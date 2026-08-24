@@ -8,7 +8,7 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-Phase 1 principles and extension points are documented. Phase 2 is defining stack ADRs and typed contracts. **Part 1 HTTP API contracts are specified** under [`docs/api/`](docs/api/) (no runtime routes yet).
+Phase 1 principles and extension points are documented. Phase 2 is defining stack ADRs and typed contracts. **Agent contracts / trust model** and **Part 1 HTTP API contracts** are specified (no runtime agents or FastAPI routes yet).
 
 ## Conceptual pipeline
 
@@ -21,13 +21,14 @@ Document → ingestion → Extractor → confidence/evidence/presence
 
 Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
 
-<<<<<<< HEAD
+## Agent contracts (Phase 2)
+
 Agent **contracts and trust model** are defined (no runtime agents yet):
 
 - [`docs/agents/contracts.md`](docs/agents/contracts.md)
 - [`docs/agents/trust-model.md`](docs/agents/trust-model.md)
-- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md)
-=======
+- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md) (numbering may be reconciled during Phase 2 integration)
+
 ## External API (Part 1 contracts)
 
 Public HTTP surface (contracts only; FastAPI implementation later):
@@ -52,7 +53,6 @@ Normative docs:
 - [`docs/api/query-interface.md`](docs/api/query-interface.md)
 
 API layering: routes → application services → domain/agent ports → infrastructure. NL query must use allow-listed plans only — **no arbitrary LLM-generated SQL execution**.
->>>>>>> feature/phase-2-api-contracts
 
 ## Design principles
 
@@ -73,11 +73,7 @@ See the full list in [`docs/architecture/principles.md`](docs/architecture/princ
 - Stack ADRs (language, API framework, database, LLM provider) — in progress under [`docs/decisions/`](docs/decisions/)
 - Orchestration model for agents
 - Rules representation and customer configuration
-<<<<<<< HEAD
-- Schema IDL encoding for agent contracts
-- API surface for intake, review, and NL query
-=======
->>>>>>> feature/phase-2-api-contracts
+- Schema IDL encoding for agent contracts (Pydantic as working encoding)
 - Evaluation harness tooling
 
 Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
