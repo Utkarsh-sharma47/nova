@@ -230,13 +230,15 @@ Part 2 features are **not** implemented.
 
 ## Verification evidence (commands run)
 
-See integration commit message / final report for exact command outputs. Checks intended:
+Executed on 2026-08-25 in a local `.venv` (Python 3.12):
 
-```bash
-./scripts/check-docs-structure.sh
-./scripts/check-secret-patterns.sh
-pip install -e ".[dev]"
-ruff check src tests
-mypy
-pytest -q
-```
+| Command | Result |
+|---------|--------|
+| `./scripts/check-docs-structure.sh` | **PASSED** |
+| `./scripts/check-secret-patterns.sh` | **PASSED** |
+| `pip install -e ".[dev]"` (in `.venv`) | Success |
+| `ruff check src tests` | **All checks passed** (exit 0) |
+| `mypy` | **Success: no issues found in 8 source files** (exit 0) |
+| `pytest -q` | **11 passed** in 0.14s (exit 0) |
+
+No application unit/integration/E2E suites exist yet — not claimed.
