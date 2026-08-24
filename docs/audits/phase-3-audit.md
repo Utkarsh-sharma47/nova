@@ -201,7 +201,18 @@ Entrypoint waits for DB, runs `alembic upgrade head`, then uvicorn (non-root ima
 
 Local CI-equivalent steps above: **PASS**.
 
-GitHub Actions: verified by pushing `feature/phase-3-integration` and inspecting workflow runs (see section appendix / verification report). **Do not treat local green as remote CI green until Actions report success.**
+GitHub Actions on PR [#5](https://github.com/Utkarsh-sharma47/nova/pull/5):
+
+| Job | Result |
+|-----|--------|
+| Docs and secrets checks | **pass** (12s) |
+| Python (Ruff, MyPy, pytest) incl. migrations + docker build | **pass** (1m2s) |
+
+Run: https://github.com/Utkarsh-sharma47/nova/actions/runs/32790248121  
+Head SHA: `1743de310a529881ae1722f94f66838ae6325b61`  
+Conclusion: **success**
+
+Note: an earlier push-only run failed before jobs started because job-level `env` used `${{ runner.temp }}` (invalid context). Fixed in `fix(ci): avoid runner context in job-level env`.
 
 Workflow (`.github/workflows/ci.yml`) includes: docs/secrets, ruff, mypy, pytest with Postgres service, migration validation for six tables, `docker build`.
 
@@ -278,7 +289,7 @@ No open CRITICAL or HIGH issues remain.
 | Ruff / MyPy / tests / failure / security | PASS (local) |
 | Documentation + traceability updated | PASS |
 | Phase 3 audit PASS | **PASS** |
-| GitHub Actions CI | Pending remote run after push |
+| GitHub Actions CI | **PASS** (run 32790248121) |
 
 ## Appendix — key paths
 
