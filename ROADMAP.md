@@ -12,6 +12,11 @@ Requirements inventory, product/problem/solution definition, Part 1 scope, Part 
 
 ADRs for language/runtime, API, DB, LLM provider; typed agent/API contracts; enable language CI.
 
+- **Done (docs):** PostgreSQL system of record + domain/schema design ([`docs/database/`](docs/database/))
+- **Done (docs):** AI agent contracts and trust model ([`docs/agents/`](docs/agents/))
+- **Done (docs):** Part 1 HTTP API contracts ([`docs/api/`](docs/api/))
+- Record remaining stack ADRs; freeze interfaces for extraction, validation, and decisioning
+
 ## Phase 3 — Ingestion & Extractor
 
 Document input, Extractor Agent with confidence/evidence, failure isolation, observability for extraction.

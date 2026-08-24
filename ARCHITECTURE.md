@@ -8,7 +8,13 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-Phase 1 principles and extension points are documented. Phase 2 is defining stack ADRs and typed contracts. **Agent contracts / trust model** and **Part 1 HTTP API contracts** are specified (no runtime agents or FastAPI routes yet).
+Phase 1 principles and extension points are documented. Phase 2 is defining stack ADRs and typed contracts.
+
+**Specified so far (contracts/design only — no runtime services yet):**
+
+- Agent contracts / trust model ([`docs/agents/`](docs/agents/))
+- Part 1 HTTP API contracts ([`docs/api/`](docs/api/))
+- Domain model + PostgreSQL schema design ([`docs/database/`](docs/database/), persistence ADR)
 
 ## Conceptual pipeline
 
@@ -21,13 +27,13 @@ Document → ingestion → Extractor → confidence/evidence/presence
 
 Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
 
-## Agent contracts (Phase 2)
+Persistence stores shipment-centric, multi-document data. See [`docs/database/`](docs/database/).
 
-Agent **contracts and trust model** are defined (no runtime agents yet):
+## Agent contracts (Phase 2)
 
 - [`docs/agents/contracts.md`](docs/agents/contracts.md)
 - [`docs/agents/trust-model.md`](docs/agents/trust-model.md)
-- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md) (numbering may be reconciled during Phase 2 integration)
+- ADR for AI contracts (see [`docs/decisions/`](docs/decisions/); numbering reconciled during integration)
 
 ## External API (Part 1 contracts)
 
@@ -44,15 +50,18 @@ Public HTTP surface (contracts only; FastAPI implementation later):
 | Health | `GET` | `/health` |
 | Readiness | `GET` | `/ready` |
 
-Normative docs:
-
-- [`docs/api/contracts.md`](docs/api/contracts.md)
-- [`docs/api/error-model.md`](docs/api/error-model.md)
-- [`docs/api/versioning.md`](docs/api/versioning.md)
-- [`docs/api/idempotency.md`](docs/api/idempotency.md)
-- [`docs/api/query-interface.md`](docs/api/query-interface.md)
+Normative docs: [`docs/api/contracts.md`](docs/api/contracts.md), [error-model](docs/api/error-model.md), [versioning](docs/api/versioning.md), [idempotency](docs/api/idempotency.md), [query-interface](docs/api/query-interface.md).
 
 API layering: routes → application services → domain/agent ports → infrastructure. NL query must use allow-listed plans only — **no arbitrary LLM-generated SQL execution**.
+
+## Persistence (Phase 2 design)
+
+| Concern | Decision |
+|---------|----------|
+| Primary store | PostgreSQL (see persistence ADR under `docs/decisions/`) |
+| Document bytes | Object storage via URI + content hash on `document_versions` |
+| Domain model | [`docs/database/domain-model.md`](docs/database/domain-model.md) |
+| Schema | [`docs/database/schema-design.md`](docs/database/schema-design.md) |
 
 ## Design principles
 
@@ -62,7 +71,8 @@ See the full list in [`docs/architecture/principles.md`](docs/architecture/princ
 - Confidence-aware extraction with evidence/grounding
 - Human-in-the-loop; no silent auto-approve on failure
 - Observability, idempotency, bounded retries, cost controls
-- Part 2 extensibility without implementing Part 2 now
+- Auditability from stored fields, rule results, and audit events
+- Part 2 extensibility (shipment 1→N documents) without implementing Part 2 now
 
 ## Part 2 readiness
 
@@ -70,9 +80,9 @@ See the full list in [`docs/architecture/principles.md`](docs/architecture/princ
 
 ## Open decisions (Phase 2+)
 
-- Stack ADRs (language, API framework, database, LLM provider) — in progress under [`docs/decisions/`](docs/decisions/)
+- Remaining stack ADRs (language/runtime, API framework, LLM provider, object storage) — under [`docs/decisions/`](docs/decisions/)
 - Orchestration model for agents
-- Rules representation and customer configuration
+- Rules representation / `definition_json` schemas
 - Schema IDL encoding for agent contracts (Pydantic as working encoding)
 - Evaluation harness tooling
 
@@ -82,10 +92,10 @@ Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
 
 - [docs/architecture/](docs/architecture/)
 - [docs/api/](docs/api/)
+- [docs/database/](docs/database/)
 - [docs/agents/](docs/agents/)
 - [docs/agents/contracts.md](docs/agents/contracts.md)
 - [docs/evaluation/agent-evaluation.md](docs/evaluation/agent-evaluation.md)
 - [docs/decisions/](docs/decisions/)
 - [ADR-0001](docs/decisions/0001-documentation-first-phase1.md)
-- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md)
 - [AGENTS.md](AGENTS.md)

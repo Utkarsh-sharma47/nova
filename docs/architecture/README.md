@@ -11,12 +11,12 @@ Detailed architecture notes for Nova. High-level overview also in [ARCHITECTURE.
 | [part2-extension-points.md](./part2-extension-points.md) | Done |
 | [engineering-standards.md](./engineering-standards.md) | Done |
 
-## Still planned (implementation phases)
+## Contents / planned
 
 | Topic | Status |
 |-------|--------|
 | Concrete context diagram with chosen stack | Phase 2 ADR |
-| Storage and retention details | Phase 2–5 |
+| Storage and retention | **Domain/DB design documented** — see [`../database/`](../database/) |
 | External integrations | Phase 2+ / Part 2 |
 | Failure/retry implementation specifics | Phase 3–4 |
 

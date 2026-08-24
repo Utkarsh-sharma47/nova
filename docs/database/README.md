@@ -1,25 +1,45 @@
 # Database
 
-Data model and persistence notes for Nova.
+Data model and persistence documentation for Nova.
+
+## Purpose
+
+Define the logical domain model, PostgreSQL physical schema, relationships, indexing, audit strategy, and database test requirements for the system of record.
 
 ## Current status
 
-No database schema exists in Phase 1.
+| Topic | Status |
+|-------|--------|
+| Persistence technology | **Accepted:** PostgreSQL (see persistence ADR under `docs/decisions/`) |
+| Logical domain model | Documented |
+| Physical schema design | Documented (migrations not implemented) |
+| Indexing strategy | Documented |
+| Audit model | Documented |
+| Database test plan | Documented (tests not implemented) |
+| Repositories / ORM | Not started (Phase 5) |
 
-## Design constraint already in force
+## Design constraints in force
 
-Shipment **1→N** documents must be representable for Part 2 readiness (`REQ-DATA-002`, [Part 2 extension points](../architecture/part2-extension-points.md)), even if Part 1 only persists one document per shipment.
+- Shipment **1→N** documents (`REQ-DATA-002`, [Part 2 extension points](../architecture/part2-extension-points.md)); never model a permanent single-file shipment.
+- Structured AI outputs (values, confidence, evidence, validation results, decision factors, model/prompt metadata) remain **queryable**.
+- Decisions and audit events are **append-only**; Part 2 approvals add records without rewriting router dispositions.
+- Object storage holds document bytes; PostgreSQL stores URIs + hashes + pipeline data.
 
-## Planned contents
+## Contents
 
-| Document | Status |
-|----------|--------|
-| ERD / entity definitions | Phase 2–5 |
-| Migration notes | Phase 5 |
-| Retention / PII handling notes | Phase 5 (policy started in security baseline) |
+| Document | Description |
+|----------|-------------|
+| [domain-model.md](./domain-model.md) | Entities, lifecycles, invariants, data classification |
+| [schema-design.md](./schema-design.md) | Tables, keys, constraints, soft-delete, AI storage, Part 2 stubs |
+| [relationships.md](./relationships.md) | Cardinality, FKs, ER diagram |
+| [indexing-strategy.md](./indexing-strategy.md) | Unique, FK, queue, and audit indexes |
+| [audit-model.md](./audit-model.md) | Audit stream vs domain history |
+| [database-test-plan.md](./database-test-plan.md) | FK/uniqueness/idempotency/transaction tests |
 
 ## Related
 
 - [Architecture](../architecture/)
+- [Decisions](../decisions/)
 - [Security baseline](../security/baseline.md)
-- Requirements `REQ-DATA-*`
+- [Testing](../testing/)
+- Requirements `REQ-DATA-*`, `REQ-PART2-*`
