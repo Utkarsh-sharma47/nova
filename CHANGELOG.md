@@ -17,6 +17,7 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Persistence ADR (PostgreSQL as system of record)
 - Phase 2 AI agent contracts and trust model (Extractor, Validator, Router); agent evaluation specification (no harness yet)
 - Phase 2 Part 1 HTTP API contracts (ingestion, retrieval, validation, decision, NL query, health/ready)
+- Phase 2 integration audit (`docs/audits/phase-2-audit.md`) — PASS
 - Testing and AI evaluation architecture:
   - Test pyramid (unit, contract, integration, E2E, evaluation, regression, failure, performance)
   - Contract, failure, and performance testing specs (no harness/tooling yet)

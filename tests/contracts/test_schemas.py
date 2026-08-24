@@ -86,8 +86,18 @@ def test_extraction_round_trip() -> None:
         content=_content(),
         required_fields=["bl_number", "vessel"],
     )
+    ctx = {
+        k: ids[k]
+        for k in (
+            "trace_id",
+            "run_id",
+            "document_id",
+            "document_version_id",
+            "shipment_id",
+        )
+    }
     result = ExtractionResult(
-        **{k: ids[k] for k in ("trace_id", "run_id", "document_id", "document_version_id", "shipment_id")},
+        **ctx,
         status=ExtractionStatus.COMPLETED,
         fields=[_known_field(ids["trace_id"])],
     )
