@@ -1,0 +1,49 @@
+{
+  "case_id": "val_numeric_mismatch",
+  "category": "numeric_mismatch",
+  "description": "Weight outside tolerance",
+  "extracted_fields": [
+    {
+      "field_name": "weight_kg",
+      "value": 1200,
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "1200",
+          "page": 1,
+          "evidence_id": "52268513-1d76-471a-bdd6-1f3b4a60d650"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "de21e963-bfa0-4825-9fc8-b7b4a9872353",
+      "rule_code": "WEIGHT_TOL",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "numeric",
+        "field": "weight_kg",
+        "expected": 1000,
+        "tolerance_pct": 0.5
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression"
+  ]
+}

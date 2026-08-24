@@ -1,0 +1,49 @@
+{
+  "case_id": "val_uncertain_value",
+  "category": "uncertain_value",
+  "description": "Low confidence equal strings still UNCERTAIN",
+  "extracted_fields": [
+    {
+      "field_name": "shipper",
+      "value": "Acme Shipping",
+      "presence": "KNOWN",
+      "confidence": 0.2,
+      "confidence_band": "LOW",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Acme Shipping",
+          "page": 1,
+          "evidence_id": "06be3dd4-4a2f-4d66-85b7-acb59d6b7f46"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "a70069e1-ab20-43bc-99d4-b45d737f173f",
+      "rule_code": "SHIPPER_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "equals",
+        "field": "shipper",
+        "expected": "Acme Shipping"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety"
+  ]
+}

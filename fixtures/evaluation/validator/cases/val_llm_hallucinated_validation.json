@@ -1,0 +1,57 @@
+{
+  "case_id": "val_llm_hallucinated_validation",
+  "category": "llm_hallucinated_validation",
+  "description": "LLM proposes MATCH despite missing verified evidence \u2192 UNCERTAIN",
+  "extracted_fields": [
+    {
+      "field_name": "remarks",
+      "value": "Looks fine",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "NONE",
+          "snippet": null,
+          "page": null
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "9f42c9bd-ad18-4106-9cf9-34d34d718efe",
+      "rule_code": "REMARKS_JUDGMENT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": true,
+      "expression": {
+        "op": "equals",
+        "field": "remarks",
+        "expected": "Looks fine"
+      }
+    }
+  ],
+  "llm": {
+    "mode": "response",
+    "response": {
+      "outcome": "MATCH",
+      "reason": "invented ok",
+      "confidence": 0.99
+    }
+  },
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety",
+    "llm"
+  ]
+}

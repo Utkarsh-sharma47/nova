@@ -2,12 +2,14 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Proposed (contract defined; not implemented) |
-| Owner | AI Systems Architect |
+| Status | Implemented (Phase 5 evaluation + deterministic/judgment agent) |
+| Owner | AI Systems Architect / QA Evaluation |
 | Last updated | 2026-08-25 |
 | Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
 | Related feature(s) | Part 1 document verification pipeline |
 | Contract | [contracts.md](./contracts.md#validator-contract) |
+| Runtime | `src/nova/agents/validator/` (`ValidatorAgent`) |
+| Evaluation | [../evaluation/validator-evaluation.md](../evaluation/validator-evaluation.md) |
 
 ## 1. Purpose
 
@@ -110,33 +112,35 @@ See `ValidationResult` and `ValidationCheck` in [contracts.md](./contracts.md#va
 
 ## 8. Testing
 
-- Golden fixtures for MATCH / MISMATCH / UNCERTAIN
-- Deterministic equality and tolerance cases
-- Uncertainty propagation from extraction presence flags
-- Proof that LLM path cannot override deterministic results
+- Golden / synthetic fixtures: `fixtures/evaluation/validator/`
+- Safety invariants: `tests/agents/validator/test_safety_invariants.py`
+- Failure injection: `tests/failure/validator/`
+- See [../testing/validator-evaluation.md](../testing/validator-evaluation.md)
 
 ## 9. Evaluation
 
-- Agreement with labeled check outcomes
-- False `MATCH` rate (critical)
-- Calibration on messy documents (expect more `UNCERTAIN`)
+- Harness: `src/nova/evaluation/validator/`
+- Runner: `python scripts/run_validator_eval.py`
+- Metrics + reports: [../evaluation/validator-evaluation.md](../evaluation/validator-evaluation.md)
+- Critical gate: **unsafe MATCH count = 0**
 
 ## 10. Observability
 
 - `run_id`, stage=`validator`, ruleset ids/versions
-- Summary counts (match/mismatch/uncertain/blocking)
-- Per-check `rule_id`, `result`, `deterministic`
+- Summary counts (match/mismatch/uncertain)
+- Per-check `rule_id`, `outcome`, `deterministic`
 - Model metadata when judgment used
-- Latency and error codes
+- Latency and error codes (no sensitive document bodies)
 
 ## 11. Known limitations
 
-- Rules DSL / storage format not chosen (future ADR).
-- Cross-document consistency is Part 2; ValidationRequest may later accept multi-doc context without changing check statuses.
-- No runtime implementation yet.
+- Rules DSL remains expression-dict based (future ADR for storage format).
+- Cross-document consistency is Part 2 (`related_extractions` reserved).
+- Live vendor LLM adapters not required for CI (MockLLM default).
 
 ## 12. Change history
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-08-25 | Initial contract and agent governance doc | AI Systems Architect |
+| 2026-08-25 | Runtime Validator + evaluation/failure harness | QA / AI Evaluation |

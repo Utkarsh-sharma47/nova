@@ -34,6 +34,7 @@ from nova.contracts.validation import (
     ValidationOutcome,
     ValidationRequest,
     ValidationResult,
+    ValidationStatus,
 )
 
 __all__ = [
@@ -65,4 +66,5 @@ __all__ = [
     "ValidationOutcome",
     "ValidationRequest",
     "ValidationResult",
+    "ValidationStatus",
 ]

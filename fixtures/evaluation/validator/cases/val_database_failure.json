@@ -1,0 +1,53 @@
+{
+  "case_id": "val_database_failure",
+  "category": "database_failure",
+  "description": "Persist failure flips stage to FAILED",
+  "extracted_fields": [
+    {
+      "field_name": "bl_number",
+      "value": "BL-1001",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "BL-1001",
+          "page": 1,
+          "evidence_id": "f8051175-526e-4dfc-9491-3c5586616c5d"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "dfd55651-0bcb-4e59-a8c5-93bdd07c7699",
+      "rule_code": "BL_REQUIRED",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "required",
+        "field": "bl_number"
+      }
+    }
+  ],
+  "store": {
+    "type": "failing"
+  },
+  "expect_persist_failure": true,
+  "gold_outcomes": [
+    "MATCH"
+  ],
+  "gold_status": "FAILED",
+  "tags": [
+    "regression",
+    "safety",
+    "failure"
+  ]
+}

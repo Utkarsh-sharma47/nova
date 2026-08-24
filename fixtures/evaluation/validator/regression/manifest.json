@@ -1,0 +1,22 @@
+{
+  "dataset_id": "validator-regression",
+  "dataset_revision": "2026-08-25.1",
+  "case_ids": [
+    "val_valid_extraction",
+    "val_invalid_extraction",
+    "val_missing_required",
+    "val_format_mismatch",
+    "val_numeric_mismatch",
+    "val_date_mismatch",
+    "val_cross_field_mismatch",
+    "val_conflicting_evidence",
+    "val_ambiguous_value",
+    "val_uncertain_value",
+    "val_llm_hallucinated_validation",
+    "val_llm_override_deterministic_mismatch",
+    "val_llm_timeout",
+    "val_llm_malformed_output",
+    "val_database_failure"
+  ],
+  "policy": "Any rule/prompt/model change must run this suite. unsafe_match_count must be 0."
+}

@@ -13,10 +13,10 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 | REQ-EXT-004 | Evidence model | `Evidence[]` | 3 | Unit + review UX | contracts + UI checklist (Ph6) |
 | REQ-EXT-005 | Evaluation datasets | — | 5 | Eval harness | `docs/evaluation/datasets.md`, fixtures |
 | REQ-EXT-006 | Failure isolation | StageError / ErrorResponse | 3–4 | Failure tests | `docs/testing/failure-testing.md` |
-| REQ-VAL-001 | Validator + CustomerRule | ValidationRequest/Result | 4 | Unit + fixtures | `docs/agents/validator.md`, DB rules |
-| REQ-VAL-002–004 | Validation outcomes | MATCH/MISMATCH/UNCERTAIN | 4 | Golden | contracts + golden cases |
-| REQ-VAL-005 | Deterministic vs LLM boundary | `ValidationCheck.deterministic` | 2–4 | Design + unit | ADR-0010, validator doc |
-| REQ-VAL-006 | Auditable validation | Validation + AuditEvent | 4–5 | Integration | schema + audit-model |
+| REQ-VAL-001 | Validator + CustomerRule | ValidationRequest/Result | 5 | Unit + fixtures | `src/nova/agents/validator/`, `fixtures/evaluation/validator/` |
+| REQ-VAL-002–004 | Validation outcomes | MATCH/MISMATCH/UNCERTAIN | 5 | Golden + eval | fixtures + `docs/evaluation/reports/` |
+| REQ-VAL-005 | Deterministic vs LLM boundary | `ValidationCheck.deterministic` | 5 | Safety unit | `tests/agents/validator/test_safety_invariants.py` |
+| REQ-VAL-006 | Auditable validation | append-only store | 5 | Unit + eval | `src/nova/validation_store/`, invariant tests |
 | REQ-ROUTER-001–003 | Router decisions | DecisionResult enums | 4 | Unit + eval | `docs/agents/router.md` |
 | REQ-ROUTER-004 | Explicit policy | RoutingPolicySnapshot | 2–4 | Design + tests | router + routing contracts |
 | REQ-ROUTER-005 | Fail-safe routing | safety constraints | 4 | Failure tests | trust-model + failure catalog |

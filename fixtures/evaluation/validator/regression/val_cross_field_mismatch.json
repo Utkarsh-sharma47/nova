@@ -1,0 +1,67 @@
+{
+  "case_id": "val_cross_field_mismatch",
+  "category": "cross_field_mismatch",
+  "description": "Invoice total != BL total",
+  "extracted_fields": [
+    {
+      "field_name": "invoice_total",
+      "value": "1000",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "1000",
+          "page": 1,
+          "evidence_id": "d2cf92bd-b4ce-4d0a-bf63-7e5fa5ca3bd8"
+        }
+      ]
+    },
+    {
+      "field_name": "bl_total",
+      "value": "900",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "900",
+          "page": 1,
+          "evidence_id": "aee0e390-426f-438a-96c5-21a70eb0e168"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "525c3abb-0667-4a21-aac3-7bc46c8f2409",
+      "rule_code": "TOTALS_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "cross_field",
+        "left_field": "invoice_total",
+        "right_field": "bl_total"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression"
+  ]
+}

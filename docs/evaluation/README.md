@@ -7,13 +7,15 @@ Quality and accuracy evaluation for Nova’s extraction, validation, and decisio
 |----------|--------|
 | [philosophy.md](./philosophy.md) | Done (Phase 1) |
 | [agent-evaluation.md](./agent-evaluation.md) | Done (spec only — no harness) |
+| [validator-evaluation.md](./validator-evaluation.md) | Done — Validator harness + measured reports |
 | [evaluation-framework.md](./evaluation-framework.md) | Done — process and agent dimensions |
 | [datasets.md](./datasets.md) | Done — Part 1 categories + Part 2 future |
 | [metrics.md](./metrics.md) | Done — definitions; thresholds as calibration targets |
 | [regression-policy.md](./regression-policy.md) | Done — mandatory fixed-dataset eval on prompt/model changes |
 ## Current status
-No evaluation harness or gold dataset exists yet. Do not invent scores or claim unmeasured quality.
-[agent-evaluation.md](./agent-evaluation.md) defines required test classes (contract, schema, golden, datasets, adversarial, failure, regression) and the false `AUTO_APPROVE` safety bar for Extractor / Validator / Router. The framework/metrics/datasets docs define how evaluation will be run once fixtures exist.
+
+Validator evaluation harness and synthetic fixtures are implemented. Run `python scripts/run_validator_eval.py` and read `docs/evaluation/reports/`. Do not invent scores; re-measure after behavioral changes.
+Extractor/Router evaluation harnesses remain Phase later.
 ## Planned contents
 | Topic | Status |
 |-------|--------|
