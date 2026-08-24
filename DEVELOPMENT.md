@@ -4,13 +4,13 @@ Local development guidance for Nova.
 
 ## Current status
 
-**Phase 2:** Python contracts package exists. FastAPI app, agents, ORM, and UI are not implemented yet.
+**Phase 3:** FastAPI, SQLAlchemy/Alembic persistence, local document storage, and
+digital PDF/text ingestion are implemented. Runtime AI agents and the UI are not.
 
 ## Prerequisites
 
 - Python **3.12+**
 - Docker (optional, for Compose Postgres)
-- Node **20+** (Phase 6 UI only)
 
 ## Setup
 
@@ -31,12 +31,24 @@ mypy
 pytest -q
 ```
 
-## Repository layout (Phase 2)
+PostgreSQL integration tests run when `TEST_DATABASE_URL` is set. They reset the
+named test database before applying migrations; never point it at shared data.
+
+To run the service, populate `.env` (including `API_AUTH_TOKEN`) and use
+`docker compose up --build`. The container entrypoint applies Alembic migrations.
+
+## Repository layout
 
 ```text
 .
-├── src/nova/contracts/     # Pydantic domain contracts
-├── tests/contracts/        # Schema tests
+├── src/nova/api/           # HTTP routes, DI, error handling
+├── src/nova/application/   # Ingestion use case
+├── src/nova/domain/        # Lifecycle policy and errors
+├── src/nova/infrastructure/# Document processors and storage
+├── src/nova/persistence/   # SQLAlchemy models and repositories
+├── src/nova/contracts/     # Frozen Phase 2 Pydantic contracts
+├── alembic/                # Production schema migrations
+├── tests/                  # Unit, contract, API, integration, security checks
 ├── docs/                   # Architecture, ADRs, requirements
 ├── Dockerfile
 ├── docker-compose.yml

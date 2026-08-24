@@ -49,3 +49,24 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 ## Phase 2 coverage check
 
 All 68 inventory requirements retain a design/contract/test pointer above. Runtime implementation remains Phases 3–7 except contract schema encoding and CI for contracts (Phase 2).
+
+## Phase 3 implementation evidence
+
+| Requirement | Implementation | Test | Reproducible evidence |
+|-------------|----------------|------|-----------------------|
+| REQ-EXT-001 | `nova.api.routes`, `nova.application.ingestion`, `nova.documents` | `tests/api/test_documents_api.py`, `tests/documents/` | Authenticated multipart upload returns 202; normalized `DocumentContent` and persisted IDs |
+| REQ-EXT-006 | Typed processor/domain errors, orphan cleanup, global safe handlers | `tests/documents/test_contracts.py`, API failure and ingestion unit tests | Corrupt/unsupported input is structured; database failures do not leave blobs; HTTP bodies omit internals |
+| REQ-DATA-001 | SQLAlchemy core ingestion entities + retrieval API | API + migration integration | Customer/shipment/document/version/run tables and GET projections |
+| REQ-DATA-002 | Shipment-to-documents 1:N model | API + migration integration | No uniqueness constraint on `documents.shipment_id` |
+| REQ-DATA-003 | Principal/key/fingerprint idempotency records with unique-violation recovery | API replay/conflict and concurrent-ingestion tests | Same request replays, concurrent loser re-reads winner, changed content returns 409 |
+| REQ-QUERY-001 (partial) | Document and shipment GET endpoints | API retrieval tests | Persisted ingestion metadata is queryable; validation/decision reads remain deferred |
+| REQ-OBS-001–002 | JSON formatter, request/trace middleware, `/metrics` | API header and metrics tests | Correlation headers, structured fields, Prometheus request count/latency; no agent-stage tracing yet |
+| REQ-OBS-004 (partial) | Safe classified HTTP errors and schema/storage readiness | API readiness and failure tests | DB-down, missing-schema, and storage failures are visible without connection details |
+| REQ-TEST-001,003–004 | Unit/API/integration plus retained contract suite | `tests/` | `ruff check src tests`, `mypy`, `pytest -q` |
+| REQ-DEPLOY-003–004 | Non-root image, bounded DB wait, Compose, CI PostgreSQL | clean/repeated migration validation and Docker build | `Dockerfile`, `scripts/entrypoint.sh`, `docker-compose.yml`, CI workflow |
+| REQ-DOC-001–003 | Phase 3 feature, API, architecture, ops docs | docs structure check | Repository documentation listed in this row |
+| REQ-SEC-001–004 | Env-only auth, safe logs, upload controls/storage confinement | unit/API security assertions | No committed secret; path traversal/type/size/auth tests |
+
+Not claimed in Phase 3: REQ-EXT-002–005 and REQ-AI-001–006 runtime agent
+behavior. Frozen Phase 2 contracts remain available, but no Extractor,
+Validator, Router, or LLM implementation exists.

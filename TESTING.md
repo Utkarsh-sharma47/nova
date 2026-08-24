@@ -10,12 +10,25 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 2 provides **contract/schema tests only** (`tests/contracts/`). No agent or API tests yet.
+Phase 3 includes contract, lifecycle, processor/storage, API, security/failure,
+and PostgreSQL migration tests. No LLM or agent behavior is tested because those
+agents are outside this phase.
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
 ```
+
+The default suite skips PostgreSQL migration verification unless
+`TEST_DATABASE_URL` is set. With a disposable PostgreSQL database:
+
+```bash
+export TEST_DATABASE_URL=postgresql+psycopg://nova:nova@localhost:5432/nova_test
+export DATABASE_URL="$TEST_DATABASE_URL"
+pytest -q
+```
+
+The migration test downgrades that database to base and upgrades it twice.
 
 Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
 
@@ -39,12 +52,12 @@ Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/cont
 ## Test layers
 | Layer | Intent | Status |
 |-------|--------|--------|
-| Unit | Pure functions, parsers, rule helpers | Phase 3+ |
-| Integration | Agent boundaries, storage, API | Phase 5+ |
+| Unit | Config, lifecycle, processors, storage | **Phase 3** |
+| Integration | HTTP ingestion and PostgreSQL migrations | **Phase 3** |
 | Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
 | End-to-end | Document in → decision out | Phase 6–7 |
 | Evaluation | Accuracy on curated sets | Phase 5+ |
-| Failure | Timeouts, provider errors | Phase 3+ |
+| Failure | DB-down readiness, corrupt and unsupported input | **Phase 3** |
 
 ## Expectations for contributors
 

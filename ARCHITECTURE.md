@@ -8,7 +8,11 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 2 complete (design freeze):** technology stack and domain contracts are accepted via ADRs. Application business logic, agents, ORM, and UI are **not** implemented yet.
+**Phase 3 application foundation implemented:** FastAPI routes call an
+application ingestion service, which owns persistence transactions and uses
+storage/processor ports. SQLAlchemy/Alembic persistence and structured request
+observability are live. Extractor, Validator, Router, LLM calls, and UI remain
+out of scope.
 
 ## Conceptual pipeline
 
@@ -20,6 +24,20 @@ Document → ingestion → extraction → ExtractionResult
 ```
 
 Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md).
+
+## Implemented dependency direction
+
+```text
+FastAPI routes → application ingestion service → domain policy
+                                      ├── persistence repositories → PostgreSQL
+                                      ├── DocumentStoragePort → local filesystem
+                                      └── DocumentProcessorPort → PDF/text adapters
+```
+
+Routes contain no OCR or SQL details. Document bytes are validated for size,
+extension, content signature, and safe filename before storage. Ingestion
+commits document, immutable first version, queued run, and idempotency record as
+one database transaction; raw bytes remain outside PostgreSQL.
 
 ## Technology stack (summary)
 

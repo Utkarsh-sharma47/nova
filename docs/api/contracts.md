@@ -1,6 +1,8 @@
 # Part 1 API contracts
 
-HTTP API contracts for Nova Part 1. **Documentation only** — no FastAPI routes or handlers are implemented here.
+HTTP API contracts for Nova Part 1. Phase 3 implements authenticated document
+ingestion, document/shipment retrieval, health, readiness, and metrics. Other
+sections are forward contracts and are explicitly marked as deferred.
 
 Aligned with:
 
@@ -79,7 +81,9 @@ Headers:
 }
 ```
 
-Processing continues asynchronously through extraction → validation → routing → persistence. Clients poll retrieval endpoints (or future webhooks — Part 2).
+Phase 3 stores normalized document content and creates a queued verification
+run. Extractor, Validator, and Router execution is deferred; clients can
+retrieve the accepted document and shipment metadata.
 
 ### Status codes
 

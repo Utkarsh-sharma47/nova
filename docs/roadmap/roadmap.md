@@ -18,17 +18,24 @@
 
 **Status:** Complete pending merge review. Audit: [`../audits/phase-2-architecture-audit.md`](../audits/phase-2-architecture-audit.md).
 
-## Phase 3 — Ingestion & Extractor Agent
+## Phase 3 — Application foundation + document ingestion
 
-Document input, DocumentProcessor adapters, Extractor with confidence/evidence, observability.
+**Status:** Complete pending merge review. Audit: [`../audits/phase-3-audit.md`](../audits/phase-3-audit.md).
 
-## Phase 4 — Validation & Router
+Authenticated FastAPI ingest/retrieval, PostgreSQL/Alembic core entities,
+idempotency, local storage, PDF/text `DocumentProcessorPort`, observability,
+Docker Compose, CI. **Extractor Agent is deferred to Phase 4** (verification
+runs are queued only).
 
-Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
+## Phase 4 — Extraction, Validation & Router
 
-## Phase 5 — Persistence, samples, evaluation harness
+Extractor Agent against frozen contracts, then customer rules,
+MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
 
-SQLAlchemy/Alembic, samples, eval harness, idempotency.
+## Phase 5 — Persistence expansion, samples, evaluation harness
+
+Validation/decision/audit persistence, samples, eval harness. Core ingestion
+entities and HTTP idempotency landed in Phase 3.
 
 ## Phase 6 — Query & UI
 

@@ -1,18 +1,35 @@
-# Phase 2 skeleton — no application business logic.
-# Build context expects Python contracts package only for now.
+FROM python:3.12-slim AS builder
 
-FROM python:3.12-slim AS base
+ENV PIP_NO_CACHE_DIR=1
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 
-WORKDIR /app
+WORKDIR /build
+COPY pyproject.toml README.md ./
+COPY src ./src
+RUN pip install --upgrade pip && pip install .
+
+FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PATH="/opt/venv/bin:${PATH}" \
+    HOME=/home/nova
 
-COPY pyproject.toml README.md ./
-COPY src ./src
+WORKDIR /app
+RUN groupadd --system --gid 10001 nova \
+    && useradd --system --uid 10001 --gid nova --create-home nova \
+    && mkdir -p /var/lib/nova/documents \
+    && chown -R nova:nova /var/lib/nova
+COPY --from=builder /opt/venv /opt/venv
+COPY --chown=nova:nova alembic.ini ./
+COPY --chown=nova:nova alembic ./alembic
+COPY --chown=nova:nova scripts/entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
 
-RUN pip install --upgrade pip && pip install .
-
-# Placeholder: Phase 3+ will start uvicorn for FastAPI.
-CMD ["python", "-c", "import nova; print('nova', nova.__version__)"]
+USER nova
+EXPOSE 8000
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["uvicorn", "nova.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

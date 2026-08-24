@@ -8,7 +8,7 @@ Requirements inventory, product/problem/solution definition, Part 1 scope, Part 
 
 **Status:** Complete.
 
-## Phase 2 — Stack selection & contracts (current delivery)
+## Phase 2 — Stack selection & contracts
 
 ADRs for language/runtime, API, DB, LLM abstraction, document processing, observability, deployment, frontend; typed agent/API contracts (`src/nova/contracts`); domain/DB/API/error/confidence/lifecycle docs; Python CI (Ruff, MyPy, contract pytest).
 
@@ -19,17 +19,26 @@ ADRs for language/runtime, API, DB, LLM abstraction, document processing, observ
 - **Done (docs):** Part 1 HTTP API contracts ([`docs/api/`](docs/api/))
 - Record remaining stack ADRs; freeze interfaces for extraction, validation, and decisioning
 
-## Phase 3 — Ingestion & Extractor
+## Phase 3 — Application foundation + document ingestion
 
-Document input, DocumentProcessor adapters, Extractor Agent with confidence/evidence, failure isolation, observability for extraction.
+**Application foundation and document ingestion complete:** authenticated
+FastAPI upload/retrieval, idempotency, PostgreSQL/Alembic core records, local
+storage, PDF/text processors, request observability, Docker, and CI.
 
-## Phase 4 — Validation & Router
+Audit: [`docs/audits/phase-3-audit.md`](docs/audits/phase-3-audit.md).
 
-Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
+Extractor Agent work is explicitly deferred; Phase 3 ingestion only queues a
+verification run and must not be read as an extraction implementation.
 
-## Phase 5 — Persistence, samples, evaluation
+## Phase 4 — Extraction, Validation & Router
 
-Persist core entities (SQLAlchemy/Alembic), clean + messy samples, eval harness, idempotency.
+Extractor against frozen contracts, then customer rules, MATCH/MISMATCH/UNCERTAIN,
+router dispositions, golden fixtures, fail-safe defaults.
+
+## Phase 5 — Persistence expansion, samples, evaluation
+
+Persist validation/decision/audit entities, clean + messy samples, and add the
+evaluation harness. Core ingestion entities and HTTP idempotency landed in Phase 3.
 
 ## Phase 6 — Query & UI
 

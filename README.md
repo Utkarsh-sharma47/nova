@@ -8,7 +8,7 @@ This is an operational verification system — not a generic chatbot and not a h
 
 ## Status
 
-**Phase 2 — Technology architecture & domain contracts**
+**Phase 3 — Application foundation and document ingestion**
 
 | Area | Status |
 |------|--------|
@@ -16,8 +16,11 @@ This is an operational verification system — not a generic chatbot and not a h
 | Technology ADRs (0002–0009) | Accepted |
 | System / AI / DB / API architecture docs | Documented |
 | Pydantic domain contracts | In `src/nova/contracts/` |
-| Agent business logic | **Not started** (Phase 3–4) |
-| ORM / UI / live LLM | **Not started** |
+| FastAPI ingestion and retrieval | Implemented |
+| PostgreSQL / Alembic foundation | Implemented |
+| Local document processing/storage | PDF and UTF-8 text |
+| Extractor / Validator / Router agents | **Not implemented** |
+| UI / live LLM | **Not implemented** |
 
 ## Quick links
 
@@ -49,6 +52,20 @@ ruff check src tests
 mypy
 pytest -q
 ```
+
+## Run locally
+
+Set a non-placeholder `API_AUTH_TOKEN` and database password in `.env`, then:
+
+```bash
+docker compose up --build
+curl http://localhost:8000/health
+```
+
+Authenticated endpoints accept `Authorization: Bearer <token>` or `X-API-Key`.
+`POST /v1/documents` requires multipart form data and an `Idempotency-Key`, and
+returns `202 Accepted`. Phase 3 stores and normalizes content, creates a queued
+verification run, and does not execute extraction or any LLM agent.
 
 ## License
 

@@ -4,7 +4,11 @@ Complement to [contracts.md](./contracts.md) and [surface.md](./surface.md).
 
 ## POST `/v1/documents`
 
-Ingest into a shipment (create if needed). Multipart or JSON+storage ref. Headers: optional `Idempotency-Key`. Response `201` with ids + `trace_id`. Errors: 401/403/409/413/422. Audit: `DOCUMENT_INGESTED`. Extension: source metadata (`upload`/`email`/`api`).
+Ingest into a shipment (create if needed). Phase 3 accepts exactly one multipart
+file or a relative pre-staged `source_path` beneath `DOCUMENT_STORAGE_PATH`.
+`Idempotency-Key` and API authentication are required. Response is
+`202 Accepted` with document, shipment, run, replay, and trace fields. Errors:
+400/401/404/409/413/422. Audit events are not yet implemented.
 
 ## GET `/v1/documents/{document_id}`
 
@@ -16,16 +20,19 @@ Shipment state, document IDs, latest decision summary.
 
 ## GET `/v1/documents/{document_id}/validation`
 
-Latest `ValidationResult` DTO; historical via `?validation_id=`.
+Deferred. No Phase 3 route exists; the planned contract is a latest
+`ValidationResult` DTO with optional historical lookup.
 
 ## GET `/v1/documents/{document_id}/decision`
 
-Latest `DecisionResult` DTO. Part 2 may add approval fields.
+Deferred. No Phase 3 route exists; the planned contract returns the latest
+`DecisionResult` DTO. Part 2 may add approval fields.
 
 ## POST `/v1/query`
 
-`{ question, shipment_id?, document_id? }` → `{ answer, citations[], refused, trace_id }`. Must refuse when ungrounded ([query-interface.md](./query-interface.md)).
+Deferred. No Phase 3 route exists. The planned grounded query contract is
+documented in [query-interface.md](./query-interface.md).
 
-## GET `/health` / `/ready`
+## GET `/health` / `/ready` / `/metrics`
 
-Liveness vs DB/config readiness. No auth.
+Liveness, database-schema/storage readiness, and Prometheus metrics. No auth.

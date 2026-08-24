@@ -1,3 +1,3 @@
-"""Nova package — Phase 2 delivers contracts only."""
+"""Nova trade-document verification system."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
