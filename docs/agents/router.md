@@ -2,12 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Proposed (contract defined; not implemented) |
-| Owner | AI Systems Architect |
+| Status | Implemented (Phase 6) |
+| Owner | Decision and Routing Engineer |
 | Last updated | 2026-08-25 |
 | Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
-| Related feature(s) | Part 1 document verification pipeline |
+| Related feature(s) | Part 1 document verification pipeline; [router-decision-agent.md](../features/router-decision-agent.md) |
 | Contract | [contracts.md](./contracts.md#router-contract) |
+| Runtime | `src/nova/router/` (`RouterService`) |
 
 ## 1. Purpose
 
@@ -154,12 +155,15 @@ Not allowed to:
 
 ## 11. Known limitations
 
-- Concrete threshold numbers are customer/policy-specific and not hard-coded here.
-- Human approval workflow UX is Part 2; Part 1 still emits `HUMAN_REVIEW` as a first-class decision.
 - No runtime implementation yet.
+- Concrete threshold numbers are customer/policy-specific and calibrated via
+  versioned `RoutingPolicySnapshot` (defaults: high=0.85, low=0.60).
+- Human approval workflow UX is Part 2; Part 1 still emits `HUMAN_REVIEW` as a
+  first-class decision.
 
 ## 12. Change history
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-08-25 | Initial contract and agent governance doc | AI Systems Architect |
+| 2026-08-25 | Phase 6 runtime: `RouterService`, failsafe, persistence | Decision and Routing Engineer |

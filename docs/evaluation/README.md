@@ -38,6 +38,7 @@ No evaluation harness or gold dataset exists yet. Do not invent scores or claim 
 | [philosophy.md](./philosophy.md) | Goals / safety bar |
 | [architecture.md](./architecture.md) | Harness shape |
 | [evaluation-framework.md](./evaluation-framework.md) | Framework |
+| [decision-evaluation.md](./decision-evaluation.md) | Router decision eval harness + results |
 | [metrics.md](./metrics.md) | Metrics |
 | [datasets.md](./datasets.md) | Datasets |
 | [regression-policy.md](./regression-policy.md) | Regression |

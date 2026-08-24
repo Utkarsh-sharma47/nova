@@ -19,6 +19,7 @@ _REQUIRED_TABLES = {
     "document_versions",
     "verification_runs",
     "idempotency_records",
+    "decisions",
 }
 
 

@@ -8,6 +8,15 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 6 Router / Decision Agent (`nova.router`):
+  - Deterministic safety constraints; AUTO_APPROVE only when fully eligible
+  - Optional advisory LLM assist that cannot authorize AUTO_APPROVE
+  - System failsafe → HUMAN_REVIEW; `system_failsafe` cannot store AUTO_APPROVE
+    (contract + app boundary + DB CHECK)
+  - Append-only `decisions` table (Alembic `0002_phase6_decisions`)
+  - Idempotent replay via input fingerprint
+  - Observability logs for decision start/completion (no document contents)
+  - Tests: `tests/agents/router/`, `tests/router/`, decision evaluation suite
 - Phase 3 application foundation (`0.3.0`):
   - FastAPI health/readiness, authenticated ingestion, and document/shipment retrieval
   - Required HTTP idempotency with replay and mismatch conflict behavior

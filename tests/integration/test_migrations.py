@@ -31,6 +31,7 @@ def test_migrations_upgrade_clean_database_and_are_repeatable() -> None:
         "document_versions",
         "verification_runs",
         "idempotency_records",
+        "decisions",
     } <= tables
 
 

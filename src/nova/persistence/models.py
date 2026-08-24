@@ -11,6 +11,7 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -209,3 +210,59 @@ class IdempotencyRecord(Base):
     )
     response_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class DecisionRecord(Base):
+    """Append-only router disposition. One decision per verification run."""
+
+    __tablename__ = "decisions"
+    __table_args__ = (
+        CheckConstraint(
+            "disposition IN ('AUTO_APPROVE','HUMAN_REVIEW','AMENDMENT_REQUEST')",
+            name="ck_decisions_disposition",
+        ),
+        CheckConstraint(
+            "actor_type IN ('router','system_failsafe')",
+            name="ck_decisions_actor_type",
+        ),
+        CheckConstraint(
+            "actor_type <> 'system_failsafe' OR disposition <> 'AUTO_APPROVE'",
+            name="ck_decisions_failsafe_no_auto_approve",
+        ),
+        UniqueConstraint("verification_run_id", name="uq_decisions_verification_run"),
+    )
+
+    decision_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id"),
+        nullable=False,
+    )
+    shipment_id: Mapped[UUID] = mapped_column(ForeignKey("shipments.shipment_id"), nullable=False)
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.document_id"), nullable=False)
+    document_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("document_versions.document_version_id"),
+        nullable=False,
+    )
+    validation_result_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    disposition: Mapped[str] = mapped_column(Text, nullable=False)
+    policy_id: Mapped[str | None] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text, nullable=False)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    reasons: Mapped[list[str]] = mapped_column(JSON, default=list)
+    triggering_check_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    safety_constraints_applied: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    actor_type: Mapped[str] = mapped_column(Text, nullable=False, default="router")
+    agent_version: Mapped[str | None] = mapped_column(Text)
+    trace_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    reasoning_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    risk_flags: Mapped[list[str] | None] = mapped_column(JSON)
+    supersedes_decision_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("decisions.decision_id"),
+    )
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    input_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    llm_rationale: Mapped[str | None] = mapped_column(Text)
+    evidence_refs: Mapped[list[str]] = mapped_column(JSON, default=list)
+    routing_rule_version: Mapped[str | None] = mapped_column(Text)

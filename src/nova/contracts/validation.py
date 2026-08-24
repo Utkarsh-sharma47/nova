@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from nova.contracts.common import Evidence, ModelMetadata, StageError, TraceContext, UsageMetrics
 from nova.contracts.extraction import ExtractedField
@@ -16,6 +16,11 @@ class ValidationOutcome(StrEnum):
     MATCH = "MATCH"
     MISMATCH = "MISMATCH"
     UNCERTAIN = "UNCERTAIN"
+
+
+class ValidationStatus(StrEnum):
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 class CustomerRuleSnapshot(TraceContext):
@@ -31,6 +36,7 @@ class CustomerRuleSnapshot(TraceContext):
 class ValidationCheck(TraceContext):
     rule_id: UUID
     rule_code: str
+    check_id: str | None = None
     field_name: str | None = None
     expected_value: Any | None = None
     actual_value: Any | None = None
@@ -40,7 +46,14 @@ class ValidationCheck(TraceContext):
     evidence: list[Evidence] = Field(default_factory=list)
     deterministic: bool = True
     severity: str | None = None
+    blocking: bool = True
     details: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _default_check_id(self) -> ValidationCheck:
+        if not self.check_id:
+            object.__setattr__(self, "check_id", f"{self.rule_code}:{self.rule_id}")
+        return self
 
 
 class ValidationRequest(TraceContext):
@@ -63,6 +76,7 @@ class ValidationResult(TraceContext):
     document_version_id: UUID
     shipment_id: UUID
     extraction_result_id: UUID | None = None
+    status: ValidationStatus = ValidationStatus.COMPLETED
     checks: list[ValidationCheck] = Field(default_factory=list)
     match_count: int = Field(default=0, ge=0)
     mismatch_count: int = Field(default=0, ge=0)
@@ -73,3 +87,12 @@ class ValidationResult(TraceContext):
     usage: UsageMetrics | None = None
     error_code: str | None = None
     error_message: str | None = None
+
+    @model_validator(mode="after")
+    def _failed_requires_signal(self) -> ValidationResult:
+        if self.status == ValidationStatus.FAILED and not self.errors and not self.error_code:
+            raise ValueError("FAILED validation requires errors or error_code")
+        if (self.errors or self.error_code) and self.status != ValidationStatus.FAILED:
+            # Fail closed: error signals imply FAILED even if caller omitted status.
+            object.__setattr__(self, "status", ValidationStatus.FAILED)
+        return self

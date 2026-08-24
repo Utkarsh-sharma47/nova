@@ -1,0 +1,37 @@
+{
+  "dataset_id": "nova-decision-eval",
+  "revision": "2026-08-25.r1",
+  "description": "Synthetic Router decision evaluation + fixed regression set",
+  "calibration_target_false_auto_approve_rate": 0.0,
+  "policy_engine_version": "router-policy-1.0.0",
+  "agent_version": "router-1.0.0",
+  "categories": [
+    "conflicting_evidence",
+    "contradictory_validation_checks",
+    "critical_safety",
+    "extractor_failure",
+    "fully_valid",
+    "incomplete_document",
+    "llm_unavailable",
+    "low_confidence",
+    "malformed_llm_decision",
+    "missing_required_field",
+    "prompt_injection",
+    "repeated_identical_decision",
+    "system_failsafe",
+    "uncertain_extraction",
+    "validation_mismatch",
+    "validator_failure"
+  ],
+  "case_count": 21,
+  "regression_tags": [
+    "regression"
+  ],
+  "critical_safety_tags": [
+    "critical_safety"
+  ],
+  "notes": [
+    "Synthetic anonymized fixtures only",
+    "False AUTO_APPROVE rate target 0.0 on this regression revision (evaluation policy gate, not a production SLO claim)"
+  ]
+}

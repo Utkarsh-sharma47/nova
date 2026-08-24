@@ -35,6 +35,7 @@ from nova.contracts.common import (
     FieldPresence,
     UncertaintyFlag,
 )
+from nova.contracts.routing import DecisionActorType
 from nova.contracts.validation import CustomerRuleSnapshot
 
 
@@ -211,19 +212,33 @@ def test_decision_result_enums() -> None:
         extraction_result_id=uuid4(),
         engine_version="det-1",
     )
+    extraction = ExtractionResult(
+        **{k: ids[k] for k in ("trace_id", "document_id", "document_version_id", "shipment_id")},
+        status=ExtractionStatus.SUCCEEDED,
+        fields=[_known_field(ids["trace_id"])],  # type: ignore[arg-type]
+    )
     decision = DecisionResult(
         **{k: ids[k] for k in ("trace_id", "document_id", "document_version_id", "shipment_id")},
+        verification_run_id=ids["run_id"],  # type: ignore[arg-type]
         validation_result_id=uuid4(),
         decision=DecisionKind.HUMAN_REVIEW,
         reasons=["uncertain_field"],
         reason_codes=["UNCERTAIN_BLOCKING"],
+        policy_id="default",
         policy_version="1.0.0",
+        routing_rule_version="router-policy-1.0.0",
+        agent_version="router-1.0.0",
         requires_human_attention=True,
+        actor_type=DecisionActorType.ROUTER,
+        input_fingerprint="abc",
+        completed_at=datetime.now(UTC),
     )
     assert decision.requires_human_attention is True
     RoutingRequest(
         **{k: ids[k] for k in ("trace_id", "document_id", "document_version_id", "shipment_id")},
+        verification_run_id=ids["run_id"],  # type: ignore[arg-type]
         validation_result_id=decision.validation_result_id,
+        extraction=extraction,
         validation=validation,
         policy=RoutingPolicySnapshot(
             trace_id=ids["trace_id"],  # type: ignore[arg-type]
