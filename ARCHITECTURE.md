@@ -8,7 +8,7 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-Phase 1 architecture principles and extension points are documented. No runtime stack, service topology, or persistence technology has been chosen yet. Stack choices will be ADRs in [`docs/decisions/`](docs/decisions/).
+Phase 1 principles and extension points are documented. Phase 2 is defining stack ADRs and typed contracts. **Part 1 HTTP API contracts are specified** under [`docs/api/`](docs/api/) (no runtime routes yet).
 
 ## Conceptual pipeline
 
@@ -18,6 +18,31 @@ Document → ingestion → extraction → confidence/evidence
 ```
 
 Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
+
+## External API (Part 1 contracts)
+
+Public HTTP surface (contracts only; FastAPI implementation later):
+
+| Area | Method | Path |
+|------|--------|------|
+| Document ingestion | `POST` | `/v1/documents` |
+| Document retrieval | `GET` | `/v1/documents/{document_id}` |
+| Shipment retrieval | `GET` | `/v1/shipments/{shipment_id}` |
+| Validation results | `GET` | `/v1/documents/{document_id}/validation` |
+| Decision results | `GET` | `/v1/documents/{document_id}/decision` |
+| Natural-language query | `POST` | `/v1/query` |
+| Health | `GET` | `/health` |
+| Readiness | `GET` | `/ready` |
+
+Normative docs:
+
+- [`docs/api/contracts.md`](docs/api/contracts.md)
+- [`docs/api/error-model.md`](docs/api/error-model.md)
+- [`docs/api/versioning.md`](docs/api/versioning.md)
+- [`docs/api/idempotency.md`](docs/api/idempotency.md)
+- [`docs/api/query-interface.md`](docs/api/query-interface.md)
+
+API layering: routes → application services → domain/agent ports → infrastructure. NL query must use allow-listed plans only — **no arbitrary LLM-generated SQL execution**.
 
 ## Design principles
 
@@ -35,10 +60,9 @@ See the full list in [`docs/architecture/principles.md`](docs/architecture/princ
 
 ## Open decisions (Phase 2+)
 
-- Language/runtime, API framework, database, LLM provider
+- Stack ADRs (language, API framework, database, LLM provider) — in progress under [`docs/decisions/`](docs/decisions/)
 - Orchestration model for agents
 - Rules representation and customer configuration
-- API surface for intake, review, and NL query
 - Evaluation harness tooling
 
 Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
@@ -46,6 +70,7 @@ Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
 ## Related documents
 
 - [docs/architecture/](docs/architecture/)
+- [docs/api/](docs/api/)
 - [docs/agents/](docs/agents/)
 - [docs/decisions/](docs/decisions/)
 - [ADR-0001](docs/decisions/0001-documentation-first-phase1.md)
