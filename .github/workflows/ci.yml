@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Verify documentation and foundation files
+        run: ./scripts/check-docs-structure.sh
+
+  secret-pattern-scan:
+    name: Secret pattern scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Run heuristic secret pattern checks
+        run: ./scripts/check-secret-patterns.sh
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Cache Gitleaks binary
+        uses: actions/cache@v4.2.0
+        with:
+          path: /tmp/gitleaks
+          key: gitleaks-8.21.2-linux-x64
+
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: "8.21.2"
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/gitleaks
+          if [[ ! -x /tmp/gitleaks/gitleaks ]]; then
+            curl -sSL \
+              "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+              | tar -xz -C /tmp/gitleaks gitleaks
+          fi
+          sudo install /tmp/gitleaks/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Scan repository for secrets
+        run: gitleaks detect --source . --verbose --redact --exit-code 1
