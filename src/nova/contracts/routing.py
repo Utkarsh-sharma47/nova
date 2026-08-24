@@ -146,8 +146,9 @@ class DecisionResult(TraceContext):
 
 
 def validation_blocks_auto_approve(validation: ValidationResult) -> bool:
-    """Deterministic helper: any MISMATCH/UNCERTAIN blocks AUTO_APPROVE."""
+    """Deterministic helper: any blocking MISMATCH/UNCERTAIN blocks AUTO_APPROVE."""
     return any(
-        c.outcome in {ValidationOutcome.MISMATCH, ValidationOutcome.UNCERTAIN}
+        c.blocking
+        and c.outcome in {ValidationOutcome.MISMATCH, ValidationOutcome.UNCERTAIN}
         for c in validation.checks
     )

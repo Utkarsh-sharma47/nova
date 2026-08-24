@@ -4,6 +4,7 @@
 |-----|---------|
 | [philosophy.md](./philosophy.md) | Goals |
 | [contract-requirements.md](./contract-requirements.md) | Required suites |
+| [router-decision.md](./router-decision.md) | Router safety + decision regression |
 
 ## Documents
 
@@ -23,7 +24,7 @@
 | Topic | Status |
 |-------|--------|
 | Suite layout and naming | Phase 3+ |
-| Fixture policy (clean/messy samples) | Phase 5 |
+| Fixture policy (clean/messy samples) | Phase 5+; Router decision fixtures **done** (`fixtures/evaluation/decision/`) |
 | Contract test catalog | Phase 3–4 |
 | Expanded CI gates | Progressive with toolchain |
 | Database constraint / integrity tests | **Partial** — failsafe CHECK covered in `tests/router/test_decision_persistence.py`; full plan remains in database-test-plan |

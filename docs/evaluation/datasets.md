@@ -99,15 +99,21 @@ Never silently move failing exploratory cases out of regression to “make green
 
 ---
 
-## Storage (planned)
+## Storage
 
-Fixtures and labels will live in a future controlled path (e.g. `fixtures/evaluation/` or equivalent) with README provenance. Paths are not fixed until implementation ADR.
+Pinned synthetic **decision** fixtures:
+
+`fixtures/evaluation/decision/` (`cases.jsonl`, `manifest.json`, revision `2026-08-25.r1`)
+
+See [decision-evaluation.md](./decision-evaluation.md). Extractor/validator document
+gold files remain planned under the same parent tree as labeling budget allows.
 
 ---
 
 ## Related
 
 - [evaluation-framework.md](./evaluation-framework.md)
+- [decision-evaluation.md](./decision-evaluation.md)
 - [metrics.md](./metrics.md)
 - [regression-policy.md](./regression-policy.md)
 - [failure testing](../testing/failure-testing.md) for infrastructure faults vs document difficulty

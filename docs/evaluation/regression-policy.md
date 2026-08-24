@@ -32,10 +32,11 @@ If unsure, run the regression suite.
 
 ## Fixed regression dataset
 
-1. A named dataset revision is designated **regression** (see [datasets.md](./datasets.md)).
-2. Contents are pinned: items are not removed to silence failures.
-3. Additions are allowed via a new dataset revision; compare reports across revisions explicitly.
-4. Minimum category coverage must be preserved (clean, messy, missing, and disposition coverage as datasets grow).
+1. Named revision: `nova-decision-eval` @ `2026-08-25.r1` (`fixtures/evaluation/decision/`).
+2. Cases tagged `regression` are the fixed Router regression suite.
+3. Contents are pinned: items are not removed to silence failures.
+4. Additions are allowed via a new dataset revision; compare reports across revisions explicitly.
+5. Minimum category coverage must be preserved (see [decision-evaluation.md](./decision-evaluation.md)).
 
 ---
 
@@ -43,11 +44,11 @@ If unsure, run the regression suite.
 
 ```text
 1. Implement change on a feature branch
-2. Run unit/contract/integration/failure suites (when they exist)
-3. Run evaluation harness on the fixed regression dataset revision
-4. Diff metrics vs last accepted baseline (same dataset revision when possible)
+2. Run unit/contract suites (tests/router, tests/agents/router, tests/contracts)
+3. Run decision regression: pytest tests/evaluation/test_decision_evaluation.py
+4. Diff false AUTO_APPROVE rate vs target 0.0 on this revision
 5. Investigate any new false AUTO_APPROVE or dangerous Validator upgrades
-6. Record report artifact with versions
+6. Record report metrics in PR (do not fabricate)
 7. Only then claim improvement or cut a release/demo
 ```
 

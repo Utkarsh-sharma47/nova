@@ -70,3 +70,17 @@ All 68 inventory requirements retain a design/contract/test pointer above. Runti
 Not claimed in Phase 3: REQ-EXT-002–005 and REQ-AI-001–006 runtime agent
 behavior. Frozen Phase 2 contracts remain available, but no Extractor,
 Validator, Router, or LLM implementation exists.
+
+## Phase 6 Router / decision evaluation evidence
+
+| Requirement | Implementation | Test | Reproducible evidence |
+|-------------|----------------|------|-----------------------|
+| REQ-ROUTER-001–003 | `nova.router.RouterService` dispositions | `tests/agents/router/`, `tests/router/`, decision eval | AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST on labeled cases |
+| REQ-ROUTER-004 | `RoutingPolicySnapshot` + constraint engine | unit + eval | Versioned policy fields and `safety_constraints_applied` |
+| REQ-ROUTER-005 | Failsafe / timeout / malformed / LLM override | failure + critical_safety eval | Never AUTO_APPROVE on failure paths |
+| REQ-TEST-002 | Golden / fixture routing | `fixtures/evaluation/decision/` | Fixed regression revision `2026-08-25.r1` |
+| REQ-AI-004 (routing) | No silent uncertainty→approve | critical_safety cases | False AUTO_APPROVE rate 0.0 on regression set |
+| REQ-SUBMISSION-002 (partial) | Eval report via harness | `tests/evaluation/test_decision_evaluation.py` | Metrics include false AUTO_APPROVE rate |
+
+Detail: [`docs/evaluation/decision-evaluation.md`](../evaluation/decision-evaluation.md),
+[`docs/agents/router.md`](../agents/router.md).

@@ -63,7 +63,17 @@ Normalization rules for field comparison (case folding, whitespace, numeric tole
 | 3-way disposition agreement | Pred disposition equals gold | Report with confusion matrix |
 | False AUTO_APPROVE rate | `FP_auto / n` or `/ n_non_auto_gold` — define clearly in each report | Must appear on every Router-inclusive report |
 
-**Calibration targets (to establish later):** minimum AUTO_APPROVE precision; maximum false AUTO_APPROVE rate; minimum HUMAN_REVIEW recall on must-review slice — TBD from dataset. Until calibrated, any false AUTO_APPROVE on the regression set is treated as a **blocking investigation** under [regression-policy.md](./regression-policy.md).
+**Calibration targets (Router decision eval, dataset `nova-decision-eval` rev `2026-08-25.r1`):**
+
+| Metric | Target | Scope |
+|--------|--------|-------|
+| False AUTO_APPROVE rate | **0.0** | Regression tag set |
+| AUTO_APPROVE precision | 1.0 when any AUTO_APPROVE predicted | Same |
+
+These are **evaluation-policy calibration / regression gates**, not production SLOs
+or claims about unseen customer traffic. See [decision-evaluation.md](./decision-evaluation.md)
+and [regression-policy.md](./regression-policy.md). Until broader calibration exists,
+any false AUTO_APPROVE on the regression set is a **blocking investigation**.
 
 ---
 
