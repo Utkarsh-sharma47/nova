@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from nova.persistence.models import (
+    AgentExecution,
     Customer,
     Document,
     IdempotencyRecord,
@@ -33,7 +34,7 @@ class NovaRepository:
     def document(self, document_id: UUID) -> Document | None:
         return self.session.scalar(
             select(Document)
-            .options(selectinload(Document.versions))
+            .options(selectinload(Document.versions), selectinload(Document.shipment))
             .where(Document.document_id == document_id, Document.deleted_at.is_(None))
         )
 
@@ -66,6 +67,14 @@ class NovaRepository:
                 Shipment.customer_id == customer_id,
                 Document.external_ref == external_ref,
                 Document.deleted_at.is_(None),
+            )
+        )
+
+    def extractor_execution(self, verification_run_id: UUID) -> AgentExecution | None:
+        return self.session.scalar(
+            select(AgentExecution).where(
+                AgentExecution.verification_run_id == verification_run_id,
+                AgentExecution.stage == "extractor",
             )
         )
 

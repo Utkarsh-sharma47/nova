@@ -46,6 +46,7 @@ def test_lifecycle_allows_forward_transitions_and_rejects_terminal() -> None:
         DocumentStatus.REGISTERED,
         DocumentStatus.CONTENT_AVAILABLE,
     )
+    assert_document_transition(DocumentStatus.IN_PIPELINE, DocumentStatus.FAILED)
     assert_run_transition(VerificationRunStatus.QUEUED, VerificationRunStatus.RUNNING)
     with pytest.raises(InvalidLifecycleTransition):
         assert_document_transition(

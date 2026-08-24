@@ -29,8 +29,11 @@ runs are queued only).
 
 ## Phase 4 — Extraction, Validation & Router
 
-Extractor Agent against frozen contracts, then customer rules,
-MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
+**Extractor delivered** (`feature/phase-4-extractor`): `LLMPort`/`MockLLM`,
+`ExtractorService`, prompt `extractor.v1`, append-only extraction tables,
+document lifecycle through `extracted`/`failed`.
+
+Still open: Validator, Router, golden fixtures, fail-safe routing defaults.
 
 ## Phase 5 — Persistence expansion, samples, evaluation harness
 

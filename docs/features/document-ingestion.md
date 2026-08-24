@@ -12,6 +12,10 @@ agreement, and filename safety. It normalizes digital content through
 atomically records the document, immutable first version, queued verification
 run, and idempotency response.
 
+After accept, Phase 4 runs the Extractor Agent (`LLMPort`, default `MockLLM`)
+and advances lifecycle `content_available → in_pipeline → extracted|failed`.
+Extraction fields and model/prompt metadata are append-only.
+
 Equal principal/key/fingerprint requests replay the original identifiers.
 Reusing a key for different input returns
 `409 IDEMPOTENCY_KEY_REUSE_MISMATCH`. Concurrent requests are resolved by the
@@ -19,5 +23,5 @@ database uniqueness constraint: the loser rolls back, removes its stored blob,
 then re-reads and replays the winner. Any database failure after a blob write
 also triggers best-effort orphan cleanup.
 
-Phase 3 stops at `ACCEPTED`: no extraction, validation, routing, malware
-scanner, OCR for scanned PDFs, or LLM invocation is implemented.
+Validator, Router, malware scanning, and OCR for scanned PDFs are not
+implemented in this phase.

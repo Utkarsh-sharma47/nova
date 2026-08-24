@@ -10,9 +10,11 @@ from typing import Annotated, cast
 from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session
 
+from nova.application.extraction import build_default_llm
 from nova.application.ingestion import IngestionService
 from nova.config import Settings
 from nova.domain.errors import NovaError
+from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.persistence.database import get_session
 
@@ -53,9 +55,17 @@ def ingestion_service(
 ) -> IngestionService:
     app_settings = settings(request)
     storage = LocalFilesystemStorage(app_settings.document_storage_path)
+    llm = build_default_llm(
+        app_settings.llm_provider,
+        app_settings.llm_model,
+        app_settings.llm_api_key,
+    )
+    extractor = ExtractorService(llm)
     return IngestionService(
         session,
         storage,
         max_document_size_bytes=app_settings.max_document_size_bytes,
         allowed_mime_types=app_settings.allowed_mime_types,
+        extractor=extractor,
+        auto_extract=True,
     )

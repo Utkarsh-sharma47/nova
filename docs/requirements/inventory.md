@@ -31,7 +31,7 @@ Planned implementation phases map to `docs/roadmap/roadmap.md`.
 | ID | Requirement | Source | Priority | Part | Acceptance criteria | Planned phase | Planned test | Evidence required | Status |
 |----|-------------|--------|----------|------|---------------------|---------------|--------------|-------------------|--------|
 | REQ-EXT-001 | Accept trade/shipping document input for Part 1 (file/path or upload abstraction) | ASSIGNMENT | P0 | 1 | Document can be submitted into the Part 1 pipeline | Phase 3 | Integration | API/contract + sample run | planned |
-| REQ-EXT-002 | Extractor Agent extracts required business fields from the document | ASSIGNMENT | P0 | 1 | Required field set returned for supported doc types | Phase 3 | Unit + golden | Extraction contract + samples | planned |
+| REQ-EXT-002 | Extractor Agent extracts required business fields from the document | ASSIGNMENT | P0 | 1 | Required field set returned for supported doc types | Phase 4 | Unit + golden | Extraction contract + samples | implemented (MockLLM) |
 | REQ-EXT-003 | Each extracted field includes a confidence score | ASSIGNMENT | P0 | 1 | Confidence present on every extracted field (or explicit null with reason) | Phase 3 | Unit + eval | Schema + eval report | planned |
 | REQ-EXT-004 | Each extracted field includes evidence/grounding (where in the document) | ASSIGNMENT | P0 | 1 | Evidence reference suitable for audit/review | Phase 3 | Unit + review UX | Schema + sample evidence | planned |
 | REQ-EXT-005 | Provide at least one clean sample document and one messy/hard sample | ASSIGNMENT | P0 | 1 | Both samples checked in (or clearly licensed fixtures) and used in eval | Phase 5 | Eval harness | `fixtures/` + eval results | planned |

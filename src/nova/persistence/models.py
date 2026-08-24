@@ -9,8 +9,10 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -91,7 +93,7 @@ class Document(Base):
         ),
         CheckConstraint(
             "status IN ('registered','content_available','in_pipeline','extracted',"
-            "'superseded','withdrawn')",
+            "'failed','superseded','withdrawn')",
             name="ck_documents_status",
         ),
         CheckConstraint(
@@ -209,3 +211,123 @@ class IdempotencyRecord(Base):
     )
     response_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+class AgentExecution(Base):
+    """Append-only agent invocation metadata (extractor/validator/router)."""
+
+    __tablename__ = "agent_executions"
+    __table_args__ = (
+        CheckConstraint(
+            "stage IN ('extractor','validator','router')",
+            name="ck_agent_executions_stage",
+        ),
+        CheckConstraint(
+            "status IN ('running','succeeded','partial','failed')",
+            name="ck_agent_executions_status",
+        ),
+        UniqueConstraint(
+            "verification_run_id",
+            "stage",
+            "attempt_group",
+            name="uq_agent_executions_run_stage_group",
+        ),
+    )
+
+    agent_execution_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id")
+    )
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.document_id"))
+    document_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("document_versions.document_version_id")
+    )
+    stage: Mapped[str] = mapped_column(Text, default="extractor")
+    status: Mapped[str] = mapped_column(Text, default="running")
+    attempt_group: Mapped[int] = mapped_column(Integer, default=1)
+    agent_version: Mapped[str] = mapped_column(Text)
+    prompt_id: Mapped[str | None] = mapped_column(Text)
+    prompt_version: Mapped[str | None] = mapped_column(Text)
+    provider: Mapped[str | None] = mapped_column(Text)
+    model_name: Mapped[str | None] = mapped_column(Text)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=1)
+    trace_id: Mapped[str | None] = mapped_column(Text)
+    error_code: Mapped[str | None] = mapped_column(Text)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    result_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class ModelCallMetadata(Base):
+    __tablename__ = "model_call_metadata"
+
+    model_call_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id")
+    )
+    agent_execution_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("agent_executions.agent_execution_id")
+    )
+    stage: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(Text)
+    model_name: Mapped[str] = mapped_column(Text)
+    prompt_version: Mapped[str] = mapped_column(Text)
+    response_schema_version: Mapped[str | None] = mapped_column(Text)
+    temperature: Mapped[float | None] = mapped_column(Float)
+    token_input: Mapped[int | None] = mapped_column(Integer)
+    token_output: Mapped[int | None] = mapped_column(Integer)
+    cost_usd: Mapped[float | None] = mapped_column(Float)
+    latency_ms: Mapped[int | None] = mapped_column(Integer)
+    request_hash: Mapped[str | None] = mapped_column(Text)
+    attempt: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class ExtractedFieldRow(Base):
+    """Append-only extracted field rows (AI-generated; never overwrite)."""
+
+    __tablename__ = "extracted_fields"
+    __table_args__ = (
+        UniqueConstraint(
+            "verification_run_id",
+            "document_version_id",
+            "field_key",
+            name="uq_extracted_fields_run_version_key",
+        ),
+        CheckConstraint(
+            "confidence IS NULL OR (confidence >= 0 AND confidence <= 1)",
+            name="ck_extracted_fields_confidence",
+        ),
+        CheckConstraint(
+            "(NOT is_missing) OR value_json IS NULL",
+            name="ck_extracted_fields_missing_value",
+        ),
+    )
+
+    extracted_field_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id")
+    )
+    document_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("document_versions.document_version_id")
+    )
+    agent_execution_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("agent_executions.agent_execution_id")
+    )
+    model_call_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("model_call_metadata.model_call_id")
+    )
+    field_key: Mapped[str] = mapped_column(Text)
+    value_json: Mapped[Any | None] = mapped_column(JSON)
+    value_type: Mapped[str] = mapped_column(Text, default="string")
+    presence: Mapped[str] = mapped_column(Text, default="UNKNOWN")
+    confidence: Mapped[float | None] = mapped_column(Float)
+    evidence_json: Mapped[list[Any] | dict[str, Any]] = mapped_column(JSON, default=list)
+    is_missing: Mapped[bool] = mapped_column(Boolean, default=False)
+    absence_reason: Mapped[str | None] = mapped_column(Text)
+    uncertainty_json: Mapped[list[Any] | dict[str, Any] | None] = mapped_column(JSON)
+    extractor_notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+

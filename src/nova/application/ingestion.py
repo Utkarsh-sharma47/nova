@@ -47,6 +47,7 @@ from nova.domain.errors import (
     UnsupportedMediaType,
     ValidationFailure,
 )
+from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import DocumentStoragePort
 from nova.persistence.models import (
     Document,
@@ -77,6 +78,7 @@ _STATUS_TO_WIRE = {
     "content_available": "ACCEPTED",
     "in_pipeline": "PROCESSING",
     "extracted": "EXTRACTED",
+    "failed": "FAILED",
     "superseded": "FAILED",
     "withdrawn": "FAILED",
 }
@@ -105,6 +107,8 @@ class IngestionService:
         max_document_size_bytes: int,
         allowed_mime_types: tuple[str, ...],
         processor: DocumentProcessingService | None = None,
+        extractor: ExtractorService | None = None,
+        auto_extract: bool = True,
     ) -> None:
         self.session = session
         self.storage = storage
@@ -114,6 +118,8 @@ class IngestionService:
         self.processor = processor or DocumentProcessingService(
             limits=DocumentLimits(max_bytes=max_document_size_bytes)
         )
+        self.extractor = extractor
+        self.auto_extract = auto_extract
 
     def load_staged(self, source_path: str) -> tuple[bytes, str, str]:
         filename, blob = self.storage.read_staged(source_path)
@@ -279,6 +285,8 @@ class IngestionService:
                 run_id,
             )
             self.session.commit()
+            if self.auto_extract and self.extractor is not None:
+                self._run_extraction(document_id, run_id, command.trace_id)
             return response
         except IntegrityError as exc:
             self.session.rollback()
@@ -310,6 +318,7 @@ class IngestionService:
             None,
         )
         run = self.repository.run_for_shipment(document.shipment_id)
+        extraction_summary = self._extraction_summary(run.verification_run_id) if run else None
         return {
             "document_id": str(document.document_id),
             "shipment_id": str(document.shipment_id),
@@ -325,7 +334,7 @@ class IngestionService:
                 "content_sha256": version.content_sha256 if version else None,
                 "download_url": None,
             },
-            "extraction": None,
+            "extraction": extraction_summary,
             "links": {
                 "validation": f"/v1/documents/{document.document_id}/validation",
                 "decision": f"/v1/documents/{document.document_id}/decision",
@@ -359,6 +368,48 @@ class IngestionService:
             "created_at": _iso(shipment.created_at),
             "updated_at": _iso(shipment.updated_at),
             "trace_id": trace_id,
+        }
+
+    def _run_extraction(self, document_id: UUID, run_id: UUID, trace_id: str) -> None:
+        from nova.application.extraction import ExtractionApplicationService
+
+        assert self.extractor is not None
+        try:
+            service = ExtractionApplicationService(
+                self.session,
+                self.storage,
+                self.extractor,
+                processor=self.processor,
+            )
+            service.extract_for_run(
+                document_id=document_id,
+                verification_run_id=run_id,
+                trace_id=_as_uuid(trace_id) or uuid4(),
+            )
+            self.session.commit()
+        except Exception:
+            logger.exception(
+                "extraction_after_ingest_failed",
+                extra={
+                    "event": "extraction.ingest_hook_failed",
+                    "extra_fields": {
+                        "document_id": str(document_id),
+                        "run_id": str(run_id),
+                    },
+                },
+            )
+
+    def _extraction_summary(self, verification_run_id: UUID) -> dict[str, Any] | None:
+        execution = self.repository.extractor_execution(verification_run_id)
+        if execution is None or execution.result_json is None:
+            return None
+        result = execution.result_json
+        return {
+            "status": result.get("status"),
+            "field_count": len(result.get("fields") or []),
+            "prompt_version": (result.get("model_metadata") or {}).get("prompt_version"),
+            "agent_execution_id": result.get("agent_execution_id"),
+            "error_code": result.get("error_code"),
         }
 
     def _resolve_shipment(self, command: IngestCommand) -> Shipment:

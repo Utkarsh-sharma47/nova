@@ -19,6 +19,9 @@ _REQUIRED_TABLES = {
     "document_versions",
     "verification_runs",
     "idempotency_records",
+    "agent_executions",
+    "model_call_metadata",
+    "extracted_fields",
 }
 
 

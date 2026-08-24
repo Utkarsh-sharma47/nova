@@ -8,6 +8,13 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 4 Extractor Agent (`0.4.0`):
+  - `LLMPort` + `MockLLM` (default test/local provider; no API key required)
+  - `ExtractorService` with versioned prompt `extractor.v1`, 60s timeout, max 2 retries
+  - Presence/confidence/evidence anti-fabrication and schema validation
+  - Append-only `agent_executions`, `model_call_metadata`, `extracted_fields`
+  - Document lifecycle `content_available → in_pipeline → extracted|failed`
+  - Unit, integration, and security tests under `tests/extraction/`
 - Phase 3 application foundation (`0.3.0`):
   - FastAPI health/readiness, authenticated ingestion, and document/shipment retrieval
   - Required HTTP idempotency with replay and mismatch conflict behavior
@@ -17,8 +24,7 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Non-root Docker/Compose runtime with migration entrypoint and PostgreSQL health checks
   - Unit, API, failure/security, and optional PostgreSQL migration tests
   - Phase 3 integration audit (`docs/audits/phase-3-audit.md`) — PASS
-- Phase 3 intentionally queues verification runs without invoking Extractor,
-  Validator, Router, or an LLM.
+- Phase 3 queues verification runs; Phase 4 adds Extractor (Validator/Router still deferred).
 - Phase 2 technology stack ADRs (backend, database, API, AI provider, document processing, observability, deployment, frontend)
 - Phase 2 Pydantic contract package (`src/nova/contracts/`) with contract tests and Python CI
 - Phase 2 domain and database architecture:

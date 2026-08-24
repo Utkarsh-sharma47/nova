@@ -16,7 +16,7 @@ blob (+ optional filename / declared MIME)
  DocumentProcessingResult (status, source metadata, warnings, duration)
         │
         ▼
- Extractor Agent (future — not implemented in this package)
+ Extractor Agent (Phase 4 — `ExtractorService` via `LLMPort`)
 ```
 
 ## Statuses
@@ -27,8 +27,8 @@ blob (+ optional filename / declared MIME)
 | `PARTIAL` | Processed but no/low extractable text (e.g. scan without OCR) |
 | `FAILED` | Rejected or unreadable; `error_code` set |
 
-## Non-goals
+## Non-goals (document package)
 
-- No LLM calls
-- No business field extraction
+- No business field extraction inside adapters (Extractor owns that)
 - No validation/routing decisions
+- No live LLM vendor SDK in this package

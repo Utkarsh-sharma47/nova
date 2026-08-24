@@ -8,11 +8,12 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 3 application foundation implemented:** FastAPI routes call an
-application ingestion service, which owns persistence transactions and uses
-storage/processor ports. SQLAlchemy/Alembic persistence and structured request
-observability are live. Extractor, Validator, Router, LLM calls, and UI remain
-out of scope.
+**Phase 4 Extractor implemented** on top of Phase 3 foundation: ingestion
+queues a run, then `ExtractorService` (via `LLMPort`, default `MockLLM`)
+produces schema-validated `ExtractionResult` with presence/confidence/evidence.
+Append-only `extracted_fields` / `agent_executions` / `model_call_metadata`
+support audit. Validator, Router, live vendor adapters, and UI remain out of
+scope.
 
 ## Conceptual pipeline
 
@@ -31,13 +32,16 @@ Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-ar
 FastAPI routes → application ingestion service → domain policy
                                       ├── persistence repositories → PostgreSQL
                                       ├── DocumentStoragePort → local filesystem
-                                      └── DocumentProcessorPort → PDF/text adapters
+                                      ├── DocumentProcessorPort → PDF/text adapters
+                                      └── ExtractorService → LLMPort (MockLLM default)
 ```
 
 Routes contain no OCR or SQL details. Document bytes are validated for size,
 extension, content signature, and safe filename before storage. Ingestion
 commits document, immutable first version, queued run, and idempotency record as
-one database transaction; raw bytes remain outside PostgreSQL.
+one database transaction; raw bytes remain outside PostgreSQL. Extraction then
+runs (Part 1: synchronous post-accept) and appends AI outputs without overwriting
+prior runs.
 
 ## Technology stack (summary)
 

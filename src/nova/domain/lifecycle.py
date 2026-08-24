@@ -12,6 +12,7 @@ class DocumentStatus(StrEnum):
     CONTENT_AVAILABLE = "content_available"
     IN_PIPELINE = "in_pipeline"
     EXTRACTED = "extracted"
+    FAILED = "failed"
     SUPERSEDED = "superseded"
     WITHDRAWN = "withdrawn"
 
@@ -29,14 +30,20 @@ _DOCUMENT_TRANSITIONS: dict[DocumentStatus, frozenset[DocumentStatus]] = {
         {DocumentStatus.CONTENT_AVAILABLE, DocumentStatus.WITHDRAWN}
     ),
     DocumentStatus.CONTENT_AVAILABLE: frozenset(
-        {DocumentStatus.IN_PIPELINE, DocumentStatus.SUPERSEDED, DocumentStatus.WITHDRAWN}
+        {
+            DocumentStatus.IN_PIPELINE,
+            DocumentStatus.SUPERSEDED,
+            DocumentStatus.WITHDRAWN,
+            DocumentStatus.FAILED,
+        }
     ),
     DocumentStatus.IN_PIPELINE: frozenset(
-        {DocumentStatus.EXTRACTED, DocumentStatus.WITHDRAWN}
+        {DocumentStatus.EXTRACTED, DocumentStatus.FAILED, DocumentStatus.WITHDRAWN}
     ),
     DocumentStatus.EXTRACTED: frozenset(
         {DocumentStatus.SUPERSEDED, DocumentStatus.WITHDRAWN}
     ),
+    DocumentStatus.FAILED: frozenset({DocumentStatus.WITHDRAWN}),
     DocumentStatus.SUPERSEDED: frozenset(),
     DocumentStatus.WITHDRAWN: frozenset(),
 }

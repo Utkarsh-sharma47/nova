@@ -32,8 +32,12 @@ verification run and must not be read as an extraction implementation.
 
 ## Phase 4 — Extraction, Validation & Router
 
-Extractor against frozen contracts, then customer rules, MATCH/MISMATCH/UNCERTAIN,
-router dispositions, golden fixtures, fail-safe defaults.
+**Extractor (delivered on `feature/phase-4-extractor`):** `ExtractorService` +
+`LLMPort`/`MockLLM`, versioned prompts, schema-validated `ExtractionResult`,
+append-only extraction persistence, lifecycle
+`content_available → in_pipeline → extracted|failed`.
+
+Still deferred: Validator, Router, golden eval harness, live vendor LLM adapters.
 
 ## Phase 5 — Persistence expansion, samples, evaluation
 

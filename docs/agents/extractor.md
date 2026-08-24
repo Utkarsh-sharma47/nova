@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Proposed (contract defined; not implemented) |
+| Status | Implemented (Phase 4) |
 | Owner | AI Systems Architect |
 | Last updated | 2026-08-25 |
 | Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
@@ -127,9 +127,10 @@ Must emit (when implemented):
 
 ## 11. Known limitations
 
-- No runtime implementation yet.
-- Document-type field catalogs and OCR strategy are undecided (future ADRs).
-- Multi-document extraction is Part 2; contract allows later extension via additional `document_id`s without changing presence semantics.
+- Default runtime uses `MockLLM` / heuristic factory; live vendor adapters are configuration-time only (ADR-0005).
+- OCR for scanned PDFs remains out of scope (DocumentProcessor warning path).
+- Multi-document extraction is Part 2.
+- Evaluation harness / golden datasets land in a later phase; unit/integration contract tests are in-tree.
 
 ## 12. Change history
 
