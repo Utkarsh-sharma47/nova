@@ -5,33 +5,41 @@ Testing strategy for Nova.
 ## Goals
 
 - Protect extraction, validation, and decision contracts.
-- Catch regressions in rule evaluation and agent behavior.
+- Catch regressions in ingestion, persistence, and API auth/idempotency.
 - Support honest reporting of quality (see also [docs/evaluation/](docs/evaluation/)).
 
 ## Current status
 
-Phase 2 provides **contract/schema tests only** (`tests/contracts/`). No agent or API tests yet.
+Phase 3 suites:
+
+| Suite | Path | Notes |
+|-------|------|-------|
+| Contracts | `tests/contracts/` | Phase 2 schemas |
+| Config / domain / storage | `tests/config`, `tests/domain`, `tests/infrastructure` | Unit |
+| API health/errors | `tests/api/test_health.py`, `test_errors.py` | Unit |
+| Documents API | `tests/api/test_documents.py` | `@pytest.mark.integration` + Postgres |
+| Repositories / migrations | `tests/persistence`, `tests/migrations` | Integration |
 
 ```bash
 pip install -e ".[dev]"
+export TEST_DATABASE_URL=postgresql+asyncpg://nova:nova@localhost:5432/nova_test
 pytest -q
 ```
 
-Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
+Tooling: **pytest** (+ pytest-asyncio), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
 
-Required future suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
+Required suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
 Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
 ## Test layers
 
 | Layer | Intent | Status |
 |-------|--------|--------|
-| Unit | Pure functions, parsers, rule helpers | Phase 3+ |
-| Integration | Agent boundaries, storage, API | Phase 5+ |
-| Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
-| End-to-end | Document in → decision out | Phase 6–7 |
-| Evaluation | Accuracy on curated sets | Phase 5+ |
-| Failure | Timeouts, provider errors | Phase 3+ |
+| Unit | Settings, lifecycle, storage safety, error envelope | **Phase 3** |
+| Integration | API ingest + repos + Alembic | **Phase 3** (Postgres) |
+| Contract | Agent/API schemas | **Phase 2** |
+| End-to-end | Document in → decision out | Later |
+| Evaluation | Accuracy on curated sets | Later |
 
 ## Expectations for contributors
 

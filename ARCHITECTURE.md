@@ -8,7 +8,7 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 2 complete (design freeze):** technology stack and domain contracts are accepted via ADRs. Application business logic, agents, ORM, and UI are **not** implemented yet.
+**Phase 3 backend foundation:** HTTP ingestion (`POST /v1/documents`), health/ready, PostgreSQL schema (customers → shipments → documents → versions → verification_runs + idempotency_records), and local document storage. Extractor / Validator / Router agents and LLM providers are **not** invoked yet; verification runs are created as `queued`.
 
 ## Conceptual pipeline
 
@@ -19,7 +19,7 @@ Document → ingestion → extraction → ExtractionResult
         → persistence → query/API → UI
 ```
 
-Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md).
+Phase 3 implements through **ingestion + queued run**. Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md).
 
 ## Technology stack (summary)
 
@@ -29,12 +29,10 @@ Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-ar
 | API | FastAPI | [0004](docs/decisions/0004-api-framework.md) |
 | DB | PostgreSQL 16 | [0003](docs/decisions/0003-database.md) |
 | LLM | Provider-agnostic `LLMPort` | [0005](docs/decisions/0005-ai-provider-abstraction.md) |
-| Documents | Pluggable processor/OCR port | [0006](docs/decisions/0006-document-processing.md) |
-| Observability | Structured logs + metrics + health | [0007](docs/decisions/0007-observability.md) |
+| Documents | Local filesystem port (Phase 3) | [0006](docs/decisions/0006-document-processing.md) |
+| Observability | Structured logs + health/ready | [0007](docs/decisions/0007-observability.md) |
 | Deploy | Docker Compose | [0008](docs/decisions/0008-deployment.md) |
 | Frontend | React + TypeScript + Vite | [0009](docs/decisions/0009-frontend-stack.md) |
-
-Index: [`docs/architecture/technology-stack.md`](docs/architecture/technology-stack.md).
 
 ## Design principles
 

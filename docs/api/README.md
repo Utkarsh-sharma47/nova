@@ -1,6 +1,8 @@
 # API
 
-HTTP API design for Nova. **Not implemented in Phase 2.**
+HTTP API design for Nova.
+
+**Phase 3 implements:** `POST /v1/documents` (multipart ingest, `202` + idempotency), `GET /health`, `GET /ready`. Retrieval, validation, decision, and query endpoints remain contract-only until later phases.
 
 | Doc | Purpose |
 |-----|---------|
@@ -12,4 +14,4 @@ HTTP API design for Nova. **Not implemented in Phase 2.**
 | [versioning.md](./versioning.md) | API versioning |
 | [query-interface.md](./query-interface.md) | NL query |
 
-Framework: FastAPI ([ADR-0004](../decisions/0004-api-framework.md)).
+Framework: FastAPI ([ADR-0004](../decisions/0004-api-framework.md)). Code: `src/nova/api/`.

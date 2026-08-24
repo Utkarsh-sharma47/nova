@@ -22,9 +22,29 @@ jobs:
       - name: Secret patterns
         run: ./scripts/check-secret-patterns.sh
 
-  python-contracts:
-    name: Python contracts (Ruff, MyPy, pytest)
+  python:
+    name: Ruff, MyPy, pytest
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nova
+          POSTGRES_PASSWORD: nova
+          POSTGRES_DB: nova_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nova -d nova_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://nova:nova@localhost:5432/nova_test
+      TEST_DATABASE_URL: postgresql+asyncpg://nova:nova@localhost:5432/nova_test
+      API_AUTH_TOKEN: test-token-not-for-production
+      APP_ENV: test
+      DOCUMENT_STORAGE_PATH: ./data/uploads
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,5 +65,18 @@ jobs:
       - name: MyPy
         run: mypy
 
-      - name: Contract tests
+      - name: Alembic upgrade
+        run: alembic upgrade head
+
+      - name: Pytest
         run: pytest -q
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t nova-api:ci .

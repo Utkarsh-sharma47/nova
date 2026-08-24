@@ -1,8 +1,8 @@
 # CI/CD
 
-## Current repository reality (Phase 2)
+## Current repository reality (Phase 3)
 
-Documentation + governance + **Pydantic domain contracts**. No FastAPI routes, agents, ORM, or UI yet.
+Docs + contracts + FastAPI ingestion backend. CI runs lint, typecheck, pytest (with Postgres service), and Docker build.
 
 ## CI jobs (enforced)
 
@@ -12,7 +12,9 @@ Documentation + governance + **Pydantic domain contracts**. No FastAPI routes, a
 | Secret patterns | `scripts/check-secret-patterns.sh` |
 | Ruff | `ruff check src tests` |
 | MyPy | `mypy` |
-| Contract tests | `pytest -q` |
+| Alembic | `alembic upgrade head` against service Postgres |
+| Pytest | `pytest -q` (`TEST_DATABASE_URL`) |
+| Docker | `docker build -t nova-api:ci .` |
 
 Workflow: `.github/workflows/ci.yml`
 
@@ -24,5 +26,6 @@ Workflow: `.github/workflows/ci.yml`
 pip install -e ".[dev]"
 ruff check src tests
 mypy
+alembic upgrade head
 pytest -q
 ```

@@ -10,42 +10,28 @@ ADR: [0008](../decisions/0008-deployment.md). Philosophy: [philosophy.md](./phil
 │  (Phase 6) │     │  FastAPI   │     │            │
 └────────────┘     └─────┬──────┘     └────────────┘
                          │
-                   object storage / volume
+                   local volume
                    (document bytes)
 ```
 
-Compose services: `api`, `db`, optional `web`.
+Compose services: `api`, `db`, optional `web` (later).
 
-## Priorities
+## Phase 3 reality
 
-| Priority | How addressed |
-|----------|---------------|
-| Easy deployment | `docker compose up` |
-| Low ops complexity | No K8s, no required queue |
-| Reproducibility | Tagged images + lockfiles + model/prompt versions in data |
-| Environment config | `.env` / host env |
-| Health checks | `/health`, `/ready` |
-| Logs | JSON stdout |
-| Rollback | Prior image tag; forward-compatible migrations |
+- `api` image entrypoint: `alembic upgrade head` → `uvicorn nova.api.main:create_app --factory`
+- Document bytes on named volume `nova_uploads`
+- Healthchecks on Postgres and HTTP `/health`
 
-## Configuration (illustrative)
+## Configuration
 
 ```bash
-DATABASE_URL=postgresql+psycopg://nova:***@db:5432/nova
-LLM_PROVIDER=mock|openai|anthropic|...
-LLM_API_KEY=
-LLM_MODEL=
-LOG_LEVEL=INFO
+DATABASE_URL=postgresql+asyncpg://nova:***@db:5432/nova
 API_AUTH_TOKEN=
+DOCUMENT_STORAGE_PATH=/app/data/uploads
+LOG_LEVEL=INFO
+LLM_PROVIDER=mock
 ```
 
 ## Part 2 extension
 
-Add `worker` service consuming ingestion jobs; same image possible with different command. No redesign of api/db contracts.
-
-## Phase 2 artifacts
-
-- `Dockerfile` — Python API image skeleton
-- `docker-compose.yml` — api + db shape
-
-No production business logic in images yet.
+Add `worker` service consuming ingestion jobs; same image possible with different command.

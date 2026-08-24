@@ -1,6 +1,6 @@
 # Database
 
-Relational design for Nova. **ORM not implemented in Phase 2.**
+Relational design for Nova. Phase 3 implements the **ingestion foundation** via Alembic.
 
 | Doc | Purpose |
 |-----|---------|
@@ -10,5 +10,6 @@ Relational design for Nova. **ORM not implemented in Phase 2.**
 | [indexing-strategy.md](./indexing-strategy.md) | Indexes |
 | [audit-model.md](./audit-model.md) | Audit |
 | [database-test-plan.md](./database-test-plan.md) | Later test plan |
+| [phase3-implementation.md](./phase3-implementation.md) | What Phase 3 ships |
 
 Engine: PostgreSQL 16 ([ADR-0003](../decisions/0003-database.md)).

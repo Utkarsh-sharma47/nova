@@ -8,7 +8,9 @@ Nova processes trade shipping documents that may contain commercially sensitive 
 
 ## Current status
 
-Phase 2 security architecture is documented: [`docs/security/architecture.md`](docs/security/architecture.md). Runtime enforcement lands with implementation phases.
+Phase 2 security architecture is documented: [`docs/security/architecture.md`](docs/security/architecture.md).
+
+Phase 3 runtime controls: shared API token (`Authorization: Bearer` or `X-API-Key`) on `/v1/*`; `/health` and `/ready` remain unauthenticated; upload size/MIME allow-lists; local storage path-traversal protection and no overwrite; secrets stay in env (see `.env.example`).
 
 ## Principles
 

@@ -8,6 +8,12 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 3 backend foundation (ingestion, no agents/LLM):
+  - FastAPI app: `POST /v1/documents`, `GET /health`, `GET /ready`
+  - SQLAlchemy models + Alembic `0001_phase3_foundation` migration
+  - Local filesystem document storage (path-safe, no overwrite)
+  - Idempotent ingest (`Idempotency-Key`) with queued verification runs
+  - Docker Compose (api + Postgres 16); CI with Postgres service + image build
 - Phase 2 technology architecture and domain contracts:
   - ADRs 0002–0010 (backend, database, API, LLM port, document processing, observability, deployment, frontend)
   - System/AI/layering architecture; error, confidence/evidence, lifecycle/idempotency models

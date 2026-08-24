@@ -4,12 +4,12 @@ Local development guidance for Nova.
 
 ## Current status
 
-**Phase 2:** Python contracts package exists. FastAPI app, agents, ORM, and UI are not implemented yet.
+**Phase 3:** FastAPI API with document ingestion, PostgreSQL persistence (Alembic), and local filesystem storage. Agents / LLM calls are not implemented yet.
 
 ## Prerequisites
 
 - Python **3.12+**
-- Docker (optional, for Compose Postgres)
+- Docker (Postgres 16 via Compose)
 - Node **20+** (Phase 6 UI only)
 
 ## Setup
@@ -19,7 +19,19 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
+# edit .env — set API_AUTH_TOKEN and DATABASE_URL
+docker compose up -d db
+alembic upgrade head
 ```
+
+## Run the API
+
+```bash
+uvicorn nova.api.main:create_app --factory --reload --host 0.0.0.0 --port 8000
+```
+
+Auth: `Authorization: Bearer <API_AUTH_TOKEN>` or `X-API-Key: <API_AUTH_TOKEN>` on `/v1/*`.  
+Health: `GET /health`, `GET /ready` (no auth).
 
 ## Local checks
 
@@ -31,17 +43,32 @@ mypy
 pytest -q
 ```
 
-## Repository layout (Phase 2)
+For integration tests, ensure `nova_test` exists:
+
+```bash
+docker compose exec db createdb -U nova nova_test || true
+export TEST_DATABASE_URL=postgresql+asyncpg://nova:nova@localhost:5432/nova_test
+pytest -q
+```
+
+## Repository layout (Phase 3)
 
 ```text
 .
-├── src/nova/contracts/     # Pydantic domain contracts
-├── tests/contracts/        # Schema tests
-├── docs/                   # Architecture, ADRs, requirements
+├── alembic/                  # Migrations
+├── src/nova/
+│   ├── api/                  # FastAPI app, routes, deps
+│   ├── config/               # Settings
+│   ├── contracts/            # Phase 2 Pydantic contracts (frozen)
+│   ├── domain/               # Lifecycle + app errors
+│   ├── infrastructure/       # Document storage
+│   ├── observability/        # Structured logging
+│   ├── persistence/          # ORM, DB, repositories
+│   └── services/             # DocumentIngestionService
+├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
-├── pyproject.toml
-└── scripts/
+└── pyproject.toml
 ```
 
 ## Branching
@@ -60,5 +87,5 @@ Use `.env.example` as a template. Never commit secrets. See [`docs/security/base
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [TESTING.md](TESTING.md)
-- [docs/architecture/technology-stack.md](docs/architecture/technology-stack.md)
-- [docs/deployment/architecture.md](docs/deployment/architecture.md)
+- [docs/deployment/](docs/deployment/)
+- [docs/database/](docs/database/)

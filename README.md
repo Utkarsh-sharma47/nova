@@ -8,16 +8,17 @@ This is an operational verification system — not a generic chatbot and not a h
 
 ## Status
 
-**Phase 2 — Technology architecture & domain contracts**
+**Phase 3 — Backend foundation (ingestion)**
 
 | Area | Status |
 |------|--------|
-| Phase 1 foundation | Complete |
-| Technology ADRs (0002–0009) | Accepted |
-| System / AI / DB / API architecture docs | Documented |
-| Pydantic domain contracts | In `src/nova/contracts/` |
-| Agent business logic | **Not started** (Phase 3–4) |
-| ORM / UI / live LLM | **Not started** |
+| Phase 1–2 foundation + contracts | Complete |
+| Config / domain lifecycle / observability | Implemented |
+| PostgreSQL models + Alembic migration | Implemented |
+| Local document storage | Implemented |
+| `POST /v1/documents` + `/health` + `/ready` | Implemented |
+| Extractor / Validator / Router agents | **Not started** |
+| LLM provider calls | **Not in Phase 3** |
 
 ## Quick links
 
@@ -25,12 +26,12 @@ This is an operational verification system — not a generic chatbot and not a h
 |----------|------------|
 | AI coding agents | [AGENTS.md](./AGENTS.md) |
 | Contributors | [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| Requirements | [docs/requirements/inventory.md](./docs/requirements/inventory.md) |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) · [docs/architecture/](./docs/architecture/) |
-| Stack ADRs | [docs/decisions/](./docs/decisions/) |
-| Contracts | [docs/architecture/contracts.md](./docs/architecture/contracts.md) |
+| Local development | [DEVELOPMENT.md](./DEVELOPMENT.md) |
+| API surface | [docs/api/](./docs/api/) |
+| Database | [docs/database/](./docs/database/) |
+| Deployment | [docs/deployment/](./docs/deployment/) |
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Roadmap | [ROADMAP.md](./ROADMAP.md) |
-| Full docs tree | [docs/README.md](./docs/README.md) |
 
 ## Conceptual pipeline
 
@@ -39,16 +40,33 @@ Document → ingestion → extraction → confidence/evidence
         → validation → routing → persistence → query → UI
 ```
 
+Phase 3 implements **ingestion only**: multipart upload, idempotent accept (`202`), queued verification run row. No agent/LLM execution yet.
+
+## Local quickstart
+
+```bash
+cp .env.example .env
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+docker compose up -d db
+# create test DB if needed: docker compose exec db createdb -U nova nova_test
+alembic upgrade head
+uvicorn nova.api.main:create_app --factory --reload
+```
+
+Or full stack: `API_AUTH_TOKEN=… docker compose up --build`
+
 ## Local checks
 
 ```bash
 ./scripts/check-docs-structure.sh
 ./scripts/check-secret-patterns.sh
-pip install -e ".[dev]"
 ruff check src tests
 mypy
 pytest -q
 ```
+
+Integration tests expect PostgreSQL at `TEST_DATABASE_URL` (default `postgresql+asyncpg://nova:nova@localhost:5432/nova_test`).
 
 ## License
 
