@@ -165,16 +165,90 @@ def evaluate_deterministic_rule(
             evidence=_copy_evidence(field),
         )
 
-    if field is None or field.presence != FieldPresence.KNOWN or field.value is None:
+    if op in {"cross_field", "cross_field_equals", "fields_equal"}:
+        left_name = expr.get("left_field") or expr.get("field")
+        right_name = expr.get("right_field") or expr.get("other_field")
+        fields_list = expr.get("fields")
+        if (
+            (not isinstance(left_name, str) or not isinstance(right_name, str))
+            and isinstance(fields_list, list)
+            and len(fields_list) >= 2
+        ):
+            left_name, right_name = str(fields_list[0]), str(fields_list[1])
+        if not isinstance(left_name, str) or not isinstance(right_name, str):
+            return _base_check(
+                rule,
+                field_name=field_name,
+                outcome=ValidationOutcome.UNCERTAIN,
+                reason="RULE_EXPRESSION_INVALID",
+                trace_id=trace_id,
+                run_id=run_id,
+            )
+        left_field = fmap.get(left_name)
+        right_field = fmap.get(right_name)
+        if (
+            left_field is None
+            or right_field is None
+            or left_field.presence != FieldPresence.KNOWN
+            or right_field.presence != FieldPresence.KNOWN
+        ):
+            return _base_check(
+                rule,
+                field_name=f"{left_name},{right_name}",
+                outcome=ValidationOutcome.UNCERTAIN,
+                reason="FIELD_UNKNOWN",
+                trace_id=trace_id,
+                run_id=run_id,
+            )
+        if not _evidence_ok(left_field) or not _evidence_ok(right_field):
+            return _base_check(
+                rule,
+                field_name=f"{left_name},{right_name}",
+                outcome=ValidationOutcome.UNCERTAIN,
+                reason="MISSING_EVIDENCE",
+                trace_id=trace_id,
+                run_id=run_id,
+            )
+        ok = _normalize_str(left_field.value) == _normalize_str(right_field.value)
+        return _base_check(
+            rule,
+            field_name=f"{left_name},{right_name}",
+            outcome=ValidationOutcome.MATCH if ok else ValidationOutcome.MISMATCH,
+            reason="MATCH" if ok else "CROSS_FIELD_MISMATCH",
+            trace_id=trace_id,
+            run_id=run_id,
+            expected=right_field.value,
+            actual=left_field.value,
+            confidence=min(
+                filter(None, [left_field.confidence, right_field.confidence]), default=None
+            ),
+            evidence=_copy_evidence(left_field) + _copy_evidence(right_field),
+        )
+
+    if op in {"judgment", "custom"}:
         return _base_check(
             rule,
             field_name=field_name,
             outcome=ValidationOutcome.UNCERTAIN,
-            reason=(
-                "FIELD_MISSING"
-                if field is None or field.presence == FieldPresence.MISSING
-                else "FIELD_UNKNOWN"
-            ),
+            reason="REQUIRES_JUDGMENT",
+            trace_id=trace_id,
+            run_id=run_id,
+            confidence=None,
+            details={"op": op},
+        )
+
+    if field is None or field.presence != FieldPresence.KNOWN or field.value is None:
+        if field is not None and field.presence == FieldPresence.AMBIGUOUS:
+            reason = "FIELD_AMBIGUOUS"
+        elif field is None or field.presence == FieldPresence.MISSING:
+            reason = "FIELD_MISSING"
+        else:
+            reason = "FIELD_UNKNOWN"
+        return _base_check(
+            rule,
+            field_name=field_name,
+            outcome=ValidationOutcome.UNCERTAIN,
+            reason=reason,
             trace_id=trace_id,
             run_id=run_id,
             evidence=_copy_evidence(field),
@@ -356,58 +430,6 @@ def evaluate_deterministic_rule(
             actual=field.value,
             confidence=field.confidence,
             evidence=_copy_evidence(field),
-        )
-
-    if op in {"cross_field", "cross_field_equals", "fields_equal"}:
-        left_name = expr.get("left_field") or expr.get("field")
-        right_name = expr.get("right_field") or expr.get("other_field")
-        fields_list = expr.get("fields")
-        if (
-            (not isinstance(left_name, str) or not isinstance(right_name, str))
-            and isinstance(fields_list, list)
-            and len(fields_list) >= 2
-        ):
-            left_name, right_name = str(fields_list[0]), str(fields_list[1])
-        if not isinstance(left_name, str) or not isinstance(right_name, str):
-            return _base_check(
-                rule,
-                field_name=field_name,
-                outcome=ValidationOutcome.UNCERTAIN,
-                reason="RULE_EXPRESSION_INVALID",
-                trace_id=trace_id,
-                run_id=run_id,
-            )
-        left_field = fmap.get(left_name)
-        right_field = fmap.get(right_name)
-        if (
-            left_field is None
-            or right_field is None
-            or left_field.presence != FieldPresence.KNOWN
-            or right_field.presence != FieldPresence.KNOWN
-        ):
-            return _base_check(
-                rule,
-                field_name=f"{left_name},{right_name}",
-                outcome=ValidationOutcome.UNCERTAIN,
-                reason="FIELD_UNKNOWN",
-                trace_id=trace_id,
-                run_id=run_id,
-            )
-        ok = _normalize_str(left_field.value) == _normalize_str(right_field.value)
-        return _base_check(
-            rule,
-            field_name=f"{left_name},{right_name}",
-            outcome=ValidationOutcome.MATCH if ok else ValidationOutcome.MISMATCH,
-            reason="MATCH" if ok else "CROSS_FIELD_MISMATCH",
-            trace_id=trace_id,
-            run_id=run_id,
-            expected=right_field.value,
-            actual=left_field.value,
-            confidence=min(
-                filter(None, [left_field.confidence, right_field.confidence]),
-                default=None,
-            ),
-            evidence=_copy_evidence(left_field) + _copy_evidence(right_field),
         )
 
     return _base_check(

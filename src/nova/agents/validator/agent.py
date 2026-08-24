@@ -433,8 +433,16 @@ class ValidatorAgent:
         if self._persist and self._store is not None:
             try:
                 self._store.append(result, validator_version=VALIDATOR_VERSION)
-            except Exception:  # noqa: BLE001
-                logger.exception("validator_persist_failed")
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "validator_persist_failed",
+                    extra={
+                        "extra_fields": {
+                            "event": "validator_persist_failed",
+                            "error_type": type(exc).__name__,
+                        }
+                    },
+                )
                 return result.model_copy(
                     update={
                         "status": ValidationStatus.FAILED,
