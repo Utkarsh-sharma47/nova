@@ -1,0 +1,47 @@
+{
+  "case_id": "val_invalid_extraction",
+  "category": "invalid_extraction",
+  "description": "FAILED extraction cannot produce successful MATCH suite",
+  "extraction_status": "FAILED",
+  "extracted_fields": [
+    {
+      "field_name": "bl_number",
+      "value": "BL-1001",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "BL-1001",
+          "page": 1,
+          "evidence_id": "c70610a1-bb20-4053-84fe-44b2fb46eed1"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "6833304f-a4b9-4372-ba81-d8439d5a1d89",
+      "rule_code": "BL_REQUIRED",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "required",
+        "field": "bl_number"
+      }
+    }
+  ],
+  "gold_outcomes": [],
+  "gold_status": "FAILED",
+  "tags": [
+    "regression",
+    "safety"
+  ]
+}

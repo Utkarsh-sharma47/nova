@@ -1,0 +1,53 @@
+{
+  "case_id": "val_llm_timeout",
+  "category": "llm_timeout",
+  "description": "LLM timeout \u2192 UNCERTAIN not MATCH",
+  "extracted_fields": [
+    {
+      "field_name": "commodity",
+      "value": "steel",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "steel",
+          "page": 1,
+          "evidence_id": "d272b427-dd63-455c-ac45-dd01b34960d5"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "54a50590-c84d-4126-a9c5-2c2f00052ccd",
+      "rule_code": "COMMODITY_JUDGMENT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": true,
+      "expression": {
+        "op": "judgment",
+        "field": "commodity"
+      }
+    }
+  ],
+  "llm": {
+    "mode": "timeout"
+  },
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety",
+    "failure",
+    "llm"
+  ]
+}

@@ -1,0 +1,347 @@
+{
+  "blocking": false,
+  "blocking_reasons": [],
+  "cases": [
+    {
+      "agreement": true,
+      "case_id": "val_ambiguous_value",
+      "category": "ambiguous_value",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_conflicting_evidence",
+      "category": "conflicting_evidence",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": false,
+      "case_id": "val_cross_field_mismatch",
+      "category": "cross_field_mismatch",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_database_failure",
+      "category": "database_failure",
+      "deterministic_checks": 1,
+      "failed": true,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MATCH"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_date_mismatch",
+      "category": "date_mismatch",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 1,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_format_mismatch",
+      "category": "format_mismatch",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_invalid_extraction",
+      "category": "invalid_extraction",
+      "deterministic_checks": 0,
+      "failed": true,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_llm_disagreement",
+      "category": "llm_disagreement",
+      "deterministic_checks": 0,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 1,
+      "llm_checks": 1,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_llm_hallucinated_validation",
+      "category": "llm_hallucinated_validation",
+      "deterministic_checks": 0,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 1,
+      "llm_checks": 1,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_llm_malformed_output",
+      "category": "llm_malformed_output",
+      "deterministic_checks": 0,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 1,
+      "llm_checks": 1,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_llm_override_deterministic_mismatch",
+      "category": "llm_override_deterministic_mismatch",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_llm_timeout",
+      "category": "llm_timeout",
+      "deterministic_checks": 0,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 1,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_missing_required",
+      "category": "missing_required_value",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_numeric_mismatch",
+      "category": "numeric_mismatch",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MISMATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MISMATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_uncertain_value",
+      "category": "uncertain_value",
+      "deterministic_checks": 1,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "UNCERTAIN"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "UNCERTAIN"
+      ],
+      "uncertain": true,
+      "unsafe_match": false
+    },
+    {
+      "agreement": true,
+      "case_id": "val_valid_extraction",
+      "category": "valid_extraction",
+      "deterministic_checks": 5,
+      "failed": false,
+      "false_match": false,
+      "false_mismatch": false,
+      "gold_outcomes": [
+        "MATCH",
+        "MATCH",
+        "MATCH",
+        "MATCH",
+        "MATCH"
+      ],
+      "latency_ms": 0,
+      "llm_checks": 0,
+      "notes": "",
+      "pred_outcomes": [
+        "MATCH",
+        "MATCH",
+        "MATCH",
+        "MATCH",
+        "MATCH"
+      ],
+      "uncertain": false,
+      "unsafe_match": false
+    }
+  ],
+  "dataset_id": "validator-eval",
+  "dataset_revision": "2026-08-25.1",
+  "engine_version": "validator-det-1.0.0",
+  "metrics": {
+    "deterministic_rule_coverage": 0.7894736842105263,
+    "failure_rate": 0.125,
+    "false_match_rate": 0.0,
+    "false_mismatch_rate": 0.0,
+    "llm_assisted_validation_rate": 0.25,
+    "mean_latency_ms": 0.25,
+    "uncertainty_rate": 0.5625,
+    "unsafe_match_count": 0,
+    "unsafe_match_rate": 0.0,
+    "validation_accuracy": 0.9375
+  },
+  "n": 16,
+  "validator_version": "0.1.0"
+}

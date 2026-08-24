@@ -1,0 +1,164 @@
+{
+  "case_id": "val_valid_extraction",
+  "category": "valid_extraction",
+  "description": "Clean known fields match deterministic rules",
+  "ruleset_id": "demo",
+  "ruleset_version": "1.0.0",
+  "extracted_fields": [
+    {
+      "field_name": "bl_number",
+      "value": "BL-1001",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "BL-1001",
+          "page": 1,
+          "evidence_id": "6cf841b0-fe3c-4225-a8ca-cff04861efa6"
+        }
+      ]
+    },
+    {
+      "field_name": "shipper",
+      "value": "Acme Shipping",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Acme Shipping",
+          "page": 1,
+          "evidence_id": "7b3fe6e4-a653-4d58-bb02-3fb35e936d89"
+        }
+      ]
+    },
+    {
+      "field_name": "weight_kg",
+      "value": 1000,
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "1000",
+          "page": 1,
+          "evidence_id": "27e09b18-b8f0-4818-9ddc-c949af5815a3"
+        }
+      ]
+    },
+    {
+      "field_name": "ship_date",
+      "value": "2026-01-15",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "2026-01-15",
+          "page": 1,
+          "evidence_id": "2f5e8f27-3b93-4c36-a0be-943c00fa878e"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "207bf02c-36eb-4afb-ac1e-293974c1db91",
+      "rule_code": "BL_REQUIRED",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "required",
+        "field": "bl_number"
+      }
+    },
+    {
+      "rule_id": "a4e09794-7ede-4032-b6c1-c439512e38fa",
+      "rule_code": "BL_FORMAT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "format",
+        "field": "bl_number",
+        "pattern": "^BL-[0-9]+$"
+      }
+    },
+    {
+      "rule_id": "87f381b4-788c-44c6-a33c-d8fff1979343",
+      "rule_code": "SHIPPER_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "equals",
+        "field": "shipper",
+        "expected": "Acme Shipping"
+      }
+    },
+    {
+      "rule_id": "4c85343c-da6f-40bc-a8f1-f6aca606f0d8",
+      "rule_code": "WEIGHT_TOL",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "numeric",
+        "field": "weight_kg",
+        "expected": 1000,
+        "tolerance_pct": 0.5
+      }
+    },
+    {
+      "rule_id": "6fd7849c-233a-4198-82fe-b67960b6d624",
+      "rule_code": "DATE_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "date",
+        "field": "ship_date",
+        "expected": "2026-01-15"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MATCH",
+    "MATCH",
+    "MATCH",
+    "MATCH",
+    "MATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "clean"
+  ]
+}
