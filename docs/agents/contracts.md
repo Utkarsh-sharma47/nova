@@ -3,7 +3,7 @@
 Canonical typed contracts for Nova’s Extractor, Validator, and Router agents.
 
 **Status:** Accepted design (contracts only — no runtime implementation)  
-**ADR:** [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)  
+**ADR:** [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md)  
 **Trust model:** [trust-model.md](./trust-model.md)
 
 This document is the **source of truth** for stage I/O shapes. Agent-specific docs ([extractor.md](./extractor.md), [validator.md](./validator.md), [router.md](./router.md)) describe behavior, failure modes, and policies that consume these contracts.

@@ -5,10 +5,15 @@ ADRs record significant decisions. Use sequential IDs and the template.
 | ID | Title | Status |
 |----|-------|--------|
 | [0001](./0001-documentation-first-phase1.md) | Documentation-first Phase 1 foundation | Accepted |
-| [0002](./0002-ai-agent-contracts-and-trust-model.md) | AI agent contracts and trust model | Accepted |
-| [0003](./0003-postgresql-persistence.md) | PostgreSQL as system of record | Accepted |
-
-> **Integration note:** Specialist branches originally both used `0002`. During Phase 2 integration, PostgreSQL persistence is numbered **0003**. Stack ADRs from the architecture workstream will be renumbered to a coherent sequence (backend, database, API, AI provider, …) if needed.
+| [0002](./0002-backend-stack.md) | Backend stack (Python, Pydantic, SQLAlchemy, Alembic, pytest, Ruff, MyPy) | Accepted |
+| [0003](./0003-database.md) | Database (PostgreSQL 16) | Accepted |
+| [0004](./0004-api-framework.md) | API framework (FastAPI) | Accepted |
+| [0005](./0005-ai-provider-abstraction.md) | AI provider abstraction (`LLMPort`) | Accepted |
+| [0006](./0006-document-processing.md) | Document processing / OCR port | Accepted |
+| [0007](./0007-observability.md) | Observability (logs, metrics, health) | Accepted |
+| [0008](./0008-deployment.md) | Deployment (Docker / Compose) | Accepted |
+| [0009](./0009-frontend-stack.md) | Frontend (React, TypeScript, Vite) | Accepted |
+| [0010](./0010-ai-agent-contracts-and-trust-model.md) | AI agent contracts and trust model | Accepted |
 
 ## When to write an ADR
 
@@ -32,4 +37,5 @@ ADRs record significant decisions. Use sequential IDs and the template.
 - [ADR_TEMPLATE.md](ADR_TEMPLATE.md)
 - [Architecture](../architecture/)
 - [Database](../database/)
+- [Agents](../agents/)
 - [AGENTS.md](../../AGENTS.md)

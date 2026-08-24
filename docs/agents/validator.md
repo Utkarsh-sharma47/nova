@@ -5,7 +5,7 @@
 | Status | Proposed (contract defined; not implemented) |
 | Owner | AI Systems Architect |
 | Last updated | 2026-08-25 |
-| Related ADR(s) | [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md) |
+| Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
 | Related feature(s) | Part 1 document verification pipeline |
 | Contract | [contracts.md](./contracts.md#validator-contract) |
 

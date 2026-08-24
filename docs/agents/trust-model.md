@@ -2,7 +2,7 @@
 
 How Nova treats LLMs as **probabilistic components** inside an operational verification system—not as authoritative decision-makers.
 
-**Status:** Accepted design companion to [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)  
+**Status:** Accepted design companion to [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md)  
 **Contracts:** [contracts.md](./contracts.md)
 
 ---

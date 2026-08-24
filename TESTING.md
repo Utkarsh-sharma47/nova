@@ -10,19 +10,21 @@ Testing strategy for Nova.
 
 ## Current status
 
-No application test suite exists yet — and Phase 1 intentionally does **not** invent fake app tests.
+Phase 2 provides **contract/schema tests only** (`tests/contracts/`). No agent or API tests yet.
 
-Phase 1 automated checks:
+```bash
+pip install -e ".[dev]"
+pytest -q
+```
 
-- `./scripts/check-docs-structure.sh`
-- `./scripts/check-secret-patterns.sh`
+Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
 
-Testing philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
+Required future suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
+Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
 Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing/test-strategy.md).
 
 ## Test layers (planned)
-
 | Layer | Intent |
 |-------|--------|
 | Unit | Pure functions, parsers, rule helpers, transformers |
@@ -33,8 +35,16 @@ Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing
 | Evaluation | Accuracy / quality on curated document sets (not a substitute for unit tests) |
 | Regression (AI) | Fixed labeled set re-scored after prompt/model/policy changes |
 | Performance | Latency, throughput, cost per document (benchmark jobs; calibrate targets later) |
-
 Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/contract-testing.md), [failure](docs/testing/failure-testing.md), [performance](docs/testing/performance-testing.md), [evaluation](docs/evaluation/evaluation-framework.md).
+## Test layers
+| Layer | Intent | Status |
+|-------|--------|--------|
+| Unit | Pure functions, parsers, rule helpers | Phase 3+ |
+| Integration | Agent boundaries, storage, API | Phase 5+ |
+| Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
+| End-to-end | Document in → decision out | Phase 6–7 |
+| Evaluation | Accuracy on curated sets | Phase 5+ |
+| Failure | Timeouts, provider errors | Phase 3+ |
 
 ## Expectations for contributors
 
@@ -47,7 +57,6 @@ Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/cont
 
 - Prefer synthetic or anonymized documents.
 - Never commit real customer PII or production documents.
-- Document fixture conventions under `docs/testing/` as they emerge.
 
 ## Related documents
 

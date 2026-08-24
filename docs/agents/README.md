@@ -8,7 +8,7 @@ Each runtime agent has a dedicated document describing its typed contract and be
 
 **Canonical contracts:** [contracts.md](./contracts.md)  
 **Trust model:** [trust-model.md](./trust-model.md)  
-**ADR:** [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)
+**ADR:** [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md)
 
 Contracts are defined; **agents are not implemented** (no LLM provider calls in this phase).
 
@@ -41,4 +41,4 @@ Contracts are defined; **agents are not implemented** (no LLM provider calls in 
 - [AGENTS.md](../../AGENTS.md)
 - [Architecture](../architecture/)
 - [Evaluation](../evaluation/)
-- [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)
+- [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md)

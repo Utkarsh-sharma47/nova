@@ -2,7 +2,7 @@
 
 Physical design for Nova’s system of record. **No migrations or application code in this phase**—this is the contract for Phase 5 persistence work.
 
-Aligned with [domain-model.md](./domain-model.md) and [ADR-0003](../decisions/0003-postgresql-persistence.md).
+Aligned with [domain-model.md](./domain-model.md) and [ADR-0003](../decisions/0003-database.md).
 
 ---
 

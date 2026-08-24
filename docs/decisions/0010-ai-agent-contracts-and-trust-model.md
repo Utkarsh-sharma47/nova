@@ -1,4 +1,4 @@
-# ADR-0002: AI agent contracts and trust model
+# ADR-0010: AI agent contracts and trust model
 
 | Field | Value |
 |-------|-------|

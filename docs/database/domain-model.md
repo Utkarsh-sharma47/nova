@@ -2,7 +2,7 @@
 
 Logical domain model for Nova’s system of record. This document defines **entities and invariants**, not application code, repositories, or agent implementations.
 
-**Persistence technology:** PostgreSQL ([ADR-0003](../decisions/0003-postgresql-persistence.md)).  
+**Persistence technology:** PostgreSQL ([ADR-0003](../decisions/0003-database.md)).  
 **Physical schema:** [schema-design.md](./schema-design.md).  
 **Relationships:** [relationships.md](./relationships.md).  
 **Audit:** [audit-model.md](./audit-model.md).

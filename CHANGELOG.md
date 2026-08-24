@@ -8,6 +8,8 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 2 technology stack ADRs (backend, database, API, AI provider, document processing, observability, deployment, frontend)
+- Phase 2 Pydantic contract package (`src/nova/contracts/`) with contract tests and Python CI
 - Phase 2 domain and database architecture:
   - Entity domain model (`Customer` … `AuditEvent`) with data classification
   - PostgreSQL schema design, relationships/ER diagram, indexing, audit model
