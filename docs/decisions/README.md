@@ -18,10 +18,13 @@ ADRs capture significant, lasting choices: orchestration, storage, APIs, agent c
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| _(none yet)_ | | |
+| [0002](./0002-postgresql-persistence.md) | PostgreSQL as system of record | Accepted |
+
+Note: ADR-0001 may be allocated by the Phase 1 documentation-foundation workstream. This branch records the persistence decision as **0002** to avoid ID collision.
 
 ## Related
 
 - [ADR_TEMPLATE.md](ADR_TEMPLATE.md)
 - [Architecture](../architecture/)
+- [Database](../database/)
 - [AGENTS.md](../../AGENTS.md)

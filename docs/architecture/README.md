@@ -6,13 +6,13 @@ Detailed architecture notes for Nova. For the high-level overview, see [ARCHITEC
 
 Document system boundaries, component responsibilities, data flows, and integration points as they are decided.
 
-## Contents (to be filled)
+## Contents
 
 | Topic | Status |
 |-------|--------|
 | Context diagram | Planned |
 | Pipeline / agent orchestration | Planned |
-| Storage and retention | Planned |
+| Storage and retention | **Domain/DB design documented** — see [`../database/`](../database/) and [ADR-0002](../decisions/0002-postgresql-persistence.md) |
 | External integrations | Planned |
 | Failure and retry strategy | Planned |
 

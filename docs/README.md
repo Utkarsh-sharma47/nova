@@ -12,7 +12,7 @@ Authoritative detailed documentation for Nova. Root-level markdown files are ove
 | [agents/](agents/) | Pipeline agents |
 | [features/](features/) | Feature docs (see template) |
 | [api/](api/) | Interfaces |
-| [database/](database/) | Data model |
+| [database/](database/) | Domain model, PostgreSQL schema, audit, DB test plan |
 | [testing/](testing/) | Test strategy detail |
 | [evaluation/](evaluation/) | Quality evaluation |
 | [observability/](observability/) | Logs, metrics, traces |

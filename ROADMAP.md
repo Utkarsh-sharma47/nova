@@ -18,6 +18,7 @@ Phased delivery plan for Nova. Detailed phase notes live in [`docs/roadmap/`](do
 ## Phase 3 — Architecture decisions
 
 - Record ADRs for orchestration, storage, APIs, and agent contracts
+- **Done (docs):** PostgreSQL system of record + domain/schema design ([ADR-0002](docs/decisions/0002-postgresql-persistence.md), [`docs/database/`](docs/database/))
 - Freeze initial interfaces for extraction, validation, and decisioning
 
 ## Phase 4 — Implementation skeleton

@@ -18,6 +18,7 @@ No automated suite yet. Establish conventions here when the first tests land.
 | Fixture policy | Planned |
 | CI gates | Planned |
 | Contract test catalog | Planned |
+| Database constraint / integrity tests | **Specified** — [`../database/database-test-plan.md`](../database/database-test-plan.md) (not implemented yet) |
 
 ## Principles
 
