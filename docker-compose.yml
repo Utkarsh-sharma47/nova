@@ -1,5 +1,4 @@
-# Local / demo topology for Part 1 (Phase 2 shape).
-# API service is a skeleton until Phase 3+.
+# Local / demo topology for Phase 3 backend foundation.
 
 services:
   db:
@@ -20,14 +19,29 @@ services:
 
   api:
     build: .
+    ports:
+      - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://nova:nova@db:5432/nova
-      LLM_PROVIDER: mock
+      APP_ENV: development
       LOG_LEVEL: INFO
-      # API_AUTH_TOKEN: set locally; do not commit secrets
+      DATABASE_URL: postgresql+asyncpg://nova:nova@db:5432/nova
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:-local-dev-token-not-for-production}
+      DOCUMENT_STORAGE_PATH: /app/data/uploads
+      MAX_DOCUMENT_SIZE_BYTES: "10485760"
+      ALLOWED_DOCUMENT_TYPES: application/pdf,image/png,image/jpeg,image/tiff,text/plain
+      LLM_PROVIDER: mock
+    volumes:
+      - nova_uploads:/app/data/uploads
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 volumes:
   nova_pg:
+  nova_uploads:
