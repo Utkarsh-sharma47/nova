@@ -41,9 +41,10 @@ jobs:
           --health-retries 10
     env:
       APP_ENV: test
+      API_AUTH_TOKEN: nova-test-token
       TEST_DATABASE_URL: postgresql+psycopg://nova:nova@localhost:5432/nova_test
       DATABASE_URL: postgresql+psycopg://nova:nova@localhost:5432/nova_test
-      DOCUMENT_STORAGE_PATH: ${{ runner.temp }}/nova-documents
+      DOCUMENT_STORAGE_PATH: ./var/ci-documents
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,6 +58,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+          mkdir -p "${DOCUMENT_STORAGE_PATH}"
 
       - name: Ruff
         run: ruff check src tests
