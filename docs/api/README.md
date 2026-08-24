@@ -1,29 +1,15 @@
 # API
 
-Interface documentation for Nova.
+HTTP API design for Nova. **Not implemented in Phase 2.**
 
-## Current status
+| Doc | Purpose |
+|-----|---------|
+| [surface.md](./surface.md) | Endpoint index |
+| [endpoints.md](./endpoints.md) | Per-endpoint notes |
+| [contracts.md](./contracts.md) | Request/response shapes |
+| [error-model.md](./error-model.md) | HTTP errors |
+| [idempotency.md](./idempotency.md) | Idempotency |
+| [versioning.md](./versioning.md) | API versioning |
+| [query-interface.md](./query-interface.md) | NL query |
 
-No HTTP API exists in Phase 1. Do not invent endpoints here.
-
-When APIs are designed (Phase 2+):
-
-1. Record major choices as ADRs in [`../decisions/`](../decisions/).
-2. Document contracts in this directory.
-3. Keep agent I/O schemas aligned with [`../agents/`](../agents/).
-
-## Planned contents
-
-| Document | Status |
-|----------|--------|
-| Intake API | Planned |
-| Review / decision API | Planned |
-| Query / NL query API | Planned |
-| Internal agent contracts | Planned |
-| Error and versioning conventions | Planned |
-
-## Related
-
-- [Architecture](../architecture/)
-- [Agents](../agents/)
-- [Security](../security/)
+Framework: FastAPI ([ADR-0004](../decisions/0004-api-framework.md)).

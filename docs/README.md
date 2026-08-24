@@ -21,15 +21,15 @@ Authoritative detailed documentation for Nova. Root-level markdown files are ove
 | [architecture/](architecture/) | Principles, overview, Part 2 extension points, standards |
 | [agents/](agents/) | Pipeline agent contracts |
 | [features/](features/) | Feature docs (see template) |
-| [api/](api/) | Interfaces (later) |
-| [database/](database/) | Data model (later) |
+| [api/](api/) | HTTP surface (design) |
+| [database/](database/) | Domain model, ER, indexes, audit |
 | [testing/](testing/) | Test strategy |
 | [evaluation/](evaluation/) | Quality evaluation |
 | [observability/](observability/) | Logs, metrics, traces |
 | [deployment/](deployment/) | Deploy and CI/CD |
 | [security/](security/) | Security baseline |
 | [operations/](operations/) | Git workflow and runbooks |
-| [decisions/](decisions/) | ADRs |
+| [decisions/](decisions/) | ADRs 0001–0010 |
 | [ai-development/](ai-development/) | AI coding-agent governance |
 | [audits/](audits/) | Audits |
 | [roadmap/](roadmap/) | Phase detail |

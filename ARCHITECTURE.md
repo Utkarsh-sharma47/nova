@@ -8,45 +8,52 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-Phase 1 architecture principles and extension points are documented. No runtime stack, service topology, or persistence technology has been chosen yet. Stack choices will be ADRs in [`docs/decisions/`](docs/decisions/).
+**Phase 2 complete (design freeze):** technology stack and domain contracts are accepted via ADRs. Application business logic, agents, ORM, and UI are **not** implemented yet.
 
 ## Conceptual pipeline
 
 ```text
-Document → ingestion → extraction → confidence/evidence
-        → validation → routing → persistence → query → UI
+Document → ingestion → extraction → ExtractionResult
+        → validation → ValidationResult
+        → routing → DecisionResult
+        → persistence → query/API → UI
 ```
 
-Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
+Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md).
+
+## Technology stack (summary)
+
+| Layer | Choice | ADR |
+|-------|--------|-----|
+| Backend | Python 3.12+, Pydantic, SQLAlchemy, Alembic | [0002](docs/decisions/0002-backend-stack.md) |
+| API | FastAPI | [0004](docs/decisions/0004-api-framework.md) |
+| DB | PostgreSQL 16 | [0003](docs/decisions/0003-database.md) |
+| LLM | Provider-agnostic `LLMPort` | [0005](docs/decisions/0005-ai-provider-abstraction.md) |
+| Documents | Pluggable processor/OCR port | [0006](docs/decisions/0006-document-processing.md) |
+| Observability | Structured logs + metrics + health | [0007](docs/decisions/0007-observability.md) |
+| Deploy | Docker Compose | [0008](docs/decisions/0008-deployment.md) |
+| Frontend | React + TypeScript + Vite | [0009](docs/decisions/0009-frontend-stack.md) |
+
+Index: [`docs/architecture/technology-stack.md`](docs/architecture/technology-stack.md).
 
 ## Design principles
 
-See the full list in [`docs/architecture/principles.md`](docs/architecture/principles.md). Highlights:
+See [`docs/architecture/principles.md`](docs/architecture/principles.md).
 
-- Typed contracts; deterministic validation where appropriate; LLMs where reasoning is needed
-- Confidence-aware extraction with evidence/grounding
-- Human-in-the-loop; no silent auto-approve on failure
-- Observability, idempotency, bounded retries, cost controls
-- Part 2 extensibility without implementing Part 2 now
+## Contracts
+
+Authoritative Pydantic schemas: `src/nova/contracts/`.  
+Docs: [`docs/architecture/contracts.md`](docs/architecture/contracts.md).
 
 ## Part 2 readiness
 
 [`docs/architecture/part2-extension-points.md`](docs/architecture/part2-extension-points.md)
 
-## Open decisions (Phase 2+)
-
-- Language/runtime, API framework, database, LLM provider
-- Orchestration model for agents
-- Rules representation and customer configuration
-- API surface for intake, review, and NL query
-- Evaluation harness tooling
-
-Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
-
 ## Related documents
 
 - [docs/architecture/](docs/architecture/)
 - [docs/agents/](docs/agents/)
+- [docs/database/](docs/database/)
+- [docs/api/](docs/api/)
 - [docs/decisions/](docs/decisions/)
-- [ADR-0001](docs/decisions/0001-documentation-first-phase1.md)
 - [AGENTS.md](AGENTS.md)

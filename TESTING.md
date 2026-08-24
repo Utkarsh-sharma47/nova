@@ -10,26 +10,28 @@ Testing strategy for Nova.
 
 ## Current status
 
-No application test suite exists yet — and Phase 1 intentionally does **not** invent fake app tests.
+Phase 2 provides **contract/schema tests only** (`tests/contracts/`). No agent or API tests yet.
 
-Phase 1 automated checks:
+```bash
+pip install -e ".[dev]"
+pytest -q
+```
 
-- `./scripts/check-docs-structure.sh`
-- `./scripts/check-secret-patterns.sh`
+Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
 
-Testing philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
+Required future suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
+Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
-## Test layers (planned)
+## Test layers
 
-| Layer | Intent |
-|-------|--------|
-| Unit | Pure functions, parsers, rule helpers, transformers |
-| Integration | Agent boundaries, storage, API handlers |
-| Contract | Stable schemas for agent I/O and external APIs |
-| End-to-end | Document in → decision out for representative flows |
-| Evaluation | Accuracy / quality on curated document sets (not a substitute for unit tests) |
-
-Exact tooling will be recorded when chosen.
+| Layer | Intent | Status |
+|-------|--------|--------|
+| Unit | Pure functions, parsers, rule helpers | Phase 3+ |
+| Integration | Agent boundaries, storage, API | Phase 5+ |
+| Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
+| End-to-end | Document in → decision out | Phase 6–7 |
+| Evaluation | Accuracy on curated sets | Phase 5+ |
+| Failure | Timeouts, provider errors | Phase 3+ |
 
 ## Expectations for contributors
 
@@ -42,7 +44,6 @@ Exact tooling will be recorded when chosen.
 
 - Prefer synthetic or anonymized documents.
 - Never commit real customer PII or production documents.
-- Document fixture conventions under `docs/testing/` as they emerge.
 
 ## Related documents
 

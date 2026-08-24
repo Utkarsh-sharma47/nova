@@ -8,6 +8,14 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 2 technology architecture and domain contracts:
+  - ADRs 0002–0010 (backend, database, API, LLM port, document processing, observability, deployment, frontend)
+  - System/AI/layering architecture; error, confidence/evidence, lifecycle/idempotency models
+  - Database domain model, relationships, indexing, audit model
+  - API surface specs; Extractor/Validator/Router agent specifications
+  - Pydantic contracts in `src/nova/contracts/` with schema tests
+  - Docker/Compose skeleton; Python CI (Ruff, MyPy, pytest)
+  - Phase 2 architecture audit
 - Phase 1 engineering foundation:
   - Requirements inventory with stable `REQ-*` IDs (assignment vs engineering)
   - Acceptance criteria, traceability, and scope boundaries

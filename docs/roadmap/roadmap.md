@@ -1,59 +1,38 @@
 # Roadmap
 
-## Phase 1 — Engineering foundation (current)
+## Phase 1 — Engineering foundation
 
-Requirements, product definition, architecture principles, documentation system, git workflow, CI foundation, AI governance, security baseline.
-
-**Exit criteria:** Docs + CI scripts green; no application code required.
+**Status:** Complete.
 
 ## Phase 2 — Stack selection & contracts
 
-- Choose language/runtime, API framework, DB, LLM provider (ADRs)
-- Define typed contracts for extraction, validation, routing
-- Skeleton repo layout without full business logic
-- Enable language-appropriate lint/type CI
+- ADRs 0002–0010
+- Typed contracts (`src/nova/contracts` + agent/API docs)
+- Domain/DB/API/observability/security/deployment architecture
+- Python CI (Ruff, MyPy, contract pytest)
+
+**Status:** Complete pending merge review. Audit: [`../audits/phase-2-architecture-audit.md`](../audits/phase-2-architecture-audit.md).
 
 ## Phase 3 — Ingestion & Extractor Agent
 
-- Document input path
-- Extractor Agent with confidence + evidence
-- Failure isolation, timeouts, retries
-- Observability for extraction runs
+Document input, DocumentProcessor adapters, Extractor with confidence/evidence, observability.
 
 ## Phase 4 — Validation & Router
 
-- Customer rules format + deterministic checks
-- MATCH / MISMATCH / UNCERTAIN
-- Router policies for AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST
-- Golden fixture tests; fail-safe defaults
+Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
 
 ## Phase 5 — Persistence, samples, evaluation harness
 
-- Persist shipment/document/validation/decision
-- Clean + messy samples
-- Eval harness and recorded results
-- Idempotency for re-processing
+SQLAlchemy/Alembic, samples, eval harness, idempotency.
 
 ## Phase 6 — Query & UI
 
-- Query API
-- Grounded NL query layer
-- Minimal B2B operations UI with evidence display
+Query API, grounded NL query, React/TS/Vite UI.
 
 ## Phase 7 — Hardening & Part 1 submission
 
-- Demo runbook
-- Failure-path demonstration
-- Deploy simplicity pass
-- Submission package completeness
+Demo runbook, failure-path demo, deploy, submission package.
 
-## Part 2 — Forward (after Part 1)
+## Part 2 — Forward
 
-- Email / file triggers
-- Multiple attachments per shipment
-- Cross-document validation
-- Draft replies
-- Human approval
-- Outbound sending workflows
-
-Part 2 must reuse Part 1 extension points (`docs/architecture/part2-extension-points.md`).
+Email/file triggers, multi-attachment, cross-doc validation, draft replies, human approval, outbound send.

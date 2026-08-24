@@ -1,14 +1,14 @@
 # High-level architecture overview
 
-Phase 1 status: **conceptual only**. No runtime services are implemented yet.
+Phase 2 status: **stack and contracts frozen**; runtime services not implemented.
 
 ```text
                     ┌─────────────────────────────────────────┐
-                    │           Operations UI (Part 1)         │
+                    │     Operations UI (React/TS/Vite)       │
                     └───────────────────┬─────────────────────┘
                                         │
                     ┌───────────────────▼─────────────────────┐
-                    │         API / Application layer          │
+                    │         API / FastAPI application        │
                     └───────────────────┬─────────────────────┘
                                         │
         ┌───────────────┬───────────────┼───────────────┬──────────────┐
@@ -19,21 +19,8 @@ Phase 1 status: **conceptual only**. No runtime services are implemented yet.
         │               │               │               │              │
         └───────────────┴───────┬───────┴───────────────┘              │
                                 ▼                                      │
-                         Persistence store ◄────────────────────────────┘
-                     (shipment, docs, validations, decisions)
+                      PostgreSQL persistence ◄─────────────────────────┘
+                   (shipment, docs, validations, decisions, audit)
 ```
 
-## Logical components (future)
-
-| Component | Responsibility |
-|-----------|----------------|
-| Ingestion port | Normalize incoming documents into a run |
-| Extractor Agent | Fields + confidence + evidence |
-| Validator | Customer rules → MATCH/MISMATCH/UNCERTAIN |
-| Router Agent | AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST |
-| Persistence | System of record |
-| Query | Retrieval + grounded NL answers |
-| UI | Minimal B2B ops surface |
-| Observability | Logs, traces, cost metrics |
-
-Technology choices (language, framework, DB, LLM provider) will be recorded in ADRs during Phase 2 before coding.
+Stack: [technology-stack.md](./technology-stack.md) · System: [system-architecture.md](./system-architecture.md)

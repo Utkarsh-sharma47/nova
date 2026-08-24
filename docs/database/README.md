@@ -1,25 +1,14 @@
 # Database
 
-Data model and persistence notes for Nova.
+Relational design for Nova. **ORM not implemented in Phase 2.**
 
-## Current status
+| Doc | Purpose |
+|-----|---------|
+| [domain-model.md](./domain-model.md) | Entities |
+| [schema-design.md](./schema-design.md) | Physical schema notes |
+| [relationships.md](./relationships.md) | ER / cardinality |
+| [indexing-strategy.md](./indexing-strategy.md) | Indexes |
+| [audit-model.md](./audit-model.md) | Audit |
+| [database-test-plan.md](./database-test-plan.md) | Later test plan |
 
-No database schema exists in Phase 1.
-
-## Design constraint already in force
-
-Shipment **1→N** documents must be representable for Part 2 readiness (`REQ-DATA-002`, [Part 2 extension points](../architecture/part2-extension-points.md)), even if Part 1 only persists one document per shipment.
-
-## Planned contents
-
-| Document | Status |
-|----------|--------|
-| ERD / entity definitions | Phase 2–5 |
-| Migration notes | Phase 5 |
-| Retention / PII handling notes | Phase 5 (policy started in security baseline) |
-
-## Related
-
-- [Architecture](../architecture/)
-- [Security baseline](../security/baseline.md)
-- Requirements `REQ-DATA-*`
+Engine: PostgreSQL 16 ([ADR-0003](../decisions/0003-database.md)).
