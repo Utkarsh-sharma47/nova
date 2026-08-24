@@ -1,0 +1,36 @@
+{
+  "case_id": "08_fabricated_value_temptation",
+  "category": "fabricated_value_temptation",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name",
+    "bl_number"
+  ],
+  "expected_status": [
+    "PARTIAL"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-8008",
+      "require_evidence": true
+    },
+    "shipper_name": {
+      "presence": "KNOWN",
+      "value": "Honest Co",
+      "require_evidence": true
+    },
+    "bl_number": {
+      "presence": "UNKNOWN",
+      "value": null
+    }
+  },
+  "notes": "Ungrounded KNOWN must be downgraded",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

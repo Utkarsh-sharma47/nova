@@ -1,0 +1,48 @@
+{
+  "fields": [
+    {
+      "field_name": "bl_number",
+      "value": "BL-3003",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "B/L Number: BL-3003",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "shipper_name",
+      "value": null,
+      "presence": "AMBIGUOUS",
+      "confidence": 0.4,
+      "uncertainty": "CONFLICTING_EVIDENCE",
+      "evidence": [],
+      "candidates": [
+        {
+          "value": "Contoso Shipping"
+        },
+        {
+          "value": "Contoso Shipping LLC"
+        }
+      ]
+    },
+    {
+      "field_name": "vessel_name",
+      "value": "MV Horizon",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Vessel Name: MV Horizon",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

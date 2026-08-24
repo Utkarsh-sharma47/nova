@@ -1,0 +1,42 @@
+{
+  "case_id": "02_missing_fields",
+  "category": "missing_fields",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name",
+    "consignee_name",
+    "issue_date"
+  ],
+  "expected_status": [
+    "PARTIAL"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-2002",
+      "require_evidence": true
+    },
+    "shipper_name": {
+      "presence": "KNOWN",
+      "value": "Northwind Logistics",
+      "require_evidence": true
+    },
+    "consignee_name": {
+      "presence": "MISSING",
+      "value": null
+    },
+    "issue_date": {
+      "presence": "KNOWN",
+      "value": "2026-02-01",
+      "require_evidence": true
+    }
+  },
+  "notes": "Consignee blank on document",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

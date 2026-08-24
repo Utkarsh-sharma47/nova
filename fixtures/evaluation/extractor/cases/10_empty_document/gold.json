@@ -1,0 +1,29 @@
+{
+  "case_id": "10_empty_document",
+  "category": "empty_document",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name"
+  ],
+  "expected_status": [
+    "FAILED"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "UNKNOWN",
+      "value": null
+    },
+    "shipper_name": {
+      "presence": "UNKNOWN",
+      "value": null
+    }
+  },
+  "notes": "No extractable text",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

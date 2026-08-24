@@ -1,0 +1,20 @@
+{
+  "case_id": "05_malformed_documents",
+  "category": "malformed_documents",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name"
+  ],
+  "expected_status": [
+    "FAILED"
+  ],
+  "fields": {},
+  "notes": "Malformed LLM JSON exhausted retries",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

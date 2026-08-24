@@ -8,10 +8,10 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 |--------|--------------|----------|--------------------|------|----------|
 | REQ-PROD-001–004 | `docs/product/*`, principles, system-architecture | — | 1 (docs) / 3–6 (runtime) | Doc review | Product + architecture docs |
 | REQ-EXT-001 | Ingestion port, API ingest | `POST /v1/documents`, ExtractionRequest | 3 | Integration + failure | `docs/api/contracts.md`, samples |
-| REQ-EXT-002 | Extractor agent | ExtractionResult / ExtractedField | 3 | Unit + golden | `docs/agents/extractor.md`, `src/nova/contracts/extraction.py` |
-| REQ-EXT-003 | Confidence model | `confidence` on ExtractedField | 3 | Unit + eval | contracts + eval metrics |
-| REQ-EXT-004 | Evidence model | `Evidence[]` | 3 | Unit + review UX | contracts + UI checklist (Ph6) |
-| REQ-EXT-005 | Evaluation datasets | — | 5 | Eval harness | `docs/evaluation/datasets.md`, fixtures |
+| REQ-EXT-002 | Extractor agent | ExtractionResult / ExtractedField | 4 | Unit + golden/eval | `docs/agents/extractor.md`, `src/nova/extraction/`, `tests/evaluation/` |
+| REQ-EXT-003 | Confidence model | `confidence` on ExtractedField | 4 | Unit + eval | contracts + `docs/evaluation/extractor-evaluation.md` |
+| REQ-EXT-004 | Evidence model | `Evidence[]` | 4 | Unit + eval | contracts + extractor parser grounding |
+| REQ-EXT-005 | Evaluation datasets | extractor-regression-v1 | 4 | Eval harness | `fixtures/evaluation/extractor/`, `scripts/run_extractor_eval.py` |
 | REQ-EXT-006 | Failure isolation | StageError / ErrorResponse | 3–4 | Failure tests | `docs/testing/failure-testing.md` |
 | REQ-VAL-001 | Validator + CustomerRule | ValidationRequest/Result | 4 | Unit + fixtures | `docs/agents/validator.md`, DB rules |
 | REQ-VAL-002–004 | Validation outcomes | MATCH/MISMATCH/UNCERTAIN | 4 | Golden | contracts + golden cases |
@@ -70,3 +70,16 @@ All 68 inventory requirements retain a design/contract/test pointer above. Runti
 Not claimed in Phase 3: REQ-EXT-002–005 and REQ-AI-001–006 runtime agent
 behavior. Frozen Phase 2 contracts remain available, but no Extractor,
 Validator, Router, or LLM implementation exists.
+
+## Phase 4 Extractor evaluation evidence
+
+| Requirement | Implementation | Test | Reproducible evidence |
+|-------------|----------------|------|-----------------------|
+| REQ-EXT-002 | `nova.extraction.ExtractorService` + `LLMPort`/`MockLLM` | `tests/evaluation/`, unit paths as added on extractor branch | Synthetic fixtures → typed `ExtractionResult` |
+| REQ-EXT-003–004 | Per-field confidence + grounded evidence | Eval metrics + parser anti-fabrication | Gold require_evidence cases; fabrication_rate measured |
+| REQ-EXT-005 | `fixtures/evaluation/extractor/` revision `extractor-regression-v1` | `python scripts/run_extractor_eval.py` | 12 category golden cases; report lists failures |
+| REQ-AI-004 | Presence invariants + ungrounded KNOWN downgrade | Fabrication temptation case | No silent invented `KNOWN` values |
+| REQ-AI-006 | `prompt_id`/`prompt_version` on results | Eval report metadata | `extractor.part1` / `extractor.v1` recorded |
+| REQ-TEST-001 | Deterministic eval suite in pytest | `pytest -q tests/evaluation/` | MockLLM; no API key |
+
+Real-provider accuracy is **not** claimed.

@@ -29,3 +29,14 @@ Specs: [`docs/agents/`](../agents/). Trust model: [ADR-0010](../decisions/0010-a
 | All blocking MATCH + confidence policy satisfied | `AUTO_APPROVE` |
 
 Confidence bands: [confidence-and-evidence.md](./confidence-and-evidence.md).
+
+## Extractor evaluation
+
+Implemented deterministic harness (MockLLM + synthetic gold):
+
+- Docs: [`docs/evaluation/extractor-evaluation.md`](../evaluation/extractor-evaluation.md)
+- Fixtures: `fixtures/evaluation/extractor/` (`extractor-regression-v1`)
+- Code: `src/nova/extraction/`, `src/nova/evaluation/extractor/`, `src/nova/llm/`
+- Dogfood: `python scripts/run-extractor-eval.py` / `python scripts/dogfood-extractor.py`
+
+Evaluation metrics are distinct from production confidence. No real-provider performance is claimed until measured.

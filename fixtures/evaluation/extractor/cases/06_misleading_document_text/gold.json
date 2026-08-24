@@ -1,0 +1,37 @@
+{
+  "case_id": "06_misleading_document_text",
+  "category": "misleading_document_text",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name",
+    "consignee_name"
+  ],
+  "expected_status": [
+    "SUCCEEDED"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-6006",
+      "require_evidence": true
+    },
+    "shipper_name": {
+      "presence": "KNOWN",
+      "value": "Real Shipper Inc",
+      "require_evidence": true
+    },
+    "consignee_name": {
+      "presence": "KNOWN",
+      "value": "Buyer LLC",
+      "require_evidence": true
+    }
+  },
+  "notes": "",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

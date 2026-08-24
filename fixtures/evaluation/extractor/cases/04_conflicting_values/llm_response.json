@@ -1,0 +1,48 @@
+{
+  "fields": [
+    {
+      "field_name": "invoice_number",
+      "value": "INV-4004",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Invoice Number: INV-4004",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "port_of_loading",
+      "value": null,
+      "presence": "AMBIGUOUS",
+      "confidence": 0.4,
+      "uncertainty": "CONFLICTING_EVIDENCE",
+      "evidence": [],
+      "candidates": [
+        {
+          "value": "Singapore"
+        },
+        {
+          "value": "Jakarta"
+        }
+      ]
+    },
+    {
+      "field_name": "port_of_discharge",
+      "value": "Rotterdam",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Port of Discharge: Rotterdam",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

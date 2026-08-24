@@ -35,6 +35,16 @@ Normalization rules for field comparison (case folding, whitespace, numeric tole
 
 **Calibration targets (to establish later):** minimum field accuracy on clean slice; maximum hallucinated-field rate; maximum ECE / over-confidence on messy slice — values TBD from dataset.
 
+### Evaluation vs production confidence
+
+| | Evaluation metrics | Production confidence |
+|--|--------------------|------------------------|
+| Source | Gold labels vs predictions in harness | Model/heuristic score on `ExtractedField` |
+| Used for | Regression visibility, release claims | Downstream routing policy inputs |
+| Thresholds | Not invented without baseline measurement | Policy-specific; not interchangeable with eval rates |
+
+Implemented Extractor suite: [extractor-evaluation.md](./extractor-evaluation.md).
+
 ---
 
 ## Validator metrics

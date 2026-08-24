@@ -1,0 +1,88 @@
+{
+  "fields": [
+    {
+      "field_name": "invoice_number",
+      "value": "INV-1001",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Invoice Number: INV-1001",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "shipper_name",
+      "value": "Acme Exports Pte Ltd",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Shipper Name: Acme Exports Pte Ltd",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "consignee_name",
+      "value": "Globex Trading Co",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Consignee Name: Globex Trading Co",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "issue_date",
+      "value": "2026-01-15",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Issue Date: 2026-01-15",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "cargo_description",
+      "value": "Industrial fasteners",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Cargo Description: Industrial fasteners",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "gross_weight",
+      "value": "1200 KG",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Gross Weight: 1200 KG",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

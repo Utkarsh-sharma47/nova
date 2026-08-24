@@ -1,0 +1,62 @@
+{
+  "fields": [
+    {
+      "field_name": "bl_number",
+      "value": "BL-11011",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "B/L Number: BL-11011",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "vessel_name",
+      "value": "MV Partial",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Vessel Name: MV Partial",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "port_of_loading",
+      "value": "Hamburg",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Port of Loading: Hamburg",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "port_of_discharge",
+      "value": null,
+      "presence": "MISSING",
+      "confidence": null,
+      "uncertainty": "NONE",
+      "evidence": []
+    },
+    {
+      "field_name": "consignee_name",
+      "value": null,
+      "presence": "UNKNOWN",
+      "confidence": null,
+      "uncertainty": "OTHER",
+      "evidence": []
+    }
+  ]
+}

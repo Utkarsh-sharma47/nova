@@ -1,0 +1,5 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-2002
+Shipper Name: Northwind Logistics
+Consignee Name:
+Issue Date: 2026-02-01

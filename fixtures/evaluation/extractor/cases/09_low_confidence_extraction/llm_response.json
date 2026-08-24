@@ -1,0 +1,32 @@
+{
+  "fields": [
+    {
+      "field_name": "invoice_number",
+      "value": "INV-9??9",
+      "presence": "KNOWN",
+      "confidence": 0.45,
+      "uncertainty": "LOW_CONFIDENCE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Invoice Number: INV-9??9",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "shipper_name",
+      "value": "Smudged Shipper",
+      "presence": "KNOWN",
+      "confidence": 0.55,
+      "uncertainty": "LOW_CONFIDENCE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Shipper Name: Smudged Shipper",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

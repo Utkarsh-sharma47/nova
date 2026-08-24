@@ -2,7 +2,7 @@
 
 **Mandatory rule:** every future prompt, model, decoding, rule-pack, or router-policy change that can alter Extractor, Validator, or Router behavior must be evaluated against a **fixed regression dataset** before release notes, demo claims, or “quality improved” statements.
 
-This policy is documentation-only until the harness exists; the rule still binds contributors and AI coding agents.
+**Extractor (implemented):** fixed revision `extractor-regression-v1` under `fixtures/evaluation/extractor/`. Run `python scripts/run-extractor-eval.py` (or `pytest tests/evaluation/`). A regression must appear as failed cases in the report — never delete or weaken gold to obtain green.
 
 ---
 

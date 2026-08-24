@@ -1,0 +1,5 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-4004
+Port of Loading: Singapore
+Port of Loading: Jakarta
+Port of Discharge: Rotterdam

@@ -2,11 +2,26 @@
 
 Extends [philosophy.md](./philosophy.md). See also [evaluation-framework.md](./evaluation-framework.md), [metrics.md](./metrics.md), [agent-evaluation.md](./agent-evaluation.md).
 
-## Harness (Phase 5+)
+## Harness
 
 ```text
 fixtures/ → runner → agents (real or recorded) → metrics report → artifacts/
 ```
+
+### Extractor (implemented)
+
+Deterministic MockLLM harness:
+
+```text
+fixtures/evaluation/extractor/
+  → nova.evaluation.extractor.runner
+  → ExtractorService + MockLLM
+  → metrics + failed-case report
+```
+
+Dogfood: `python scripts/run-extractor-eval.py` / `python scripts/dogfood-extractor.py`. Details: [extractor-evaluation.md](./extractor-evaluation.md).
+
+Validator/Router harnesses remain Phase 5+ unless separately delivered.
 
 ## Mandatory metrics
 

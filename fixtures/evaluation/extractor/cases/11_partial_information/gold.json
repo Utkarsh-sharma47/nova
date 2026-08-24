@@ -1,0 +1,47 @@
+{
+  "case_id": "11_partial_information",
+  "category": "partial_information",
+  "document_type": "BILL_OF_LADING",
+  "required_fields": [
+    "bl_number",
+    "vessel_name",
+    "port_of_loading",
+    "port_of_discharge",
+    "consignee_name"
+  ],
+  "expected_status": [
+    "PARTIAL"
+  ],
+  "fields": {
+    "bl_number": {
+      "presence": "KNOWN",
+      "value": "BL-11011",
+      "require_evidence": true
+    },
+    "vessel_name": {
+      "presence": "KNOWN",
+      "value": "MV Partial",
+      "require_evidence": true
+    },
+    "port_of_loading": {
+      "presence": "KNOWN",
+      "value": "Hamburg",
+      "require_evidence": true
+    },
+    "port_of_discharge": {
+      "presence": "MISSING",
+      "value": null
+    },
+    "consignee_name": {
+      "presence": "UNKNOWN",
+      "value": null
+    }
+  },
+  "notes": "",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

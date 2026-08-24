@@ -8,6 +8,13 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Extractor evaluation suite (`extractor-golden` @ `extractor-regression-v1`):
+  - 12 synthetic golden categories (normal → multiple occurrences)
+  - Deterministic MockLLM harness (`src/nova/evaluation/extractor/`)
+  - Dogfood CLI (`scripts/dogfood-extractor.py`) and regression runner (`scripts/run-extractor-eval.py`)
+  - Explicit separation of evaluation metrics vs production confidence
+  - Visible regression gate (no invented statistical thresholds)
+- Extractor Agent runtime behind `LLMPort` + `MockLLM` (`src/nova/extraction/`, `src/nova/llm/`) for evaluation and unit tests
 - Phase 3 application foundation (`0.3.0`):
   - FastAPI health/readiness, authenticated ingestion, and document/shipment retrieval
   - Required HTTP idempotency with replay and mismatch conflict behavior

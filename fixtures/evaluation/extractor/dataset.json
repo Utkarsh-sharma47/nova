@@ -1,0 +1,93 @@
+{
+  "dataset_id": "extractor-golden",
+  "revision": "extractor-regression-v1",
+  "description": "Fixed synthetic Extractor golden/regression suite. No real documents.",
+  "synthetic": true,
+  "pii": false,
+  "cases": [
+    {
+      "case_id": "01_normal_document",
+      "category": "normal_document",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "02_missing_fields",
+      "category": "missing_fields",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "03_ambiguous_values",
+      "category": "ambiguous_values",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "04_conflicting_values",
+      "category": "conflicting_values",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "05_malformed_documents",
+      "category": "malformed_documents",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "06_misleading_document_text",
+      "category": "misleading_document_text",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "07_prompt_injection_attempt",
+      "category": "prompt_injection_attempt",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "08_fabricated_value_temptation",
+      "category": "fabricated_value_temptation",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "09_low_confidence_extraction",
+      "category": "low_confidence_extraction",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "10_empty_document",
+      "category": "empty_document",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "11_partial_information",
+      "category": "partial_information",
+      "tags": [
+        "regression"
+      ]
+    },
+    {
+      "case_id": "12_multiple_occurrences",
+      "category": "multiple_occurrences",
+      "tags": [
+        "regression"
+      ]
+    }
+  ]
+}

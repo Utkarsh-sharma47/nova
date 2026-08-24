@@ -1,0 +1,40 @@
+{
+  "case_id": "09_low_confidence_extraction",
+  "category": "low_confidence_extraction",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name"
+  ],
+  "expected_status": [
+    "SUCCEEDED",
+    "PARTIAL"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-9??9",
+      "require_evidence": true,
+      "max_confidence": 0.6,
+      "uncertainty_in": [
+        "LOW_CONFIDENCE"
+      ]
+    },
+    "shipper_name": {
+      "presence": "KNOWN",
+      "value": "Smudged Shipper",
+      "require_evidence": true,
+      "max_confidence": 0.7,
+      "uncertainty_in": [
+        "LOW_CONFIDENCE"
+      ]
+    }
+  },
+  "notes": "",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

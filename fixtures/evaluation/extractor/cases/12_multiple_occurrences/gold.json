@@ -1,0 +1,37 @@
+{
+  "case_id": "12_multiple_occurrences",
+  "category": "multiple_occurrences",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "shipper_name",
+    "consignee_name"
+  ],
+  "expected_status": [
+    "SUCCEEDED"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-12012",
+      "require_evidence": true
+    },
+    "shipper_name": {
+      "presence": "KNOWN",
+      "value": "Multi Occurs GmbH",
+      "require_evidence": true
+    },
+    "consignee_name": {
+      "presence": "KNOWN",
+      "value": "Repeat Buyer SA",
+      "require_evidence": true
+    }
+  },
+  "notes": "Repeated identical values remain KNOWN",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

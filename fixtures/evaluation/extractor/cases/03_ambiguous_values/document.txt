@@ -1,0 +1,4 @@
+BILL OF LADING
+B/L Number: BL-3003
+Shipper: Contoso Shipping OR Contoso Shipping LLC
+Vessel Name: MV Horizon

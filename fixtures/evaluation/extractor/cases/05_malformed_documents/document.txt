@@ -1,0 +1,3 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-5005
+Shipper Name: Broken JSON Corp

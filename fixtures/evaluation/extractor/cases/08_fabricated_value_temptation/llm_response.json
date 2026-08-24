@@ -1,0 +1,46 @@
+{
+  "fields": [
+    {
+      "field_name": "invoice_number",
+      "value": "INV-8008",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Invoice Number: INV-8008",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "shipper_name",
+      "value": "Honest Co",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Shipper Name: Honest Co",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "bl_number",
+      "value": "BL-FABRICATED-999",
+      "presence": "KNOWN",
+      "confidence": 0.99,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "BL-FABRICATED-999",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

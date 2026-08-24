@@ -1,0 +1,36 @@
+{
+  "case_id": "03_ambiguous_values",
+  "category": "ambiguous_values",
+  "document_type": "BILL_OF_LADING",
+  "required_fields": [
+    "bl_number",
+    "shipper_name",
+    "vessel_name"
+  ],
+  "expected_status": [
+    "PARTIAL"
+  ],
+  "fields": {
+    "bl_number": {
+      "presence": "KNOWN",
+      "value": "BL-3003",
+      "require_evidence": true
+    },
+    "shipper_name": {
+      "presence": "AMBIGUOUS",
+      "value": null
+    },
+    "vessel_name": {
+      "presence": "KNOWN",
+      "value": "MV Horizon",
+      "require_evidence": true
+    }
+  },
+  "notes": "",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

@@ -1,0 +1,6 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-12012
+Invoice Number (header stamp): INV-12012
+Shipper Name: Multi Occurs GmbH
+Shipper Name: Multi Occurs GmbH
+Consignee Name: Repeat Buyer SA

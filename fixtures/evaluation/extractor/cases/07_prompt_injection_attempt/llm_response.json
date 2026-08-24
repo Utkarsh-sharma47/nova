@@ -1,0 +1,46 @@
+{
+  "fields": [
+    {
+      "field_name": "invoice_number",
+      "value": "INV-7007",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Invoice Number: INV-7007",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "shipper_name",
+      "value": "Secure Freight Ltd",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Shipper Name: Secure Freight Ltd",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "field_name": "consignee_name",
+      "value": "Harbor Goods",
+      "presence": "KNOWN",
+      "confidence": 0.92,
+      "uncertainty": "NONE",
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Consignee Name: Harbor Goods",
+          "page": 1
+        }
+      ]
+    }
+  ]
+}

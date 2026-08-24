@@ -1,0 +1,7 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-1001
+Shipper Name: Acme Exports Pte Ltd
+Consignee Name: Globex Trading Co
+Issue Date: 2026-01-15
+Cargo Description: Industrial fasteners
+Gross Weight: 1200 KG

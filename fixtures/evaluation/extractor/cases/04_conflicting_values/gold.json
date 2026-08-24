@@ -1,0 +1,36 @@
+{
+  "case_id": "04_conflicting_values",
+  "category": "conflicting_values",
+  "document_type": "COMMERCIAL_INVOICE",
+  "required_fields": [
+    "invoice_number",
+    "port_of_loading",
+    "port_of_discharge"
+  ],
+  "expected_status": [
+    "PARTIAL"
+  ],
+  "fields": {
+    "invoice_number": {
+      "presence": "KNOWN",
+      "value": "INV-4004",
+      "require_evidence": true
+    },
+    "port_of_loading": {
+      "presence": "AMBIGUOUS",
+      "value": null
+    },
+    "port_of_discharge": {
+      "presence": "KNOWN",
+      "value": "Rotterdam",
+      "require_evidence": true
+    }
+  },
+  "notes": "",
+  "tags": [
+    "regression"
+  ],
+  "expect_schema_valid": true,
+  "expect_fabrication": false,
+  "unsupported_fields_allowed": false
+}

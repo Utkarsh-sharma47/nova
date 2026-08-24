@@ -1,6 +1,8 @@
 # Evaluation datasets
 
-Categories and governance for Nova labeled evaluation data. No gold files are committed in this change.
+Categories and governance for Nova labeled evaluation data.
+
+**Extractor gold:** committed under `fixtures/evaluation/extractor/` (synthetic only).
 
 **Hygiene:** synthetic or anonymized documents only. Never commit real customer PII or production shipping documents.
 
@@ -99,9 +101,14 @@ Never silently move failing exploratory cases out of regression to “make green
 
 ---
 
-## Storage (planned)
+## Storage
 
-Fixtures and labels will live in a future controlled path (e.g. `fixtures/evaluation/` or equivalent) with README provenance. Paths are not fixed until implementation ADR.
+| Path | Status |
+|------|--------|
+| `fixtures/evaluation/extractor/` | **Implemented** — synthetic golden/regression (`extractor-regression-v1`) |
+| Validator / Router fixtures | Planned |
+
+See [extractor-evaluation.md](./extractor-evaluation.md) and `fixtures/evaluation/extractor/README.md`.
 
 ---
 

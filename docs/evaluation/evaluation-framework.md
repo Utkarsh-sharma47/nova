@@ -129,7 +129,8 @@ Never fabricate scores. If a run failed, say so.
 | Metrics definitions | [metrics.md](./metrics.md) |
 | Dataset categories | [datasets.md](./datasets.md) |
 | Regression policy | [regression-policy.md](./regression-policy.md) |
-| Harness code / gold files | Not implemented |
+| Extractor harness + synthetic gold | **Implemented** — [extractor-evaluation.md](./extractor-evaluation.md) |
+| Validator / Router harness / gold | Not implemented |
 
 ---
 

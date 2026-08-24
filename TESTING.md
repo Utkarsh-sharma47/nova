@@ -11,8 +11,18 @@ Testing strategy for Nova.
 ## Current status
 
 Phase 3 includes contract, lifecycle, processor/storage, API, security/failure,
-and PostgreSQL migration tests. No LLM or agent behavior is tested because those
-agents are outside this phase.
+and PostgreSQL migration tests.
+
+Phase 4 Extractor evaluation adds a deterministic MockLLM suite:
+
+```bash
+python scripts/run-extractor-eval.py
+pytest -q tests/evaluation/
+```
+
+Fixtures are synthetic only (`fixtures/evaluation/extractor/`). Evaluation metrics
+are not production confidence scores. No real-provider performance is claimed
+unless measured and recorded.
 
 ```bash
 pip install -e ".[dev]"
@@ -56,7 +66,7 @@ Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/cont
 | Integration | HTTP ingestion and PostgreSQL migrations | **Phase 3** |
 | Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
 | End-to-end | Document in → decision out | Phase 6–7 |
-| Evaluation | Accuracy on curated sets | Phase 5+ |
+| Evaluation | Accuracy on curated sets | **Extractor suite** (MockLLM); Validator/Router later |
 | Failure | DB-down readiness, corrupt and unsupported input | **Phase 3** |
 
 ## Expectations for contributors
