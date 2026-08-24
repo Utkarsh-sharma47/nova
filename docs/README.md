@@ -23,6 +23,7 @@ Authoritative detailed documentation for Nova. Root-level markdown files are ove
 | [features/](features/) | Feature docs (see template) |
 | [api/](api/) | HTTP surface (design) |
 | [database/](database/) | Domain model, ER, indexes, audit |
+| [documents/](documents/) | Document processing (Phase 3) |
 | [testing/](testing/) | Test strategy |
 | [evaluation/](evaluation/) | Quality evaluation |
 | [observability/](observability/) | Logs, metrics, traces |

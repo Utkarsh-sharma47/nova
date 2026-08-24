@@ -16,3 +16,5 @@
 | [engineering-standards.md](./engineering-standards.md) | Phase 1 |
 
 Related: [ARCHITECTURE.md](../../ARCHITECTURE.md), [ADRs](../decisions/), [Agents](../agents/), [API](../api/), [Database](../database/).
+| [document-processing.md](./document-processing.md) | Phase 3 |
+

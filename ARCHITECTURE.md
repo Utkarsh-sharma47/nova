@@ -8,7 +8,7 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 2 complete (design freeze):** technology stack and domain contracts are accepted via ADRs. Application business logic, agents, ORM, and UI are **not** implemented yet.
+**Phase 3 (in progress):** document processing infrastructure (`nova.documents`) implements ADR-0006. Extractor/Validator/Router agents and UI remain unimplemented.
 
 ## Conceptual pipeline
 

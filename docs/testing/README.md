@@ -6,3 +6,5 @@
 | [contract-requirements.md](./contract-requirements.md) | Required suites |
 
 Root: [TESTING.md](../../TESTING.md).
+| [document-processing.md](./document-processing.md) | Document processor suites |
+
