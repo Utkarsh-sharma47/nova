@@ -8,18 +8,22 @@ Quality and accuracy evaluation for Nova’s extraction, validation, and decisio
 |----------|--------|
 | [philosophy.md](./philosophy.md) | Done (Phase 1) |
 | [agent-evaluation.md](./agent-evaluation.md) | Done (spec only — no harness) |
+| [evaluation-framework.md](./evaluation-framework.md) | Done — process and agent dimensions |
+| [datasets.md](./datasets.md) | Done — Part 1 categories + Part 2 future |
+| [metrics.md](./metrics.md) | Done — definitions; thresholds as calibration targets |
+| [regression-policy.md](./regression-policy.md) | Done — mandatory fixed-dataset eval on prompt/model changes |
 
 ## Current status
 
 No evaluation harness or gold dataset exists yet. Do not invent scores or claim unmeasured quality.
 
-[agent-evaluation.md](./agent-evaluation.md) defines required test classes (contract, schema, golden, datasets, adversarial, failure, regression) and the false `AUTO_APPROVE` safety bar for Extractor / Validator / Router.
+[agent-evaluation.md](./agent-evaluation.md) defines required test classes (contract, schema, golden, datasets, adversarial, failure, regression) and the false `AUTO_APPROVE` safety bar for Extractor / Validator / Router. The framework/metrics/datasets docs define how evaluation will be run once fixtures exist.
 
 ## Planned contents
 
 | Topic | Status |
 |-------|--------|
-| Metrics (field-level, document-level, decision agreement) | Spec’d in agent-evaluation; harness later |
+| Metrics (field-level, document-level, decision agreement) | Spec’d; harness later |
 | Gold / labeled datasets (clean + messy samples) | Phase 5 |
 | Regression evaluation process | Spec’d; automation Phase 5–7 |
 | False AUTO_APPROVE safety bar | Spec’d as primary gate |
@@ -30,7 +34,7 @@ No evaluation harness or gold dataset exists yet. Do not invent scores or claim 
 - Use anonymized or synthetic documents only.
 - Report methodology and limitations with every result.
 - Never fabricate evaluation outcomes.
-- Prompt/model changes are behavioral changes — see [trust-model](../agents/trust-model.md).
+- Prompt/model changes are behavioral changes — see [trust-model](../agents/trust-model.md) and [regression-policy](./regression-policy.md).
 
 ## Related
 

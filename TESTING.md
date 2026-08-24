@@ -19,17 +19,22 @@ Phase 1 automated checks:
 
 Testing philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
+Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing/test-strategy.md).
+
 ## Test layers (planned)
 
 | Layer | Intent |
 |-------|--------|
 | Unit | Pure functions, parsers, rule helpers, transformers |
-| Integration | Agent boundaries, storage, API handlers |
 | Contract | Stable schemas for agent I/O and external APIs |
+| Integration | Agent boundaries, storage, API handlers |
+| Failure | Timeouts, provider/DB/file faults, retry exhaustion (fail closed) |
 | End-to-end | Document in → decision out for representative flows |
 | Evaluation | Accuracy / quality on curated document sets (not a substitute for unit tests) |
+| Regression (AI) | Fixed labeled set re-scored after prompt/model/policy changes |
+| Performance | Latency, throughput, cost per document (benchmark jobs; calibrate targets later) |
 
-Exact tooling will be recorded when chosen.
+Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/contract-testing.md), [failure](docs/testing/failure-testing.md), [performance](docs/testing/performance-testing.md), [evaluation](docs/evaluation/evaluation-framework.md).
 
 ## Expectations for contributors
 

@@ -2,11 +2,15 @@
 
 Detailed testing documentation for Nova. Overview: [TESTING.md](../../TESTING.md).
 
-## Documents (Phase 1)
+## Documents
 
 | Document | Status |
 |----------|--------|
 | [philosophy.md](./philosophy.md) | Done |
+| [test-strategy.md](./test-strategy.md) | Done — pyramid and layer ownership |
+| [contract-testing.md](./contract-testing.md) | Done — agent/API contract surfaces |
+| [failure-testing.md](./failure-testing.md) | Done — fail-safe catalog |
+| [performance-testing.md](./performance-testing.md) | Done — latency/throughput/cost (no tooling yet) |
 
 ## Current automated checks
 
@@ -15,7 +19,7 @@ Detailed testing documentation for Nova. Overview: [TESTING.md](../../TESTING.md
 
 No application test suite yet — do not invent fake app tests.
 
-## Planned contents
+## Planned / specified
 
 | Topic | Status |
 |-------|--------|
@@ -38,3 +42,4 @@ No application test suite yet — do not invent fake app tests.
 - [CI/CD](../deployment/ci-cd.md)
 - [AGENTS.md](../../AGENTS.md)
 - [Database test plan](../database/database-test-plan.md)
+- [testing rules](../ai-development/testing-rules.md)
