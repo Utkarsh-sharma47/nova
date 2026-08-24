@@ -1,3 +1,3 @@
-"""Nova package — Phase 2 delivers contracts only."""
+"""Nova package — Phase 3 operational foundation (API shell, observability, deploy)."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

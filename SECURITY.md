@@ -8,7 +8,7 @@ Nova processes trade shipping documents that may contain commercially sensitive 
 
 ## Current status
 
-Phase 2 security architecture is documented: [`docs/security/architecture.md`](docs/security/architecture.md). Runtime enforcement lands with implementation phases.
+Phase 3 operational foundation adds container hygiene checks (`scripts/check-dockerfile.sh`), dependency auditing (`pip-audit` in CI), and continues secret-pattern scanning. Runtime auth and document controls land with later product phases.
 
 ## Principles
 

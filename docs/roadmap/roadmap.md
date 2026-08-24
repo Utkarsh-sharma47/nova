@@ -11,9 +11,15 @@
 - Domain/DB/API/observability/security/deployment architecture
 - Python CI (Ruff, MyPy, contract pytest)
 
-**Status:** Complete pending merge review. Audit: [`../audits/phase-2-architecture-audit.md`](../audits/phase-2-architecture-audit.md).
+**Status:** Complete. Audit: [`../audits/phase-2-architecture-audit.md`](../audits/phase-2-architecture-audit.md).
 
-## Phase 3 — Ingestion & Extractor Agent
+## Phase 3 — Operational foundation
+
+Compose deploy, Dockerfile, Alembic bootstrap, structured logs/metrics, health/ready, CI security & docker/migration checks.
+
+**Status:** Delivered (`feature/phase-3-ops-quality`).
+
+## Phase 3 (product) — Ingestion & Extractor Agent
 
 Document input, DocumentProcessor adapters, Extractor with confidence/evidence, observability.
 
@@ -23,7 +29,7 @@ Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, 
 
 ## Phase 5 — Persistence, samples, evaluation harness
 
-SQLAlchemy/Alembic, samples, eval harness, idempotency.
+Full domain SQLAlchemy/Alembic, samples, eval harness, idempotency.
 
 ## Phase 6 — Query & UI
 

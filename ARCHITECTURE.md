@@ -8,7 +8,7 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 3 (in progress):** document processing infrastructure (`nova.documents`) implements ADR-0006. Extractor/Validator/Router agents and UI remain unimplemented.
+**Phase 3 operational foundation:** Compose deploy (API + Postgres), Alembic bootstrap, structured logging, Prometheus metrics, `/health` `/ready` `/metrics`. Product Phase 3 (ingestion/Extractor agents) is not implemented on this branch.
 
 ## Conceptual pipeline
 
@@ -52,6 +52,8 @@ Docs: [`docs/architecture/contracts.md`](docs/architecture/contracts.md).
 ## Related documents
 
 - [docs/architecture/](docs/architecture/)
+- [docs/deployment/](docs/deployment/)
+- [docs/observability/](docs/observability/)
 - [docs/agents/](docs/agents/)
 - [docs/database/](docs/database/)
 - [docs/api/](docs/api/)

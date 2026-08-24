@@ -1,6 +1,6 @@
 # Deployment architecture
 
-ADR: [0008](../decisions/0008-deployment.md). Philosophy: [philosophy.md](./philosophy.md).
+ADR: [0008](../decisions/0008-deployment.md). Philosophy: [philosophy.md](./philosophy.md). Local commands: [local.md](./local.md).
 
 ## Part 1 topology
 
@@ -11,41 +11,48 @@ ADR: [0008](../decisions/0008-deployment.md). Philosophy: [philosophy.md](./phil
 └────────────┘     └─────┬──────┘     └────────────┘
                          │
                    object storage / volume
-                   (document bytes)
+                   (document bytes — later)
 ```
 
-Compose services: `api`, `db`, optional `web`.
+Compose services for Part 1 now: **`api` + `db`**. No Kubernetes. No microservices split.
 
 ## Priorities
 
 | Priority | How addressed |
 |----------|---------------|
-| Easy deployment | `docker compose up` |
-| Low ops complexity | No K8s, no required queue |
-| Reproducibility | Tagged images + lockfiles + model/prompt versions in data |
-| Environment config | `.env` / host env |
-| Health checks | `/health`, `/ready` |
+| Easy deployment | `docker compose up --build` |
+| Low ops complexity | Two containers; entrypoint migrations |
+| Reproducibility | Image build from `Dockerfile` + pinned dependency ranges |
+| Environment config | `.env` / Compose `environment` |
+| Health checks | Compose + image `HEALTHCHECK`; `/health`, `/ready` |
 | Logs | JSON stdout |
+| Persistent DB | named volume `nova_pg` |
+| Startup ordering | `depends_on: db: condition: service_healthy` |
+| Clean shutdown | `stop_grace_period: 30s`; `exec uvicorn` for SIGTERM |
+| Restart | `restart: unless-stopped` |
 | Rollback | Prior image tag; forward-compatible migrations |
 
-## Configuration (illustrative)
+## Configuration
+
+See `.env.example`. Important variables:
 
 ```bash
-DATABASE_URL=postgresql+psycopg://nova:***@db:5432/nova
-LLM_PROVIDER=mock|openai|anthropic|...
-LLM_API_KEY=
-LLM_MODEL=
+DATABASE_URL=postgresql+psycopg://nova:nova@db:5432/nova
+ENVIRONMENT=local
 LOG_LEVEL=INFO
-API_AUTH_TOKEN=
+LLM_PROVIDER=mock
 ```
+
+Secrets only via env — never baked into the image.
+
+## Container
+
+`Dockerfile`: Python 3.12-slim multi-stage, non-root `nova` (UID 10001), `HEALTHCHECK` on `/health`, entrypoint runs migrations then `exec`s uvicorn.
+
+## Migrations
+
+Alembic (`alembic/`). Bootstrap revision `0001_schema_meta` creates `schema_meta` used by `/ready`. Full domain schema remains Phase 5.
 
 ## Part 2 extension
 
 Add `worker` service consuming ingestion jobs; same image possible with different command. No redesign of api/db contracts.
-
-## Phase 2 artifacts
-
-- `Dockerfile` — Python API image skeleton
-- `docker-compose.yml` — api + db shape
-
-No production business logic in images yet.

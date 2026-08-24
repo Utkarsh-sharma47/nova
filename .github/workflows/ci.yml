@@ -22,8 +22,11 @@ jobs:
       - name: Secret patterns
         run: ./scripts/check-secret-patterns.sh
 
-  python-contracts:
-    name: Python contracts (Ruff, MyPy, pytest)
+      - name: Dockerfile structure
+        run: ./scripts/check-dockerfile.sh
+
+  python-quality:
+    name: Ruff, MyPy, pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,5 +48,95 @@ jobs:
       - name: MyPy
         run: mypy
 
-      - name: Contract tests
-        run: pytest -q
+      - name: Pytest (unit / API; ops compose tests skipped by default)
+        run: pytest -q -m "not ops"
+
+      - name: Dependency audit (runtime dependencies only)
+        run: |
+          python -m venv /tmp/nova-audit
+          /tmp/nova-audit/bin/pip install --upgrade "pip>=26.1"
+          /tmp/nova-audit/bin/pip install .
+          /tmp/nova-audit/bin/pip install "pip-audit>=2.7,<3"
+          /tmp/nova-audit/bin/pip-audit
+
+  docker-and-migrations:
+    name: Docker build and migration validation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nova
+          POSTGRES_PASSWORD: nova
+          POSTGRES_DB: nova
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nova -d nova"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://nova:nova@localhost:5432/nova
+      ENVIRONMENT: ci
+      LOG_LEVEL: INFO
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Wait for Postgres
+        run: |
+          python - <<'PY'
+          import os, time
+          from sqlalchemy import create_engine, text
+          url = os.environ["DATABASE_URL"]
+          deadline = time.time() + 60
+          last = None
+          while time.time() < deadline:
+              engine = create_engine(url, pool_pre_ping=True)
+              try:
+                  with engine.connect() as conn:
+                      conn.execute(text("SELECT 1"))
+                  engine.dispose()
+                  print("postgres ready")
+                  raise SystemExit(0)
+              except Exception as exc:
+                  last = exc
+                  engine.dispose()
+                  time.sleep(1)
+          raise SystemExit(f"postgres not ready: {last}")
+          PY
+
+      - name: Run migrations
+        run: alembic upgrade head
+
+      - name: Validate migration revision
+        run: |
+          alembic current | grep -q 0001_schema_meta
+          python - <<'PY'
+          import os
+          from sqlalchemy import create_engine, text
+          engine = create_engine(os.environ["DATABASE_URL"])
+          with engine.connect() as conn:
+              value = conn.execute(
+                  text("SELECT value FROM schema_meta WHERE key = 'schema_bootstrap'")
+              ).scalar_one()
+          assert value == "0001_schema_meta", value
+          print("schema_meta OK:", value)
+          PY
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        run: docker build -t nova-api:ci .

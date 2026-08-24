@@ -8,13 +8,19 @@ Requirements inventory, product/problem/solution definition, Part 1 scope, Part 
 
 **Status:** Complete.
 
-## Phase 2 — Stack selection & contracts (current delivery)
+## Phase 2 — Stack selection & contracts
 
 ADRs for language/runtime, API, DB, LLM abstraction, document processing, observability, deployment, frontend; typed agent/API contracts (`src/nova/contracts`); domain/DB/API/error/confidence/lifecycle docs; Python CI (Ruff, MyPy, contract pytest).
 
-**Exit criteria:** See [`docs/audits/phase-2-architecture-audit.md`](docs/audits/phase-2-architecture-audit.md).
+**Status:** Complete. Exit criteria: [`docs/audits/phase-2-architecture-audit.md`](docs/audits/phase-2-architecture-audit.md).
 
-## Phase 3 — Ingestion & Extractor
+## Phase 3 — Operational foundation
+
+Docker Compose (API + PostgreSQL), production-minded Dockerfile, Alembic bootstrap, structured logging + correlation IDs, Prometheus baseline metrics, health/readiness, CI (lint/types/tests/docker/migrations/security scans), local verify workflow.
+
+**Status:** Delivered on `feature/phase-3-ops-quality`.
+
+## Phase 3 (product) — Ingestion & Extractor
 
 Document input, DocumentProcessor adapters, Extractor Agent with confidence/evidence, failure isolation, observability for extraction.
 
@@ -24,7 +30,7 @@ Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, 
 
 ## Phase 5 — Persistence, samples, evaluation
 
-Persist core entities (SQLAlchemy/Alembic), clean + messy samples, eval harness, idempotency.
+Persist core entities (full domain schema), clean + messy samples, eval harness, idempotency.
 
 ## Phase 6 — Query & UI
 
