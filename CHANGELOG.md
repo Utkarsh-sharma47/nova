@@ -8,6 +8,7 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- AI agent contracts and trust model (Extractor, Validator, Router); ADR-0002; agent evaluation specification (no harness yet)
 - Phase 1 engineering foundation:
   - Requirements inventory with stable `REQ-*` IDs (assignment vs engineering)
   - Acceptance criteria, traceability, and scope boundaries

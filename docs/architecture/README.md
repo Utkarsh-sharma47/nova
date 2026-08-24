@@ -23,7 +23,7 @@ Detailed architecture notes for Nova. High-level overview also in [ARCHITECTURE.
 ## Rules
 
 - Do not invent stack choices. Record them as ADRs in [`../decisions/`](../decisions/).
-- Keep aligned with [`../agents/`](../agents/).
+- Keep aligned with [`../agents/`](../agents/) and [`../agents/contracts.md`](../agents/contracts.md).
 - When architecture changes, update ADRs and this section in the same PR.
 
 ## Related
@@ -31,5 +31,6 @@ Detailed architecture notes for Nova. High-level overview also in [ARCHITECTURE.
 - [ARCHITECTURE.md](../../ARCHITECTURE.md)
 - [Decisions (ADRs)](../decisions/)
 - [Agents](../agents/)
+- [Agent contracts](../agents/contracts.md)
 - [API](../api/)
 - [Database](../database/)

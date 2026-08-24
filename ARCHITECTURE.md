@@ -13,11 +13,19 @@ Phase 1 architecture principles and extension points are documented. No runtime 
 ## Conceptual pipeline
 
 ```text
-Document → ingestion → extraction → confidence/evidence
-        → validation → routing → persistence → query → UI
+Document → ingestion → Extractor → confidence/evidence/presence
+        → Validator → MATCH|MISMATCH|UNCERTAIN
+        → Router → AUTO_APPROVE|HUMAN_REVIEW|AMENDMENT_REQUEST
+        → persistence → query → UI
 ```
 
 Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
+
+Agent **contracts and trust model** are defined (no runtime agents yet):
+
+- [`docs/agents/contracts.md`](docs/agents/contracts.md)
+- [`docs/agents/trust-model.md`](docs/agents/trust-model.md)
+- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md)
 
 ## Design principles
 
@@ -38,6 +46,7 @@ See the full list in [`docs/architecture/principles.md`](docs/architecture/princ
 - Language/runtime, API framework, database, LLM provider
 - Orchestration model for agents
 - Rules representation and customer configuration
+- Schema IDL encoding for agent contracts
 - API surface for intake, review, and NL query
 - Evaluation harness tooling
 
@@ -47,6 +56,9 @@ Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
 
 - [docs/architecture/](docs/architecture/)
 - [docs/agents/](docs/agents/)
+- [docs/agents/contracts.md](docs/agents/contracts.md)
+- [docs/evaluation/agent-evaluation.md](docs/evaluation/agent-evaluation.md)
 - [docs/decisions/](docs/decisions/)
 - [ADR-0001](docs/decisions/0001-documentation-first-phase1.md)
+- [ADR-0002](docs/decisions/0002-ai-agent-contracts-and-trust-model.md)
 - [AGENTS.md](AGENTS.md)

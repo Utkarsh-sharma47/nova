@@ -5,6 +5,7 @@ ADRs record significant decisions. Use sequential IDs and the template.
 | ID | Title | Status |
 |----|-------|--------|
 | [0001](./0001-documentation-first-phase1.md) | Documentation-first Phase 1 foundation | Accepted |
+| [0002](./0002-ai-agent-contracts-and-trust-model.md) | AI agent contracts and trust model | Accepted |
 
 ## When to write an ADR
 

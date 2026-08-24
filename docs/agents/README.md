@@ -1,31 +1,44 @@
 # Agents
 
-Documentation for agents in the Nova pipeline (Extractor, Validator path, Router, and later communication agents).
+Documentation for agents in the Nova pipeline (Extractor, Validator, Router).
 
 ## Purpose
 
-Each runtime agent should have a dedicated document describing its typed contract and behavior. AI coding agents that *implement* Nova must follow root [`AGENTS.md`](../../AGENTS.md).
+Each runtime agent has a dedicated document describing its typed contract and behavior. AI coding agents that *implement* Nova must follow root [`AGENTS.md`](../../AGENTS.md).
 
-## Conceptual roles (not yet implemented)
+**Canonical contracts:** [contracts.md](./contracts.md)  
+**Trust model:** [trust-model.md](./trust-model.md)  
+**ADR:** [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)
 
-| Role | Responsibility |
-|------|----------------|
-| Extraction | Read documents; produce fields with confidence and evidence |
-| Validation | Compare fields to customer rules; MATCH / MISMATCH / UNCERTAIN |
-| Router | AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST |
+Contracts are defined; **agents are not implemented** (no LLM provider calls in this phase).
 
-## Creating an agent doc
+## Agents
 
-1. Copy [AGENT_TEMPLATE.md](AGENT_TEMPLATE.md).
-2. Name the file clearly (for example `extractor-agent.md`).
-3. Link it from this README when added.
-4. Keep contracts synchronized with [`../api/`](../api/) and [`../architecture/`](../architecture/).
+| Agent | Doc | Role |
+|-------|-----|------|
+| Extractor | [extractor.md](./extractor.md) | Fields + confidence + evidence + presence |
+| Validator | [validator.md](./validator.md) | Customer rules → MATCH / MISMATCH / UNCERTAIN |
+| Router | [router.md](./router.md) | AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST |
+
+## Shared governance
+
+| Document | Purpose |
+|----------|---------|
+| [contracts.md](./contracts.md) | Typed request/result schemas and invariants |
+| [trust-model.md](./trust-model.md) | Probabilistic LLM controls + prompt governance |
+| [AGENT_TEMPLATE.md](./AGENT_TEMPLATE.md) | Template for additional agents |
+
+## Creating or changing an agent doc
+
+1. Prefer updating [contracts.md](./contracts.md) before agent prose.
+2. Keep extractor/validator/router docs aligned with contracts.
+3. Breaking contract changes require a new or superseding ADR.
+4. Prompt/model behavioral changes follow trust-model prompt governance and [agent-evaluation](../evaluation/agent-evaluation.md).
 5. Trace to `REQ-AI-*`, `REQ-EXT-*`, `REQ-VAL-*`, `REQ-ROUTER-*`.
 
 ## Related
 
-- [AGENT_TEMPLATE.md](AGENT_TEMPLATE.md)
 - [AGENTS.md](../../AGENTS.md)
-- [Solution definition](../product/solution-definition.md)
-- [Architecture principles](../architecture/principles.md)
-- [Part 2 extension points](../architecture/part2-extension-points.md)
+- [Architecture](../architecture/)
+- [Evaluation](../evaluation/)
+- [ADR-0002](../decisions/0002-ai-agent-contracts-and-trust-model.md)
