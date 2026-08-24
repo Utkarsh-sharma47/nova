@@ -19,13 +19,12 @@ Audits create an honest snapshot of gaps and risks. They must not invent passing
 |------|-------|--------|
 | _(none yet)_ | | |
 
-## Suggested audit types
+## Phase 1 baseline inputs (for the first audit)
 
-- Documentation completeness vs. templates
-- ADR coverage for active architecture
-- Agent rule compliance (`AGENTS.md`)
-- Security posture review
-- Evaluation readiness
+- Requirements inventory completeness (`docs/requirements/inventory.md`)
+- CI honesty (docs/secrets checks only; no fake app tests)
+- Secrets hygiene (`.gitignore`, secret pattern script)
+- AI governance presence (`AGENTS.md`, `docs/ai-development/`)
 
 ## Related
 

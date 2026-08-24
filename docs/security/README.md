@@ -2,23 +2,21 @@
 
 Detailed security documentation. Overview: [SECURITY.md](../../SECURITY.md).
 
-## Purpose
+## Documents (Phase 1)
 
-Threat models, controls, data classification, and compliance notes for Nova.
+| Document | Status |
+|----------|--------|
+| [baseline.md](./baseline.md) | Done — secrets, logging, dependency pinning, deferred upload security |
 
-## Current status
-
-Formal threat model not yet written. Principles in the root security doc apply.
-
-## Planned contents
+## Still planned
 
 | Topic | Status |
 |-------|--------|
 | Data classification | Planned |
 | Threat model | Planned |
 | Access control model | Planned |
-| Secret management | Planned |
 | Document retention and deletion | Planned |
+| Upload security controls | Implementation phases (`REQ-SEC-004`) |
 
 ## Guidance
 

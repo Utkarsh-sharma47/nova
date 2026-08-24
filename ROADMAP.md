@@ -1,41 +1,41 @@
 # Roadmap
 
-Phased delivery plan for Nova. Detailed phase notes live in [`docs/roadmap/`](docs/roadmap/).
+Phased delivery plan for Nova. Detail: [`docs/roadmap/roadmap.md`](docs/roadmap/roadmap.md).
 
-## Phase 1 — Documentation foundation (current)
+## Phase 1 — Engineering foundation (current)
 
-- Establish documentation architecture under `docs/`
-- Define agent operating rules ([AGENTS.md](AGENTS.md))
-- Templates for features, agents, ADRs, and audits
-- Root contributor and architecture overviews
+Requirements inventory, product/problem/solution definition, Part 1 scope, Part 2 extension points, architecture principles, documentation system, git workflow, CI foundation (docs + secrets), AI agent governance, security baseline.
 
-## Phase 2 — Requirements and product definition
+**Exit criteria:** Docs + foundation CI green; no application code required.
 
-- Problem statements and acceptance criteria
-- Personas and primary user workflows
-- Non-goals and constraints
+## Phase 2 — Stack selection & contracts
 
-## Phase 3 — Architecture decisions
+ADRs for language/runtime, API, DB, LLM provider; typed agent/API contracts; enable language CI.
 
-- Record ADRs for orchestration, storage, APIs, and agent contracts
-- Freeze initial interfaces for extraction, validation, and decisioning
+## Phase 3 — Ingestion & Extractor
 
-## Phase 4 — Implementation skeleton
+Document input, Extractor Agent with confidence/evidence, failure isolation, observability for extraction.
 
-- Application bootstrap and development workflow
-- Initial agent pipeline scaffolding
-- Test and evaluation harness foundations
+## Phase 4 — Validation & Router
 
-## Phase 5 — Core validation loop
+Customer rules, MATCH/MISMATCH/UNCERTAIN, router dispositions, golden fixtures, fail-safe defaults.
 
-- Document intake → extraction → rules → decision
-- Human review path
-- Observability for decisions
+## Phase 5 — Persistence, samples, evaluation
 
-## Later phases
+Persist core entities, clean + messy samples, eval harness, idempotency.
 
-Subsequent phases (customer rule configuration, scale, advanced evaluation, and operations hardening) will be defined as earlier phases complete. Avoid committing to technologies here until ADRs exist.
+## Phase 6 — Query & UI
+
+Query API, grounded NL query, minimal B2B operations UI.
+
+## Phase 7 — Hardening & Part 1 submission
+
+Demo runbook, failure-path demo, simple deploy, submission completeness.
+
+## Part 2 — Forward (after Part 1)
+
+Email/file triggers, multi-attachment, cross-document validation, draft replies, human approval, outbound sending.
 
 ## Change policy
 
-Roadmap updates should be reflected in both this file and `docs/roadmap/`. Significant scope changes deserve a short note in [CHANGELOG.md](CHANGELOG.md).
+Keep this file synchronized with `docs/roadmap/`. Significant scope changes deserve a note in [CHANGELOG.md](CHANGELOG.md). Technology choices belong in ADRs, not as invented facts here.

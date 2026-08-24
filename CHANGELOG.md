@@ -8,5 +8,16 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
-- Documentation foundation: root guides (`README`, `AGENTS`, `CONTRIBUTING`, `DEVELOPMENT`, `ARCHITECTURE`, `TESTING`, `SECURITY`, `ROADMAP`, `CHANGELOG`)
-- `docs/` tree with section READMEs and templates for features, agents, ADRs, and audits
+- Phase 1 engineering foundation:
+  - Requirements inventory with stable `REQ-*` IDs (assignment vs engineering)
+  - Acceptance criteria, traceability, and scope boundaries
+  - Product problem/solution/personas definitions
+  - Part 1 scope and Part 2 extension points
+  - Architecture principles, overview, and engineering standards
+  - Testing / evaluation / observability / deployment philosophies
+  - Security baseline; `.gitignore`; `.env.example`
+  - Git workflow documentation and PR template
+  - AI development governance (`AGENTS.md` + `docs/ai-development/`)
+  - CI foundation: docs-structure and secret-pattern checks
+  - ADR-0001 (documentation-first Phase 1)
+- Documentation system under `docs/` with section READMEs and templates

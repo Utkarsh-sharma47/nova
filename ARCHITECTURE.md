@@ -8,49 +8,38 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-Architecture is at the documentation foundation stage. No runtime stack, service topology, or persistence technology has been decided. Decisions will be recorded as ADRs in [`docs/decisions/`](docs/decisions/).
+Phase 1 architecture principles and extension points are documented. No runtime stack, service topology, or persistence technology has been chosen yet. Stack choices will be ADRs in [`docs/decisions/`](docs/decisions/).
 
 ## Conceptual pipeline
 
 ```text
-Document intake
-      │
-      ▼
-Extraction agents          → structured fields
-      │
-      ▼
-Validation / rules agents  → rule results and findings
-      │
-      ▼
-Decisioning                → approve | review | request corrections
-      │
-      ▼
-Human review / feedback    → (optional) corrections loop
+Document → ingestion → extraction → confidence/evidence
+        → validation → routing → persistence → query → UI
 ```
 
-This diagram is conceptual. Agent boundaries, orchestration, and storage are not yet fixed.
+Detail: [`docs/product/solution-definition.md`](docs/product/solution-definition.md) and [`docs/architecture/high-level-overview.md`](docs/architecture/high-level-overview.md).
 
 ## Design principles
 
-- **Contracts first.** Agent inputs/outputs and external interfaces should be explicit and versioned.
-- **Human-in-the-loop.** Ambiguous or high-risk cases escalate to review rather than silent auto-approval.
-- **Auditability.** Decisions should be explainable from logged inputs, rule results, and agent outputs.
-- **Scoped evolution.** Subsystems change via ADRs; avoid silent architectural drift.
-- **Security by default.** Treat document contents as sensitive; see [SECURITY.md](SECURITY.md).
+See the full list in [`docs/architecture/principles.md`](docs/architecture/principles.md). Highlights:
 
-## Documentation structure
+- Typed contracts; deterministic validation where appropriate; LLMs where reasoning is needed
+- Confidence-aware extraction with evidence/grounding
+- Human-in-the-loop; no silent auto-approve on failure
+- Observability, idempotency, bounded retries, cost controls
+- Part 2 extensibility without implementing Part 2 now
 
-Detailed architecture notes live under [`docs/architecture/`](docs/architecture/). Agent design lives under [`docs/agents/`](docs/agents/). Feature-level design uses the feature template in [`docs/features/`](docs/features/).
+## Part 2 readiness
 
-## Open decisions
+[`docs/architecture/part2-extension-points.md`](docs/architecture/part2-extension-points.md)
 
-Examples of decisions still to be made (non-exhaustive):
+## Open decisions (Phase 2+)
 
+- Language/runtime, API framework, database, LLM provider
 - Orchestration model for agents
-- Document storage and retention
 - Rules representation and customer configuration
-- API surface for intake and review
-- Evaluation harness and gold datasets
+- API surface for intake, review, and NL query
+- Evaluation harness tooling
 
 Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
 
@@ -59,4 +48,5 @@ Record each decision with the [ADR template](docs/decisions/ADR_TEMPLATE.md).
 - [docs/architecture/](docs/architecture/)
 - [docs/agents/](docs/agents/)
 - [docs/decisions/](docs/decisions/)
+- [ADR-0001](docs/decisions/0001-documentation-first-phase1.md)
 - [AGENTS.md](AGENTS.md)

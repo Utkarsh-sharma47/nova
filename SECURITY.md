@@ -23,8 +23,16 @@ Threat model and concrete controls are not yet finalized. This document states p
 
 Until a formal vulnerability disclosure process exists, report suspected security issues privately to the repository maintainers. Do not open public issues that include exploit details or sample production data.
 
+## Phase 1 baseline
+
+Concrete repository controls: [`docs/security/baseline.md`](docs/security/baseline.md)
+
+- `.env` gitignored; `.env.example` allowed without secrets
+- Secret pattern scan in CI
+- Safe logging policy; upload security deferred to implementation phases
+
 ## Related documents
 
-- [docs/security/](docs/security/)
+- [docs/security/baseline.md](docs/security/baseline.md)
 - [docs/operations/](docs/operations/)
 - [AGENTS.md](AGENTS.md)

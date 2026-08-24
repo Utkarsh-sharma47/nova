@@ -2,31 +2,31 @@
 
 Detailed testing documentation for Nova. Overview: [TESTING.md](../../TESTING.md).
 
-## Purpose
+## Documents (Phase 1)
 
-Define suites, fixtures, naming conventions, and CI expectations as the codebase grows.
+| Document | Status |
+|----------|--------|
+| [philosophy.md](./philosophy.md) | Done |
 
-## Current status
+## Current automated checks
 
-No automated suite yet. Establish conventions here when the first tests land.
+- Docs structure script
+- Secret pattern script
+
+No application test suite yet — do not invent fake app tests.
 
 ## Planned contents
 
 | Topic | Status |
 |-------|--------|
-| Suite layout and naming | Planned |
-| Fixture policy | Planned |
-| CI gates | Planned |
-| Contract test catalog | Planned |
-
-## Principles
-
-- Tests must be runnable and honest; never fabricate results.
-- Prefer deterministic fixtures; isolate flaky model-dependent checks under evaluation where appropriate.
-- Document how to run each suite in [DEVELOPMENT.md](../../DEVELOPMENT.md) when commands exist.
+| Suite layout and naming | Phase 3+ |
+| Fixture policy (clean/messy samples) | Phase 5 |
+| Contract test catalog | Phase 3–4 |
+| Expanded CI gates | Progressive with toolchain |
 
 ## Related
 
 - [TESTING.md](../../TESTING.md)
 - [Evaluation](../evaluation/)
+- [CI/CD](../deployment/ci-cd.md)
 - [AGENTS.md](../../AGENTS.md)

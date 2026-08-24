@@ -2,9 +2,11 @@
 
 Logging, metrics, and tracing for Nova.
 
-## Purpose
+## Documents (Phase 1)
 
-Operators and developers must reconstruct why a document received a given decision. Observability design should support auditability without leaking sensitive document content into unsafe sinks.
+| Document | Status |
+|----------|--------|
+| [philosophy.md](./philosophy.md) | Done |
 
 ## Current status
 
@@ -14,19 +16,14 @@ No observability stack has been chosen. Record tooling decisions as ADRs.
 
 | Topic | Status |
 |-------|--------|
-| Log fields and redaction rules | Planned |
-| Core metrics (throughput, latency, decision mix) | Planned |
-| Trace propagation across agents | Planned |
-| Alerting policy | Planned |
-
-## Guidance
-
-- Prefer structured logs.
-- Redact or hash sensitive fields by default.
-- Tie decision IDs across extraction, rules, and review events.
+| Log fields and redaction rules | Phase 3–5 |
+| Core metrics (throughput, latency, decision mix, cost) | Phase 3–5 |
+| Trace propagation across stages | Phase 3–5 |
+| Alerting policy | Later |
 
 ## Related
 
 - [Operations](../operations/)
 - [Security](../security/)
 - [Architecture](../architecture/)
+- Requirements `REQ-OBS-*`

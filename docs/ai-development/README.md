@@ -6,7 +6,8 @@ Mandatory guidance for AI-assisted development on Nova. Complements root [`AGENT
 
 | Document | Purpose |
 |----------|---------|
-| [agent-development-rules.md](./agent-development-rules.md) | AI coding SDLC and runtime agent rules (Extractor, Validator, Router) |
+| [governance.md](./governance.md) | Phase 1 summary of mandatory agent behaviors |
+| [agent-development-rules.md](./agent-development-rules.md) | AI coding SDLC and runtime agent rules |
 | [coding-rules.md](./coding-rules.md) | Code quality, contracts, change hygiene |
 | [testing-rules.md](./testing-rules.md) | Tests, CI honesty, static checks |
 | [documentation-rules.md](./documentation-rules.md) | Required documentation updates |

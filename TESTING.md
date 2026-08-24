@@ -10,7 +10,14 @@ Testing strategy for Nova.
 
 ## Current status
 
-No automated test suite exists yet. This document defines expectations for when application code lands.
+No application test suite exists yet — and Phase 1 intentionally does **not** invent fake app tests.
+
+Phase 1 automated checks:
+
+- `./scripts/check-docs-structure.sh`
+- `./scripts/check-secret-patterns.sh`
+
+Testing philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
 ## Test layers (planned)
 

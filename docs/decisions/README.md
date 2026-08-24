@@ -1,27 +1,27 @@
-# Decisions (ADRs)
+# Architecture Decision Records
 
-Architecture Decision Records for Nova.
+ADRs record significant decisions. Use sequential IDs and the template.
 
-## Purpose
+| ID | Title | Status |
+|----|-------|--------|
+| [0001](./0001-documentation-first-phase1.md) | Documentation-first Phase 1 foundation | Accepted |
 
-ADRs capture significant, lasting choices: orchestration, storage, APIs, agent contracts, evaluation approach, and similar. Prefer an ADR over scattering rationale across chat or PRs only.
+## When to write an ADR
 
-## Process
+- Technology stack selection
+- Agent contract shape changes
+- Persistence technology choice
+- Routing policy framework choice
+- Part 2 interface changes that affect Part 1
+
+## Creating an ADR
 
 1. Copy [ADR_TEMPLATE.md](ADR_TEMPLATE.md).
-2. Name files `NNNN-short-title.md` with a monotonic number (start at `0001`).
-3. Set status to Proposed → Accepted / Rejected / Superseded.
-4. Link accepted ADRs from [`../architecture/`](../architecture/) when they affect system design.
-5. When superseding, update both old and new ADRs.
-
-## Index
-
-| ADR | Title | Status |
-|-----|-------|--------|
-| _(none yet)_ | | |
+2. Use the next numeric ID and a short slug filename.
+3. Link it from this README.
+4. Update related architecture/requirements docs in the same PR.
 
 ## Related
 
 - [ADR_TEMPLATE.md](ADR_TEMPLATE.md)
 - [Architecture](../architecture/)
-- [AGENTS.md](../../AGENTS.md)

@@ -1,31 +1,25 @@
 # Database
 
-Data model and persistence documentation for Nova.
-
-## Purpose
-
-Document entities, schemas, migrations, retention, and access patterns once persistence is chosen.
+Data model and persistence notes for Nova.
 
 ## Current status
 
-No database technology or schema has been decided. Record the choice as an ADR before documenting vendor-specific details.
+No database schema exists in Phase 1.
+
+## Design constraint already in force
+
+Shipment **1→N** documents must be representable for Part 2 readiness (`REQ-DATA-002`, [Part 2 extension points](../architecture/part2-extension-points.md)), even if Part 1 only persists one document per shipment.
 
 ## Planned contents
 
-| Topic | Status |
-|-------|--------|
-| Logical data model | Planned |
-| Persistence technology ADR | Planned |
-| Migrations policy | Planned |
-| Retention and deletion | Planned |
-
-## Guidance
-
-- Prefer documenting the logical model before physical schema.
-- Call out PII and document-blob storage requirements; see [`../security/`](../security/).
+| Document | Status |
+|----------|--------|
+| ERD / entity definitions | Phase 2–5 |
+| Migration notes | Phase 5 |
+| Retention / PII handling notes | Phase 5 (policy started in security baseline) |
 
 ## Related
 
 - [Architecture](../architecture/)
-- [Security](../security/)
-- [Decisions](../decisions/)
+- [Security baseline](../security/baseline.md)
+- Requirements `REQ-DATA-*`

@@ -2,32 +2,28 @@
 
 Quality and accuracy evaluation for Nova’s extraction, validation, and decisioning.
 
-## Purpose
+## Documents (Phase 1)
 
-Evaluation measures how well the pipeline performs on curated document sets. It complements—but does not replace—automated unit and integration tests.
+| Document | Status |
+|----------|--------|
+| [philosophy.md](./philosophy.md) | Done |
 
 ## Current status
 
-No evaluation harness or gold dataset exists yet. Define metrics and datasets here when available. Do not invent scores or claim unmeasured quality.
+No evaluation harness or gold dataset exists yet. Do not invent scores or claim unmeasured quality.
 
 ## Planned contents
 
 | Topic | Status |
 |-------|--------|
-| Metrics (field-level, document-level, decision agreement) | Planned |
-| Gold / labeled datasets policy | Planned |
-| Regression evaluation process | Planned |
-| Human review agreement studies | Planned |
-
-## Principles
-
-- Separate **evaluation** (quality) from **tests** (correctness of code contracts).
-- Use anonymized or synthetic documents only.
-- Report methodology and limitations with every result.
-- Never fabricate evaluation outcomes.
+| Metrics (field-level, document-level, decision agreement) | Phase 5 |
+| Gold / labeled datasets (clean + messy samples) | Phase 5 |
+| Regression evaluation process | Phase 5–7 |
+| False AUTO_APPROVE safety bar | Phase 5–7 |
 
 ## Related
 
 - [Testing](../testing/)
 - [Agents](../agents/)
 - [Audits](../audits/)
+- Requirements `REQ-EXT-005`, `REQ-SUBMISSION-002`

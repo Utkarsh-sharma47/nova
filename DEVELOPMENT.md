@@ -4,22 +4,29 @@ Local development guidance for Nova.
 
 ## Current status
 
-Application code and a concrete toolchain are not yet established. This document defines the intended development process. Concrete setup commands will be added when the stack is chosen and recorded in ADRs.
+Application code and a concrete toolchain are not yet established. Concrete setup commands will be added when the stack is chosen and recorded in ADRs.
 
-## Prerequisites (to be finalized)
+## Phase 1 local checks
+
+```bash
+./scripts/check-docs-structure.sh
+./scripts/check-secret-patterns.sh
+```
+
+These are the only automated checks until application tooling exists. See [`docs/deployment/ci-cd.md`](docs/deployment/ci-cd.md).
+
+## Prerequisites (to be finalized in Phase 2)
 
 When implementation begins, this section will list:
 
 - Required language runtimes and versions
 - Package managers
-- Optional local services (for example databases or queues), if any
-- How to obtain sample documents for development (without real customer PII)
+- Optional local services (databases/queues), if any
+- How to obtain sample documents (no real customer PII)
 
-Do not assume a stack until it is decided and documented.
+## Repository layout (Phase 1)
 
-## Repository layout (documentation phase)
-
-```
+```text
 .
 ├── AGENTS.md
 ├── ARCHITECTURE.md
@@ -30,32 +37,32 @@ Do not assume a stack until it is decided and documented.
 ├── SECURITY.md
 ├── TESTING.md
 ├── CHANGELOG.md
+├── .env.example
+├── .gitignore
+├── .github/workflows/ci.yml
+├── scripts/
 └── docs/
 ```
 
-Application source directories will be documented here when introduced.
-
 ## Branching
 
-- Branch from `main`.
-- Use descriptive prefixes: `feat/`, `fix/`, `docs/`, `chore/`, `test/`.
-- Never push commits directly to `main`.
+Follow [`docs/operations/git-workflow.md`](docs/operations/git-workflow.md):
+
+- Branch from latest `main`
+- Prefixes: `feature/`, `fix/`, `docs/`, `test/`, `chore/`
+- Never push directly to `main`
 
 ## Making changes
 
-1. Read requirements and architecture docs for the area you touch.
-2. Keep changes scoped to the task.
-3. Add or update tests with the change.
+1. Read `AGENTS.md` and relevant requirements/architecture docs.
+2. Keep changes scoped; cite `REQ-*` when applicable.
+3. Add or update tests with application changes (when code exists).
 4. Update documentation in the matching `docs/` section.
 5. If architecture changes, add or update an ADR.
 
-## Running the project
-
-Not yet applicable. Commands for install, run, migrate, and lint will be added when the application skeleton exists.
-
 ## Environment configuration
 
-Secrets and environment variable conventions will be documented under `docs/deployment/` and `docs/security/` when configuration is introduced. Do not commit secrets.
+Use `.env.example` as a template. Never commit secrets. See [`docs/security/baseline.md`](docs/security/baseline.md).
 
 ## Related documents
 

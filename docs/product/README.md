@@ -1,27 +1,27 @@
 # Product
 
-Product definition for Nova: who it serves, what jobs it completes, and how users interact with it.
+Product definition for Nova: who it serves, what jobs it completes, and how verification fits operations.
 
 ## Product summary
 
-Nova helps validation teams process trade shipping documents by extracting fields, checking customer rules, and routing outcomes to auto-approve, human review, or correction requests.
+Nova is an **operational trade/shipping document verification system**. It extracts fields from documents such as invoices and Bills of Lading, checks customer-specific rules, and routes outcomes to AUTO_APPROVE, HUMAN_REVIEW, or AMENDMENT_REQUEST — reducing manual email loops between shippers and validation teams.
 
-## Contents (to be filled)
+## Documents (Phase 1)
 
 | Document | Status |
 |----------|--------|
-| Personas (shipper, validator, admin) | Planned |
-| Primary workflows | Planned |
-| Decision outcomes UX | Planned |
-| Success metrics (product-level) | Planned |
+| [problem-definition.md](./problem-definition.md) | Done |
+| [solution-definition.md](./solution-definition.md) | Done — conceptual pipeline |
+| [personas-and-users.md](./personas-and-users.md) | Done |
 
 ## Guidance
 
 - Keep workflows outcome-oriented.
-- Defer technical design to [`../architecture/`](../architecture/) and feature docs in [`../features/`](../features/).
+- Defer technical design to [`../architecture/`](../architecture/) and [`../features/`](../features/).
 - Do not specify UI frameworks or vendors here until chosen via ADR.
 
 ## Related
 
 - [Requirements](../requirements/)
 - [Features](../features/)
+- [Part 1 scope](../features/part1-scope.md)

@@ -2,15 +2,13 @@
 
 Operational practices and runbooks for Nova.
 
-## Purpose
+## Documents (Phase 1)
 
-Document how to run, diagnose, and recover the system in real environments.
+| Document | Status |
+|----------|--------|
+| [git-workflow.md](./git-workflow.md) | Done — branch model, conventional commits, PR rules |
 
-## Current status
-
-No production system yet. Add runbooks as components become operable.
-
-## Planned contents
+## Planned (when the system is operable)
 
 | Topic | Status |
 |-------|--------|
@@ -18,6 +16,7 @@ No production system yet. Add runbooks as components become operable.
 | Incident response | Planned |
 | Common failure runbooks | Planned |
 | Backup and restore (if applicable) | Planned |
+| Demo / submission runbook | Phase 7 |
 
 ## Guidance
 
@@ -30,3 +29,4 @@ No production system yet. Add runbooks as components become operable.
 - [Observability](../observability/)
 - [Deployment](../deployment/)
 - [Security](../security/)
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)

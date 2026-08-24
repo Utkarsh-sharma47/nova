@@ -1,26 +1,36 @@
-# Documentation
+# Nova documentation
 
 Authoritative detailed documentation for Nova. Root-level markdown files are overviews; this tree holds working specs, decisions, and templates.
+
+## Who this is for
+
+| Audience | Primary paths |
+|----------|---------------|
+| Developers | `architecture/`, `features/`, `api/`, `database/` |
+| Reviewers / evaluators | `requirements/`, `evaluation/`, `roadmap/` |
+| AI coding agents | Root `AGENTS.md`, `ai-development/`, then relevant feature/architecture docs |
+| Operators | `operations/`, `observability/`, `deployment/` |
+| Security | `security/` |
 
 ## Sections
 
 | Directory | Contents |
 |-----------|----------|
-| [requirements/](requirements/) | Problem, constraints, acceptance criteria |
-| [product/](product/) | Goals, personas, workflows |
-| [architecture/](architecture/) | System design |
-| [agents/](agents/) | Pipeline agents |
+| [requirements/](requirements/) | REQ inventory, acceptance, traceability, scope |
+| [product/](product/) | Problem, solution, personas |
+| [architecture/](architecture/) | Principles, overview, Part 2 extension points, standards |
+| [agents/](agents/) | Pipeline agent contracts |
 | [features/](features/) | Feature docs (see template) |
-| [api/](api/) | Interfaces |
-| [database/](database/) | Data model |
-| [testing/](testing/) | Test strategy detail |
+| [api/](api/) | Interfaces (later) |
+| [database/](database/) | Data model (later) |
+| [testing/](testing/) | Test strategy |
 | [evaluation/](evaluation/) | Quality evaluation |
 | [observability/](observability/) | Logs, metrics, traces |
-| [deployment/](deployment/) | Deploy and runtime |
-| [security/](security/) | Security detail |
-| [operations/](operations/) | Runbooks |
+| [deployment/](deployment/) | Deploy and CI/CD |
+| [security/](security/) | Security baseline |
+| [operations/](operations/) | Git workflow and runbooks |
 | [decisions/](decisions/) | ADRs |
-| [ai-development/](ai-development/) | AI-assisted development |
+| [ai-development/](ai-development/) | AI coding-agent governance |
 | [audits/](audits/) | Audits |
 | [roadmap/](roadmap/) | Phase detail |
 
@@ -33,7 +43,7 @@ Authoritative detailed documentation for Nova. Root-level markdown files are ove
 
 ## Writing rules
 
-- Be precise and useful.
-- Do not invent undecided technologies or APIs.
-- Prefer linking to ADRs over restating contested decisions.
-- Update docs in the same change that alters behavior.
+1. Be precise and useful. Do not invent undecided technologies or APIs.
+2. Prefer linking `REQ-*` IDs and ADRs over restating contested decisions.
+3. Update docs in the same change that alters behavior.
+4. Reserved folders may keep a short README until implementation phases fill them.

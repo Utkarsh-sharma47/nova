@@ -1,27 +1,22 @@
 # Requirements
 
-Requirements for Nova: problem statements, constraints, and acceptance criteria.
+Source of truth for *what* Nova must do, independent of implementation.
 
-## Purpose
-
-This section is the source of truth for *what* the system must do, independent of implementation.
-
-## Contents (to be filled)
+## Documents (Phase 1)
 
 | Document | Status |
 |----------|--------|
-| Problem statement | Planned |
-| Stakeholders and goals | Planned |
-| Functional requirements | Planned |
-| Non-functional requirements | Planned |
-| Constraints and non-goals | Planned |
-| Acceptance criteria | Planned |
+| [inventory.md](./inventory.md) | Done — stable `REQ-*` IDs |
+| [acceptance-criteria.md](./acceptance-criteria.md) | Done — Part 1 acceptance checklist |
+| [traceability.md](./traceability.md) | Done — REQ → design → test → evidence |
+| [scope-boundaries.md](./scope-boundaries.md) | Done — in/out of scope |
 
 ## Guidance
 
-- Separate must-have from nice-to-have.
+- Distinguish **ASSIGNMENT** vs **ENGINEERING** requirements in the inventory.
+- Separate must-have (P0) from later (P1/P2).
 - Reference product workflows in [`../product/`](../product/) rather than duplicating UI narrative.
-- When a requirement drives an architectural choice, link the resulting ADR in [`../decisions/`](../decisions/).
+- When a requirement drives an architectural choice, link the ADR in [`../decisions/`](../decisions/).
 
 ## Related
 
