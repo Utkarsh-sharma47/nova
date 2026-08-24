@@ -1,43 +1,24 @@
-# AI development
+# AI development governance
 
-Guidance for AI-assisted development on Nova.
+Mandatory guidance for AI-assisted development on Nova. Complements root [`AGENTS.md`](../../AGENTS.md).
 
-## Purpose
+## Documents in this directory
 
-Nova is expected to be built with substantial AI coding agent assistance. This section complements [AGENTS.md](../../AGENTS.md) with workflow practices specific to this repository.
+| Document | Purpose |
+|----------|---------|
+| [agent-development-rules.md](./agent-development-rules.md) | AI coding SDLC and runtime agent rules (Extractor, Validator, Router) |
+| [coding-rules.md](./coding-rules.md) | Code quality, contracts, change hygiene |
+| [testing-rules.md](./testing-rules.md) | Tests, CI honesty, static checks |
+| [documentation-rules.md](./documentation-rules.md) | Required documentation updates |
+| [architecture-rules.md](./architecture-rules.md) | Architecture and contract stability |
+| [security-rules.md](./security-rules.md) | Secrets, PII, model/output safety |
+| [git-rules.md](./git-rules.md) | Branches, commits, PRs |
+| [review-checklist.md](./review-checklist.md) | Human review checklist for AI-generated PRs |
+| [agent-task-template.md](./agent-task-template.md) | Task assignment template for coding agents |
 
-## Mandatory rules
+## Start here
 
-Follow [AGENTS.md](../../AGENTS.md) in full. Highlights:
-
-- Inspect before modifying; understand requirements; read architecture docs.
-- Preserve contracts; keep changes scoped; avoid unrelated files.
-- Use feature branches; never push directly to `main`.
-- Write and run tests; report failures honestly; never fabricate results.
-- Update documentation and ADRs when architecture or behavior changes.
-- Do not introduce unnecessary dependencies or silently alter architecture.
-
-## Recommended workflow for agents
-
-1. Restate the task and identify affected docs (`requirements`, `architecture`, `agents`, `features`).
-2. Inspect existing files; list what will change before editing.
-3. Implement the smallest coherent change.
-4. Update docs/templates/ADRs as needed.
-5. Run tests (or document why they cannot run).
-6. Summarize residual risks and open questions.
-
-## Documentation expectations
-
-| Change type | Update |
-|-------------|--------|
-| New feature | Feature doc from template |
-| New/changed agent | Agent doc from template |
-| Architecture shift | ADR + architecture docs |
-| Quality methodology | Evaluation docs |
-| Security control | Security docs |
-
-## Related
-
-- [AGENTS.md](../../AGENTS.md)
-- [CONTRIBUTING.md](../../CONTRIBUTING.md)
-- [Audits](../audits/)
+1. Read [`AGENTS.md`](../../AGENTS.md).
+2. Follow the AI coding SDLC end to end.
+3. Use [`agent-task-template.md`](./agent-task-template.md) for assigned work.
+4. Reviewers use [`review-checklist.md`](./review-checklist.md).

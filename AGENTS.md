@@ -1,71 +1,166 @@
 # AGENTS.md
 
-Rules for AI coding agents working on Nova.
+Mandatory operating rules for AI coding agents working on **Nova**.
 
-These rules are mandatory. Human contributors should follow the same standards when using AI assistance.
+Nova is a multi-agent AI pipeline for trade/shipping document verification (Extractor → Validator → Router → persistence → query/UI). Treat it as an operational system, not a prototype chatbot.
 
-## Mission
+Human contributors using AI assistance must follow the same standards.
 
-Nova is a multi-agent document validation pipeline for trade shipping documents. Agents must improve the repository carefully: preserve contracts, keep changes scoped, and leave documentation accurate.
+---
 
-## Before you modify anything
+## AI coding SDLC (mandatory)
 
-1. **Inspect before modifying.** Read the relevant source, tests, and docs. Do not edit files you have not inspected.
-2. **Understand requirements.** Confirm the user request against `docs/requirements/` and `docs/product/`. If requirements are missing or ambiguous, ask or document assumptions before implementing.
-3. **Read architecture docs.** Review [ARCHITECTURE.md](ARCHITECTURE.md), `docs/architecture/`, and any ADRs in `docs/decisions/` that affect the change.
-4. **Preserve contracts.** Do not break public APIs, agent interfaces, data schemas, or documented behaviors without an explicit decision and corresponding documentation updates.
+Every AI coding agent must follow this sequence:
 
-## Branching and collaboration
+1. Inspect repository.
+2. Read this `AGENTS.md`.
+3. Read relevant requirements (`docs/requirements/`, `docs/product/`).
+4. Read architecture documentation (`ARCHITECTURE.md`, `docs/architecture/`, relevant ADRs in `docs/decisions/`).
+5. Identify affected components.
+6. Plan implementation.
+7. Implement the **smallest correct change**.
+8. Add or update tests.
+9. Run tests.
+10. Run static checks.
+11. Review the diff.
+12. Update documentation.
+13. Report **exact** verification results.
+14. Commit.
+15. Push the branch.
+16. Open a pull request.
+17. Wait for CI and human review before merge.
 
-5. **Use feature branches.** Create a dedicated branch for each change set (for example `feat/...`, `fix/...`, `docs/...`).
-6. **Never push directly to `main`.** Open a pull request. Do not merge your own PR unless a human explicitly requests it and project policy allows it.
+If a step cannot be completed (for example application tests do not exist yet in Phase 1), state that explicitly. Do **not** claim it passed.
 
-## Implementation standards
+Detailed agent process: [`docs/ai-development/agent-development-rules.md`](docs/ai-development/agent-development-rules.md)
 
-7. **Keep changes scoped.** Implement only what was asked. Avoid drive-by refactors and unrelated cleanup.
-8. **Avoid modifying unrelated files.** Do not touch files outside the change boundary unless required for correctness (for example, updating a shared type used by the feature).
-9. **Do not introduce unnecessary dependencies.** Prefer the existing stack. Add a dependency only when justified, documented, and approved by the change request.
-10. **Do not silently alter architecture.** Architectural changes require an ADR update (or a new ADR) and updates to architecture docs. Do not redesign subsystems as a side effect of a feature.
+Task intake template: [`docs/ai-development/agent-task-template.md`](docs/ai-development/agent-task-template.md)
 
-## Tests and honesty
+---
 
-11. **Write tests.** New behavior and bug fixes need automated tests at the appropriate level (unit, integration, evaluation fixtures as applicable).
-12. **Run tests.** Execute the relevant test suite before claiming success. If the suite cannot run, say so explicitly.
-13. **Report failures honestly.** Surface failing tests, incomplete work, and blocked steps. Do not hide errors.
-14. **Do not fabricate results.** Never invent passing tests, metrics, evaluation scores, logs, or “verified” outcomes.
+## Non-negotiable rules
 
-## Documentation
+Agents must **never**:
 
-15. **Update documentation.** When behavior, interfaces, configuration, or operations change, update the matching docs under `docs/` and any root overview files.
-16. **Update ADRs when architecture changes.** Record decisions in `docs/decisions/` using the ADR template. Link new ADRs from architecture docs when relevant.
-17. **Use feature documentation.** New user-facing or system features should follow the [feature template](docs/features/FEATURE_TEMPLATE.md).
+- Fabricate test results, metrics, evaluation scores, or logs
+- Claim success without verification actually performed
+- Silently change architecture, contracts, or stage boundaries
+- Bypass CI
+- Commit secrets or credentials
+- Modify unrelated features
+- Delete tests merely to make CI pass
+- Weaken validation or assertions to make a test pass
+- Hardcode production credentials
+- Push directly to `main`
+- Merge their own PR unless a human explicitly authorizes it
+- Hide errors
+- Suppress failing command output
 
-## Agent-specific documentation
+Additional coding, testing, security, and git rules live under [`docs/ai-development/`](docs/ai-development/).
 
-When adding or changing an agent in the pipeline, document it with the [agent template](docs/agents/AGENT_TEMPLATE.md) under `docs/agents/`.
+---
 
-## Failure and escalation
+## Documentation rule
 
-- If requirements conflict with architecture, stop and escalate; do not guess.
-- If a change would touch security-sensitive paths (auth, secrets, PII, document storage), read [SECURITY.md](SECURITY.md) and `docs/security/` first.
-- If evaluation quality is affected, update `docs/evaluation/` and note impact in the PR.
+Every meaningful feature must update, as applicable:
 
-## Checklist before opening a PR
+- Feature documentation (`docs/features/`)
+- API documentation (`docs/api/`) if interfaces change
+- Testing documentation (`docs/testing/`) if behavior changes
+- Architecture docs and/or ADR (`docs/architecture/`, `docs/decisions/`) if architecture changes
+- Evaluation documentation (`docs/evaluation/`) if AI behavior changes
+
+See [`docs/ai-development/documentation-rules.md`](docs/ai-development/documentation-rules.md).
+
+---
+
+## Runtime AI agents (Extractor, Validator, Router)
+
+Future AI agents implementing Extractor, Validator, and Router must:
+
+- Use typed contracts
+- Produce structured output
+- Expose confidence
+- Preserve evidence
+- Respect uncertainty
+- Have bounded retries
+- Have timeout handling
+- Avoid infinite loops
+- Track token/cost usage
+- Never invent unavailable values
+- Never silently convert uncertainty into approval (`AUTO_APPROVE` / false `MATCH`)
+
+See [`docs/ai-development/agent-development-rules.md`](docs/ai-development/agent-development-rules.md) and [`docs/ai-development/architecture-rules.md`](docs/ai-development/architecture-rules.md).
+
+---
+
+## Scope and architecture discipline
+
+- Implement only what was asked; prefer minimal diffs.
+- Do not introduce unnecessary dependencies.
+- Do not redesign subsystems as a side effect of a feature.
+- Architectural changes require ADR + architecture doc updates.
+- Preserve Part 2 extension points; do not implement Part 2 unless explicitly tasked.
+
+---
+
+## Security (summary)
+
+- No secrets in git, logs, fixtures, or examples (placeholders only).
+- Treat shipping documents and extracted fields as sensitive.
+- Validate model output against schemas before downstream use.
+- Read `SECURITY.md` and `docs/security/` before changing auth, secrets, PII, or document storage paths.
+
+Full rules: [`docs/ai-development/security-rules.md`](docs/ai-development/security-rules.md)
+
+---
+
+## Git and PR (summary)
+
+- Use a dedicated feature/docs branch.
+- Never push to `main`.
+- Open a PR; wait for CI and human review.
+- Do not self-merge unless explicitly authorized.
+
+Full rules: [`docs/ai-development/git-rules.md`](docs/ai-development/git-rules.md)
+
+---
+
+## Human review
+
+Reviewers of AI-generated changes must use:
+
+[`docs/ai-development/review-checklist.md`](docs/ai-development/review-checklist.md)
+
+Coverage includes architecture, correctness, tests, security, observability, AI behavior, prompt changes, cost, latency, failure handling, documentation, and regression risk.
+
+---
+
+## Governance index (`docs/ai-development/`)
+
+| Document | Purpose |
+|----------|---------|
+| [agent-development-rules.md](docs/ai-development/agent-development-rules.md) | SDLC + runtime agent rules |
+| [coding-rules.md](docs/ai-development/coding-rules.md) | Code quality and change hygiene |
+| [testing-rules.md](docs/ai-development/testing-rules.md) | Tests, CI honesty, static checks |
+| [documentation-rules.md](docs/ai-development/documentation-rules.md) | Required doc updates |
+| [architecture-rules.md](docs/ai-development/architecture-rules.md) | Architecture and contracts |
+| [security-rules.md](docs/ai-development/security-rules.md) | Secrets, PII, model safety |
+| [git-rules.md](docs/ai-development/git-rules.md) | Branches, commits, PRs |
+| [review-checklist.md](docs/ai-development/review-checklist.md) | Human review of AI PRs |
+| [agent-task-template.md](docs/ai-development/agent-task-template.md) | Task assignment template |
+
+---
+
+## Before opening a PR
 
 - [ ] Inspected affected code and docs
 - [ ] Requirements and architecture understood
-- [ ] Contracts preserved or intentionally versioned
-- [ ] Feature branch used; not targeting a direct push to `main`
-- [ ] Tests written and run (or blockers reported)
-- [ ] Docs and ADRs updated where needed
-- [ ] No unnecessary dependencies
-- [ ] Diff limited to the requested scope
-- [ ] Status reported honestly
-
-## Related documents
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [DEVELOPMENT.md](DEVELOPMENT.md)
-- [TESTING.md](TESTING.md)
-- [docs/ai-development/](docs/ai-development/)
-- [docs/audits/](docs/audits/)
+- [ ] Smallest correct change implemented
+- [ ] Tests added/updated and run (or blockers reported honestly)
+- [ ] Static checks run (or absence explained)
+- [ ] Diff reviewed; unrelated changes excluded
+- [ ] Documentation updated per the documentation rule
+- [ ] Exact verification results reported
+- [ ] Feature branch used; not a direct `main` push
+- [ ] No secrets in the diff
