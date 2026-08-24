@@ -17,6 +17,12 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Idempotent replay via input fingerprint
   - Observability logs for decision start/completion (no document contents)
   - Tests: `tests/agents/router/`, `tests/router/`, decision evaluation suite
+- Phase 6 decision evaluation (`nova.evaluation.decision`):
+  - Synthetic dataset covering 15 decision categories + critical unsafe AUTO_APPROVE attempts
+  - Metrics: decision accuracy, AUTO_APPROVE precision, false AUTO_APPROVE rate (primary),
+    HUMAN_REVIEW / AMENDMENT_REQUEST rates, unsafe attempts, latency, failure rate
+  - Fixed regression revision `nova-decision-eval@2026-08-25.r1` (false AUTO_APPROVE target 0.0)
+  - Docs: `docs/evaluation/decision-evaluation.md`, router/testing/traceability updates
 - Phase 3 application foundation (`0.3.0`):
   - FastAPI health/readiness, authenticated ingestion, and document/shipment retrieval
   - Required HTTP idempotency with replay and mismatch conflict behavior
