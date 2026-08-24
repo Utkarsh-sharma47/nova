@@ -23,6 +23,13 @@ Prove deterministic behavior quickly in CI; evaluate probabilistic LLM behavior 
 4. **Deterministic seeds/config** for any sampling-based components where possible.
 5. **Honest reporting** — Failed evals are reported; do not hide with retries that always eventually “pass.”
 
+## Detailed architecture
+
+- [test-strategy.md](./test-strategy.md)
+- [contract-testing.md](./contract-testing.md)
+- [failure-testing.md](./failure-testing.md)
+- [performance-testing.md](./performance-testing.md)
+
 ## Phase 1 applicable checks
 
 - Documentation structure script

@@ -12,6 +12,7 @@ Requirements, product definition, architecture principles, documentation system,
 - Define typed contracts for extraction, validation, routing
 - Skeleton repo layout without full business logic
 - Enable language-appropriate lint/type CI
+- Testing and AI evaluation architecture (pyramid, failure/performance specs, eval framework, regression policy) — docs ahead of harness code
 
 ## Phase 3 — Ingestion & Extractor Agent
 

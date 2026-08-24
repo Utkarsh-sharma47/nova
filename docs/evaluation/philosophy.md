@@ -31,6 +31,13 @@ A system that auto-approves incorrectly is worse than one that over-routes to HU
 3. Store report artifacts with model/prompt versions.
 4. Regressions block release/demo claims.
 
+## Detailed architecture
+
+- [evaluation-framework.md](./evaluation-framework.md)
+- [datasets.md](./datasets.md)
+- [metrics.md](./metrics.md)
+- [regression-policy.md](./regression-policy.md)
+
 ## Phase 1 note
 
-No eval harness code yet — only the philosophy and requirements (`REQ-EXT-005`, `REQ-SUBMISSION-002`).
+No eval harness code yet — philosophy plus evaluation architecture docs. Requirements: `REQ-EXT-005`, `REQ-SUBMISSION-002`.

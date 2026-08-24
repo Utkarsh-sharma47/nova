@@ -2,24 +2,19 @@
 
 Quality and accuracy evaluation for Nova’s extraction, validation, and decisioning.
 
-## Documents (Phase 1)
+## Documents
 
 | Document | Status |
 |----------|--------|
 | [philosophy.md](./philosophy.md) | Done |
+| [evaluation-framework.md](./evaluation-framework.md) | Done — process and agent dimensions |
+| [datasets.md](./datasets.md) | Done — Part 1 categories + Part 2 future |
+| [metrics.md](./metrics.md) | Done — definitions; thresholds as calibration targets |
+| [regression-policy.md](./regression-policy.md) | Done — mandatory fixed-dataset eval on prompt/model changes |
 
 ## Current status
 
 No evaluation harness or gold dataset exists yet. Do not invent scores or claim unmeasured quality.
-
-## Planned contents
-
-| Topic | Status |
-|-------|--------|
-| Metrics (field-level, document-level, decision agreement) | Phase 5 |
-| Gold / labeled datasets (clean + messy samples) | Phase 5 |
-| Regression evaluation process | Phase 5–7 |
-| False AUTO_APPROVE safety bar | Phase 5–7 |
 
 ## Related
 

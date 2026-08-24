@@ -51,4 +51,6 @@ Agents must:
 - [`agent-development-rules.md`](./agent-development-rules.md)
 - [`review-checklist.md`](./review-checklist.md)
 - Root [`TESTING.md`](../../TESTING.md) (when present)
-- `docs/testing/` (test strategy docs)
+- [`docs/testing/test-strategy.md`](../testing/test-strategy.md)
+- [`docs/evaluation/evaluation-framework.md`](../evaluation/evaluation-framework.md)
+- [`docs/evaluation/regression-policy.md`](../evaluation/regression-policy.md)

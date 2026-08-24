@@ -8,6 +8,11 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Testing and AI evaluation architecture:
+  - Test pyramid (unit, contract, integration, E2E, evaluation, regression, failure, performance)
+  - Contract, failure, and performance testing specs (no harness/tooling yet)
+  - Evaluation framework, dataset categories, metrics (thresholds as calibration targets)
+  - Mandatory fixed-dataset regression policy for prompt/model/policy changes
 - Phase 1 engineering foundation:
   - Requirements inventory with stable `REQ-*` IDs (assignment vs engineering)
   - Acceptance criteria, traceability, and scope boundaries
