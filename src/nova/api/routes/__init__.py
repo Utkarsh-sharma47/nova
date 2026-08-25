@@ -8,12 +8,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 
-from nova.api.deps import authenticate, ingestion_service, settings
+from nova.api.deps import authenticate, ingestion_service, query_service, settings
 from nova.application.ingestion import IngestCommand, IngestionService
+from nova.contracts.query import QueryRequest, QueryResponse
 from nova.domain.errors import MissingIdempotencyKey, ValidationFailure
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.observability.metrics import render_metrics
 from nova.persistence.database import database_ready
+from nova.query.service import QueryService
 
 router = APIRouter()
 
@@ -114,3 +116,13 @@ def get_shipment(
     service: Annotated[IngestionService, Depends(ingestion_service)],
 ) -> dict[str, object]:
     return service.get_shipment(shipment_id, str(request.state.trace_id))
+
+
+@router.post("/v1/query", tags=["query"])
+def post_query(
+    body: QueryRequest,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[QueryService, Depends(query_service)],
+) -> QueryResponse:
+    return service.answer(body, trace_id=str(request.state.trace_id))

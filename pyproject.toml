@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nova"
-version = "0.4.0"
-description = "Nova trade-document verification application foundation"
+version = "0.8.0"
+description = "Nova trade-document verification with grounded query API"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "UNLICENSED" }

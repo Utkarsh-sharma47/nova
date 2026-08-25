@@ -9,6 +9,7 @@ Per-feature documentation for Nova.
 | Part 1 scope contract | [part1-scope.md](./part1-scope.md) | Done (scope; implementation later) |
 | Document ingestion | [document-ingestion.md](./document-ingestion.md) | Phase 3 implemented |
 | Extractor agent | [extractor-agent.md](./extractor-agent.md) | Phase 4 implemented |
+| Query / Intelligence API | [query-intelligence-api.md](./query-intelligence-api.md) | Phase 8 implemented |
 
 ## Creating a feature doc
 

@@ -8,6 +8,12 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 8 Query / Intelligence API (`0.8.0`):
+  - `POST /v1/query` with allow-listed intents and customer-scoped SQLAlchemy reads
+  - Security gate rejecting SQL injection, arbitrary SQL, schema discovery, prompt injection
+  - Optional LLM intent classification (MockLLM default → unsupported); never LLM SQL
+  - Persistence tables `validations`, `validation_checks`, `decisions` (Alembic `0003_phase8_query`)
+  - Tests under `tests/query/`; docs in `docs/api/query-interface.md` and `docs/features/query-intelligence-api.md`
 - Phase 4 Extractor Agent (`0.4.0`):
   - `LLMPort` + `MockLLM` (default test/local provider; no API key required)
   - `ExtractorService` with versioned prompt `extractor.v1`, 60s timeout, max 2 retries

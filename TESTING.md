@@ -10,13 +10,14 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 3 includes contract, lifecycle, processor/storage, API, security/failure,
-and PostgreSQL migration tests. No LLM or agent behavior is tested because those
-agents are outside this phase.
+Phase 8 adds grounded `POST /v1/query` coverage under `tests/query/` (supported
+intents, security rejection, LLM/DB failure modes, response schema). Phase 3–5
+suites remain. Default LLM for query is MockLLM.
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
+pytest tests/query -q
 ```
 
 The default suite skips PostgreSQL migration verification unless

@@ -7,6 +7,10 @@
 - Secret pattern scanning runs in CI (`scripts/check-secret-patterns.sh`)
 - Never commit customer documents that contain real PII/commercial secrets; use scrubbed fixtures
 
+## Natural-language query
+
+See [query-api.md](./query-api.md). User questions and LLM intent output must never become unrestricted SQL.
+
 ## Logging policy
 
 - Do not log secrets

@@ -17,6 +17,8 @@ from nova.domain.errors import NovaError
 from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.persistence.database import get_session
+from nova.query.llm import build_query_llm
+from nova.query.service import QueryService
 
 
 class AuthenticationError(NovaError):
@@ -69,3 +71,16 @@ def ingestion_service(
         extractor=extractor,
         auto_extract=True,
     )
+
+
+def query_service(
+    request: Request,
+    session: Annotated[Session, Depends(session_dependency)],
+) -> QueryService:
+    app_settings = settings(request)
+    llm = build_query_llm(
+        app_settings.llm_provider,
+        app_settings.llm_model,
+        app_settings.llm_api_key,
+    )
+    return QueryService(session, llm=llm)

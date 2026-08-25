@@ -30,8 +30,10 @@ Deferred. No Phase 3 route exists; the planned contract returns the latest
 
 ## POST `/v1/query`
 
-Deferred. No Phase 3 route exists. The planned grounded query contract is
-documented in [query-interface.md](./query-interface.md).
+Phase 8 implemented. Authenticated grounded NL query over persisted verification
+data. See [query-interface.md](./query-interface.md). Returns HTTP 200 with
+`status` ∈ `RESULT` | `EMPTY` | `UNSUPPORTED` | `FAILURE`. Does **not** execute
+LLM-generated SQL.
 
 ## GET `/health` / `/ready` / `/metrics`
 

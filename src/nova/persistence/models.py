@@ -331,3 +331,139 @@ class ExtractedFieldRow(Base):
     extractor_notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
+
+class ValidationRow(Base):
+    """Append-only validation aggregate for a verification run (query system of record)."""
+
+    __tablename__ = "validations"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending','running','completed','failed')",
+            name="ck_validations_status",
+        ),
+        CheckConstraint(
+            "aggregate_result IS NULL OR aggregate_result IN ('MATCH','MISMATCH','UNCERTAIN')",
+            name="ck_validations_aggregate_result",
+        ),
+        CheckConstraint(
+            "(status <> 'completed') OR (aggregate_result IS NOT NULL)",
+            name="ck_validations_completed_has_result",
+        ),
+        CheckConstraint(
+            "(status <> 'failed') OR (aggregate_result IS NULL OR aggregate_result <> 'MATCH')",
+            name="ck_validations_failed_not_match",
+        ),
+        UniqueConstraint("verification_run_id", name="uq_validations_verification_run"),
+        Index("ix_validations_shipment_created", "shipment_id", "created_at"),
+        Index("ix_validations_document_id", "document_id"),
+    )
+
+    validation_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id"),
+        nullable=False,
+    )
+    shipment_id: Mapped[UUID] = mapped_column(ForeignKey("shipments.shipment_id"), nullable=False)
+    document_id: Mapped[UUID | None] = mapped_column(ForeignKey("documents.document_id"))
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="completed")
+    aggregate_result: Mapped[str | None] = mapped_column(Text)
+    document_version_ids: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    summary_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    error_code: Mapped[str | None] = mapped_column(Text)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    checks: Mapped[list[ValidationCheckRow]] = relationship(back_populates="validation")
+
+
+class ValidationCheckRow(Base):
+    """Append-only per-rule validation check rows."""
+
+    __tablename__ = "validation_checks"
+    __table_args__ = (
+        CheckConstraint(
+            "result IN ('MATCH','MISMATCH','UNCERTAIN')",
+            name="ck_validation_checks_result",
+        ),
+        UniqueConstraint(
+            "validation_id",
+            "rule_key",
+            "check_sequence",
+            name="uq_validation_checks_rule_sequence",
+        ),
+        Index("ix_validation_checks_validation_id", "validation_id"),
+        Index("ix_validation_checks_result", "result"),
+    )
+
+    validation_check_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    validation_id: Mapped[UUID] = mapped_column(
+        ForeignKey("validations.validation_id"),
+        nullable=False,
+    )
+    rule_key: Mapped[str] = mapped_column(Text, nullable=False)
+    check_sequence: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    result: Mapped[str] = mapped_column(Text, nullable=False)
+    field_key: Mapped[str | None] = mapped_column(Text)
+    reason_code: Mapped[str] = mapped_column(Text, nullable=False, default="UNSPECIFIED")
+    reason_detail: Mapped[str | None] = mapped_column(Text)
+    evaluator: Mapped[str] = mapped_column(Text, nullable=False, default="deterministic")
+    confidence: Mapped[float | None] = mapped_column(Float)
+    expected_json: Mapped[Any | None] = mapped_column(JSON)
+    actual_json: Mapped[Any | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    validation: Mapped[ValidationRow] = relationship(back_populates="checks")
+
+
+class DecisionRecord(Base):
+    """Append-only router disposition. One decision per verification run."""
+
+    __tablename__ = "decisions"
+    __table_args__ = (
+        CheckConstraint(
+            "disposition IN ('AUTO_APPROVE','HUMAN_REVIEW','AMENDMENT_REQUEST')",
+            name="ck_decisions_disposition",
+        ),
+        CheckConstraint(
+            "actor_type IN ('router','system_failsafe')",
+            name="ck_decisions_actor_type",
+        ),
+        CheckConstraint(
+            "actor_type <> 'system_failsafe' OR disposition <> 'AUTO_APPROVE'",
+            name="ck_decisions_failsafe_no_auto_approve",
+        ),
+        UniqueConstraint("verification_run_id", name="uq_decisions_verification_run"),
+        Index("ix_decisions_shipment_decided", "shipment_id", "decided_at"),
+        Index("ix_decisions_disposition_decided", "disposition", "decided_at"),
+        Index("ix_decisions_document_id", "document_id"),
+    )
+
+    decision_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id"),
+        nullable=False,
+    )
+    shipment_id: Mapped[UUID] = mapped_column(ForeignKey("shipments.shipment_id"), nullable=False)
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.document_id"), nullable=False)
+    document_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("document_versions.document_version_id"),
+    )
+    validation_id: Mapped[UUID | None] = mapped_column(ForeignKey("validations.validation_id"))
+    disposition: Mapped[str] = mapped_column(Text, nullable=False)
+    policy_id: Mapped[str | None] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text, nullable=False)
+    reason_codes: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    reasons: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    actor_type: Mapped[str] = mapped_column(Text, nullable=False, default="router")
+    agent_version: Mapped[str | None] = mapped_column(Text)
+    trace_id: Mapped[str | None] = mapped_column(Text)
+    reasoning_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    risk_flags: Mapped[list[Any] | None] = mapped_column(JSON)
+    supersedes_decision_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("decisions.decision_id"),
+    )
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    input_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    llm_rationale: Mapped[str | None] = mapped_column(Text)
+

@@ -24,8 +24,8 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 | REQ-DATA-002 | 1:N documents | schema relationships | 2–5 | Schema review | ERD + relationships.md |
 | REQ-DATA-003 | Idempotent writes | Idempotency-Key + DB keys | 5 | Integration | api/idempotency + schema |
 | REQ-DATA-004 | Retention/PII policy | security baseline | 1–5 | Doc review | `docs/security/` |
-| REQ-QUERY-001 | Query API | GET shipment/document | 5–6 | Integration | api/contracts |
-| REQ-QUERY-002–003 | NL query, grounded | `POST /v1/query` | 6 | Eval + integration | query-interface.md (**no LLM SQL**) |
+| REQ-QUERY-001 | Query API | GET shipment/document + NL query reads | 8 | Integration | api/contracts + `src/nova/query/` |
+| REQ-QUERY-002–003 | NL query, grounded | `POST /v1/query` | 8 | Unit + integration + security | query-interface.md (**no LLM SQL**); `tests/query/` |
 | REQ-UI-001–003 | Frontend ADR-0009 | — | 6 | Manual/smoke | ADR-0009 + UI feature docs |
 | REQ-AI-001–003 | Agent architecture | Extractor/Validator/Router contracts | 3–4 | Contract tests | `docs/agents/*`, `tests/contracts/` |
 | REQ-AI-004 | No silent fabrication | FieldPresence invariants | 3–4 | Contract + eval | extraction.py validators |
@@ -60,6 +60,17 @@ All 68 inventory requirements retain a design/contract/test pointer above. Runti
 | REQ-DATA-002 | Shipment-to-documents 1:N model | API + migration integration | No uniqueness constraint on `documents.shipment_id` |
 | REQ-DATA-003 | Principal/key/fingerprint idempotency records with unique-violation recovery | API replay/conflict and concurrent-ingestion tests | Same request replays, concurrent loser re-reads winner, changed content returns 409 |
 | REQ-QUERY-001 (partial) | Document and shipment GET endpoints | API retrieval tests | Persisted ingestion metadata is queryable; validation/decision reads remain deferred |
+
+## Phase 8 implementation evidence
+
+| Requirement | Implementation | Test | Reproducible evidence |
+|-------------|----------------|------|-----------------------|
+| REQ-QUERY-001 | `QueryRepository` + allow-listed intents over shipments/documents/validations/decisions/runs | `tests/query/test_query_supported.py` | Seeded SoR rows returned with matching IDs |
+| REQ-QUERY-002 | `POST /v1/query`, deterministic + optional LLM classify | API + service tests | Intent allow-list only; MockLLM default returns unsupported |
+| REQ-QUERY-003 | Grounded summaries/citations from repository rows | Factual ID assertions + empty/missing cases | No invented values when entity absent |
+| REQ-SEC (query) | Security gate + customer scoping | `tests/query/test_query_security.py` | SQL/prompt/schema abuse → `SECURITY_REJECTED` |
+
+Not claimed in Phase 8: frontend UI (Part 1 Phase 6 roadmap / later), free-form analytics, or mutating NL commands.
 | REQ-OBS-001–002 | JSON formatter, request/trace middleware, `/metrics` | API header and metrics tests | Correlation headers, structured fields, Prometheus request count/latency; no agent-stage tracing yet |
 | REQ-OBS-004 (partial) | Safe classified HTTP errors and schema/storage readiness | API readiness and failure tests | DB-down, missing-schema, and storage failures are visible without connection details |
 | REQ-TEST-001,003–004 | Unit/API/integration plus retained contract suite | `tests/` | `ruff check src tests`, `mypy`, `pytest -q` |

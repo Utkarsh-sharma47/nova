@@ -79,9 +79,9 @@ Planned implementation phases map to `docs/roadmap/roadmap.md`.
 
 | ID | Requirement | Source | Priority | Part | Acceptance criteria | Planned phase | Planned test | Evidence required | Status |
 |----|-------------|--------|----------|------|---------------------|---------------|--------------|-------------------|--------|
-| REQ-QUERY-001 | Provide a query layer over persisted data | ASSIGNMENT | P0 | 1 | Operators can retrieve shipments/docs/decisions | Phase 5–6 | Integration | API demos | planned |
-| REQ-QUERY-002 | Support natural-language query over persisted verification data | ASSIGNMENT | P0 | 1 | NL query returns grounded answers from persisted records | Phase 6 | Eval + integration | Query examples + traces | planned |
-| REQ-QUERY-003 | NL query must not invent facts not present in persisted data | ENGINEERING | P0 | 1 | Answers cite records or refuse when unknown | Phase 6 | Eval adversarial | Eval cases | planned |
+| REQ-QUERY-001 | Provide a query layer over persisted data | ASSIGNMENT | P0 | 1 | Operators can retrieve shipments/docs/decisions | Phase 8 | Integration | API demos | implemented |
+| REQ-QUERY-002 | Support natural-language query over persisted verification data | ASSIGNMENT | P0 | 1 | NL query returns grounded answers from persisted records | Phase 8 | Unit + integration | Query examples + traces | implemented |
+| REQ-QUERY-003 | NL query must not invent facts not present in persisted data | ENGINEERING | P0 | 1 | Answers cite records or refuse when unknown | Phase 8 | Security + empty cases | Eval/adversarial + tests | implemented |
 
 ---
 

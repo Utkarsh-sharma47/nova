@@ -22,6 +22,9 @@ _REQUIRED_TABLES = {
     "agent_executions",
     "model_call_metadata",
     "extracted_fields",
+    "validations",
+    "validation_checks",
+    "decisions",
 }
 
 

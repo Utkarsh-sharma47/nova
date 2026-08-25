@@ -14,6 +14,7 @@
 | [lifecycle-and-idempotency.md](./lifecycle-and-idempotency.md) | Phase 2 |
 | [part2-extension-points.md](./part2-extension-points.md) | Phase 1 |
 | [engineering-standards.md](./engineering-standards.md) | Phase 1 |
+| Query intelligence (API) | Phase 8 — see [../features/query-intelligence-api.md](../features/query-intelligence-api.md) |
 
 ## Contents / planned
 

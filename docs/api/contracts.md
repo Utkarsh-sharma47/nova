@@ -345,6 +345,7 @@ Same readiness pattern as validation GET (200 when decided; 404 while pending).
 | **Path** | `/v1/query` |
 | **Auth** | Required |
 | **Idempotency** | Not required (read-only); see [query-interface.md](./query-interface.md) |
+| **Status** | Phase 8 implemented (`src/nova/query/`) |
 
 Full request/response, intent allow-list, unsupported/failure distinction, and **no arbitrary LLM SQL** rule: [query-interface.md](./query-interface.md).
 

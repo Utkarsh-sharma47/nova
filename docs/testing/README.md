@@ -15,6 +15,7 @@
 | [failure-testing.md](./failure-testing.md) | Done — fail-safe catalog |
 | [performance-testing.md](./performance-testing.md) | Done — latency/throughput/cost (no tooling yet) |
 | [validator-evaluation.md](./validator-evaluation.md) | Done — Validator safety + eval suites |
+| [query-api.md](./query-api.md) | Done — Phase 8 query/security/failure suites |
 ## Current automated checks
 - Docs structure script
 - Secret pattern script
