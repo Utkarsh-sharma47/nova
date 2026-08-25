@@ -7,6 +7,9 @@ Voyage: V-2026-08
 Port of Loading: Singapore
 Port of Discharge: Rotterdam
 Container Number: MSKU7654321
+HS Code: 8471.30
+Incoterms: CIF
 Gross Weight: 10250 KG
+Invoice Number: INV-CLEAN-2001
 Description of Goods: Synthetic clean Bill of Lading for Nova Part 1 evaluation.
 Note: Synthetic fixture only. Not a real customer document.

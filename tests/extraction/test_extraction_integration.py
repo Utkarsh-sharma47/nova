@@ -52,6 +52,13 @@ def _invoice_body() -> bytes:
         b"Invoice Date: 2026-02-01\n"
         b"Seller: Acme Trading\n"
         b"Buyer: Globex Corp\n"
+        b"Consignee: Globex Corp\n"
+        b"HS Code: 8471.30\n"
+        b"Port of Loading: Singapore\n"
+        b"Port of Discharge: Rotterdam\n"
+        b"Incoterms: FOB\n"
+        b"Description of Goods: Widget assemblies\n"
+        b"Gross Weight: 1250 KG\n"
         b"Currency: USD\n"
         b"Total Amount: 1250.00\n"
     )

@@ -6,6 +6,8 @@ Consignee: Harbor Goods BV
 Port of Loading: Singapore
 Port of Discharge: Rotterdam
 Container Number: MSKU7654321
+HS Code: 8471.30
+Incoterms: FOB
 Gross Weight: 10250 KG
 Currency: USD
 Total Amount: 15200.00

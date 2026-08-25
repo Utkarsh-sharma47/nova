@@ -26,7 +26,7 @@ from nova.extraction.fields import assert_supported_fields
 from nova.extraction.parsing import normalize_field_dicts, parse_llm_fields_payload
 from nova.extraction.prompts import PROMPT_ID, PROMPT_VERSION, build_extraction_prompt
 from nova.llm.errors import LLMError, LLMOutputError, LLMProviderError, LLMTimeoutError
-from nova.llm.port import LLMMessage, LLMPort, LLMRequest
+from nova.llm.port import LLMImagePart, LLMMessage, LLMPort, LLMRequest
 
 MAX_RETRIES = 2  # 3 total attempts
 DEFAULT_TIMEOUT_MS = 60_000
@@ -93,13 +93,13 @@ class ExtractorService:
                 model=model,
             )
 
-        if not _has_extractable_text(content):
+        if not _has_extractable_input(content):
             return self._failed(
                 request,
                 agent_execution_id=agent_execution_id,
                 run_id=run_id,
                 code="DOCUMENT_UNREADABLE",
-                message="Document has no extractable text",
+                message="Document has no extractable text or image content",
                 retryable=False,
                 started=started,
                 attempt=0,
@@ -142,6 +142,13 @@ class ExtractorService:
                         messages=[
                             LLMMessage(role="system", content=prompt.system),
                             LLMMessage(role="user", content=prompt.user),
+                        ],
+                        images=[
+                            LLMImagePart(
+                                media_type=image.media_type,
+                                data_base64=image.data_base64,
+                            )
+                            for image in content.images
                         ],
                         response_format="json",
                         temperature=prompt.temperature,
@@ -381,10 +388,12 @@ class ExtractorService:
         )
 
 
-def _has_extractable_text(content: DocumentContent) -> bool:
+def _has_extractable_input(content: DocumentContent) -> bool:
     if content.text and content.text.strip():
         return True
     if content.page_texts and any(page.strip() for page in content.page_texts):
+        return True
+    if content.images:
         return True
     return False
 

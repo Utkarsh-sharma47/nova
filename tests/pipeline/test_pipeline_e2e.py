@@ -73,6 +73,13 @@ def _invoice_body() -> bytes:
         b"Invoice Date: 2026-02-01\n"
         b"Seller: Acme Trading\n"
         b"Buyer: Globex Corp\n"
+        b"Consignee: Globex Corp\n"
+        b"HS Code: 8471.30\n"
+        b"Port of Loading: Singapore\n"
+        b"Port of Discharge: Rotterdam\n"
+        b"Incoterms: FOB\n"
+        b"Description of Goods: Widget assemblies\n"
+        b"Gross Weight: 1250 KG\n"
         b"Currency: USD\n"
         b"Total Amount: 1250.00\n"
     )
@@ -87,6 +94,11 @@ def _bol_body() -> bytes:
         b"Port of Loading: Shanghai\n"
         b"Port of Discharge: Los Angeles\n"
         b"Container Number: MSKU1234567\n"
+        b"HS Code: 8471.30\n"
+        b"Incoterms: CIF\n"
+        b"Description of Goods: Widget assemblies\n"
+        b"Gross Weight: 1250 KG\n"
+        b"Invoice Number: INV-42\n"
     )
 
 

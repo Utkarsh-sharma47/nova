@@ -55,6 +55,8 @@ def build_extraction_prompt(
             "processor_name": content.processor_name,
             "processor_version": content.processor_version,
             "text": doc_text,
+            "image_count": len(content.images),
+            "has_vision_images": bool(content.images),
             "warnings": content.warnings,
         },
         "output_schema": {
@@ -81,8 +83,15 @@ def build_extraction_prompt(
             ]
         },
     }
+    vision_note = ""
+    if content.images:
+        vision_note = (
+            "\nImage bytes are attached separately for vision-capable providers. "
+            "If you cannot read the image, mark fields MISSING/UNKNOWN — never invent.\n"
+        )
     user = (
-        "Extract the required fields from the following document JSON.\n"
+        "Extract the required fields from the following document JSON."
+        f"{vision_note}\n"
         'Respond with JSON object: {"fields": [...]} only.\n'
         f"{json.dumps(user_payload, ensure_ascii=False)}"
     )

@@ -27,6 +27,15 @@ _FIELD_ALIASES: dict[str, tuple[str, ...]] = {
     "port_of_loading": ("port of loading", "pol", "load port"),
     "port_of_discharge": ("port of discharge", "pod", "discharge port"),
     "container_number": ("container", "container number", "container no"),
+    "hs_code": ("hs code", "hs-code", "harmonized code", "hscode", "tariff code"),
+    "incoterms": ("incoterms", "incoterm", "terms of delivery", "delivery terms"),
+    "description_of_goods": (
+        "description of goods",
+        "goods description",
+        "description",
+        "commodity",
+    ),
+    "gross_weight": ("gross weight", "gross wt", "g.w.", "gw", "weight"),
 }
 
 

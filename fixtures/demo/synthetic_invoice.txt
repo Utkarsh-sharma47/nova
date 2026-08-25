@@ -5,6 +5,8 @@ Consignee: Demo Trading Co
 Port of Loading: Singapore
 Port of Discharge: Rotterdam
 Container Number: MSKU1234567
+HS Code: 8471.30
+Incoterms: FOB
 Gross Weight: 12500 KG
 Currency: USD
 Total Amount: 18450.00

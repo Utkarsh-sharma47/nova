@@ -26,10 +26,17 @@ projects `EXTRACTED` or `FAILED` with an extraction summary.
 
 ## Part 1 fields
 
-Invoice: `invoice_number`, `invoice_date`, `seller_name`, `buyer_name`, `currency`, `total_amount`
+**GoComet assignment MUST fields** (always requested for invoice and BoL):
 
-Bill of Lading: `bl_number`, `vessel_name`, `shipper_name`, `consignee_name`,
-`port_of_loading`, `port_of_discharge`, `container_number`
+`consignee_name`, `hs_code`, `port_of_loading`, `port_of_discharge`, `incoterms`,
+`description_of_goods`, `gross_weight`, `invoice_number`
+
+Invoice also includes: `invoice_date`, `seller_name`, `buyer_name`, `currency`, `total_amount`
+
+Bill of Lading also includes: `bl_number`, `vessel_name`, `shipper_name`, `container_number`
+
+Images (PNG/JPEG) are accepted via `RasterImageAdapter` and passed to vision-capable
+`LLMPort` adapters. Without live credentials, MockLLM leaves unread fields `MISSING`.
 
 ## Anti-fabrication
 
