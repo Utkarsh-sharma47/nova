@@ -43,15 +43,16 @@ Detailed row status: [final-gocomet-file-location-map.md](./final-gocomet-file-l
 
 | Command | Result |
 |---------|--------|
+| `git diff --check` | passed (after whitespace cleanup) |
+| `./scripts/check-docs-structure.sh` | PASSED |
+| `./scripts/check-secret-patterns.sh` | PASSED |
 | `ruff check src tests` | passed |
 | `mypy src` | passed (100 files) |
 | `pytest -q` | **190 passed, 2 skipped** |
 | Frontend `npm test` | **24 passed** |
 | Frontend typecheck + build | passed |
 | `PYTHONPATH=src python scripts/run_full_evaluation.py` | PASS — FA=0, fabrication=0, unsafe_match=0 |
-| `./scripts/check-docs-structure.sh` | (run in final command pass) |
-| `./scripts/check-secret-patterns.sh` | (run in final command pass) |
-| `docker compose build` | passed earlier on branch; reconfirm in final pass |
+| `docker compose build` | passed |
 
 ### Evaluation gates (**MEASURED**)
 
