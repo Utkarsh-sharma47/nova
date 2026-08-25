@@ -105,6 +105,7 @@ export function DocumentPage() {
   if (docState.status === 'error') {
     return (
       <ErrorPanel
+        title="Failed to load document"
         message={docState.error.message}
         code={
           docState.error instanceof ApiClientError
@@ -116,6 +117,12 @@ export function DocumentPage() {
             ? docState.error.traceId
             : undefined
         }
+        retryable={
+          docState.error instanceof ApiClientError
+            ? docState.error.retryable
+            : true
+        }
+        onRetry={() => docState.reload()}
       />
     )
   }

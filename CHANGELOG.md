@@ -6,6 +6,18 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ## [Unreleased]
 
+### Changed
+
+- Operations UI polish (Dashboard / Upload / Query): denser ops metrics, clearer
+  tables with shipment/decision columns, upload workflow steps + acceptance
+  messaging, query example chips, shared loading/empty/error retry states,
+  responsive table overflow, and stronger focus/contrast styling. No API
+  contract changes.
+- Expanded root README with Part 1 workflow, Docker/runbook accuracy, and
+  Mermaid architecture + upload sequence diagrams.
+- Restored Phase 10 E2E matrix tests (`tests/e2e/`) onto the final compliance
+  branch; fixed stale ingestion/TESTING docs.
+
 ### Added
 
 - Phase 12 final Part 1 release audit:

@@ -28,6 +28,26 @@ export function formatTimestamp(value: string): string {
   return date.toLocaleString()
 }
 
+export function formatBytes(size: number): string {
+  if (!Number.isFinite(size) || size < 0) {
+    return '—'
+  }
+  if (size < 1024) {
+    return `${size} B`
+  }
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`
+  }
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function shortId(value: string, keep = 8): string {
+  if (value.length <= keep * 2 + 1) {
+    return value
+  }
+  return `${value.slice(0, keep)}…${value.slice(-keep)}`
+}
+
 export function formatConfidence(value: number | null | undefined): string {
   if (value == null) {
     return '—'

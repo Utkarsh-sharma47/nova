@@ -88,6 +88,53 @@ describe('DashboardPage', () => {
       expect(screen.getByText('3')).toBeInTheDocument()
       expect(screen.getAllByText('doc_recent').length).toBeGreaterThan(0)
       expect(screen.getByLabelText(/validation outcomes/i)).toBeInTheDocument()
+      expect(screen.getAllByText('shp_1').length).toBeGreaterThan(0)
+      expect(screen.getAllByRole('columnheader', { name: /shipment/i }).length).toBeGreaterThan(0)
+      expect(screen.getAllByRole('columnheader', { name: /decision/i }).length).toBeGreaterThan(0)
+    })
+  })
+
+  it('rejects invalid customer UUID before calling the API', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    await user.type(screen.getByLabelText(/customer id/i), 'not-a-uuid')
+    await user.click(screen.getByRole('button', { name: /load dashboard/i }))
+
+    expect(screen.getByText(/valid customer uuid/i)).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('offers retry after API failure', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(() =>
+        errorResponse(503, {
+          code: 'DEPENDENCY_UNAVAILABLE',
+          message: 'Database unavailable',
+          retryable: true,
+          trace_id: 'trace_fail',
+        }),
+      ),
+    )
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    await user.type(screen.getByLabelText(/customer id/i), CUSTOMER)
+    await user.click(screen.getByRole('button', { name: /load dashboard/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/database unavailable/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
     })
   })
 

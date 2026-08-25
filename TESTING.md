@@ -47,28 +47,17 @@ Frontend: [`docs/testing/frontend.md`](docs/testing/frontend.md).
 
 Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing/test-strategy.md).
 
-
-## Test layers (planned)
-| Layer | Intent |
-|-------|--------|
-| Unit | Pure functions, parsers, rule helpers, transformers |
-| Contract | Stable schemas for agent I/O and external APIs |
-| Integration | Agent boundaries, storage, API handlers |
-| Failure | Timeouts, provider/DB/file faults, retry exhaustion (fail closed) |
-| End-to-end | Document in → decision out for representative flows |
-| Evaluation | Accuracy / quality on curated document sets (not a substitute for unit tests) |
-| Regression (AI) | Fixed labeled set re-scored after prompt/model/policy changes |
-| Performance | Latency, throughput, cost per document (benchmark jobs; calibrate targets later) |
-Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/contract-testing.md), [failure](docs/testing/failure-testing.md), [performance](docs/testing/performance-testing.md), [evaluation](docs/evaluation/evaluation-framework.md).
 ## Test layers
+
 | Layer | Intent | Status |
 |-------|--------|--------|
-| Unit | Config, lifecycle, processors, storage | **Phase 3** |
-| Integration | HTTP ingestion and PostgreSQL migrations | **Phase 3** |
-| Contract | Stable schemas for agent I/O and APIs | **Phase 2** |
-| End-to-end | Document in → decision out | Phase 6–7 |
-| Evaluation | Accuracy on curated sets | Phase 5+ |
-| Failure | DB-down readiness, corrupt and unsupported input | **Phase 3** |
+| Unit | Config, lifecycle, processors, storage, agents | Implemented |
+| Contract | Stable schemas for agent I/O and APIs | Implemented |
+| Integration | HTTP ingestion, query, PostgreSQL migrations | Implemented |
+| Failure | DB-down readiness, corrupt/unsupported input, fail-closed | Implemented |
+| End-to-end | Document in → decision out + Phase 10 matrix | Implemented (`tests/pipeline/`, `tests/e2e/`) |
+| Evaluation | Accuracy on curated sets; false AUTO_APPROVE = 0 | Implemented |
+| Performance | Latency/cost benchmarks | Deferred / calibrate later |
 
 ## Expectations for contributors
 

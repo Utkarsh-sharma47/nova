@@ -4,6 +4,7 @@ interface ErrorPanelProps {
   traceId?: string
   code?: string
   retryable?: boolean
+  onRetry?: () => void
 }
 
 export function ErrorPanel({
@@ -12,6 +13,7 @@ export function ErrorPanel({
   traceId,
   code,
   retryable,
+  onRetry,
 }: ErrorPanelProps) {
   return (
     <section
@@ -31,12 +33,19 @@ export function ErrorPanel({
           <strong>Retryable:</strong> {retryable ? 'Yes' : 'No'}
         </p>
       ) : null}
+      {onRetry ? (
+        <div className="button-row">
+          <button type="button" className="btn btn--secondary" onClick={onRetry}>
+            Try again
+          </button>
+        </div>
+      ) : null}
       {traceId ? (
         <details>
           <summary>Technical details</summary>
           <p>
             <strong>Trace ID:</strong>{' '}
-            <code style={{ fontFamily: 'var(--font-mono)' }}>{traceId}</code>
+            <code className="mono">{traceId}</code>
           </p>
         </details>
       ) : null}

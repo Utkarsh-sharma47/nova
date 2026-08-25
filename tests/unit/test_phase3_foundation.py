@@ -24,6 +24,7 @@ from nova.infrastructure.storage import LocalFilesystemStorage, safe_filename
 
 
 def test_config_parses_environment_aliases(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("APP_ENV", raising=False)
     monkeypatch.setenv("ENVIRONMENT", "test")
     monkeypatch.setenv("ALLOWED_MIME_TYPES", "application/pdf,text/plain")
     settings = Settings()

@@ -225,6 +225,24 @@ describe('QueryPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/upstream dependency failed/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
     })
+  })
+
+  it('rejects invalid customer UUID client-side', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <QueryPage />
+      </MemoryRouter>,
+    )
+
+    await user.clear(screen.getByLabelText(/customer id/i))
+    await user.type(screen.getByLabelText(/customer id/i), 'bad-id')
+    await user.type(screen.getByLabelText(/question/i), 'How many shipments are in human review?')
+    await user.click(screen.getByRole('button', { name: /submit query/i }))
+
+    expect(screen.getByText(/customer id must be a valid uuid/i)).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

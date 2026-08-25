@@ -6,7 +6,8 @@ export function Layout() {
       <header className="app-header">
         <div className="app-header__inner">
           <NavLink to="/" className="app-brand">
-            Nova Ops
+            <span className="app-brand__name">Nova Ops</span>
+            <span className="app-brand__tag">Document verification</span>
           </NavLink>
           <nav className="app-nav" aria-label="Main">
             <NavLink to="/" end>

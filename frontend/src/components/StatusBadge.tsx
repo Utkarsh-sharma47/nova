@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import { toLifecycleBadge } from '../utils/status'
 import type { DocumentStatus } from '../api/types'
 
@@ -17,25 +16,33 @@ type BadgeVariant =
   | 'EMPTY'
   | 'UNSUPPORTED'
   | 'FAILURE'
+  | 'ACCEPTED'
+  | 'EXTRACTED'
+  | 'VALIDATED'
+  | 'DECIDED'
 
-const VARIANT_STYLES: Record<string, CSSProperties> = {
-  PROCESSING: { background: '#ebf4ff', color: '#2b6cb0', borderColor: '#90cdf4' },
-  PROCESSED: { background: '#f0fff4', color: '#276749', borderColor: '#9ae6b4' },
-  FAILED: { background: '#fff5f5', color: '#9b2c2c', borderColor: '#feb2b2' },
-  MATCH: { background: '#f0fff4', color: '#276749', borderColor: '#9ae6b4' },
-  MISMATCH: { background: '#fff5f5', color: '#9b2c2c', borderColor: '#feb2b2' },
-  UNCERTAIN: { background: '#fffaf0', color: '#975a16', borderColor: '#fbd38d' },
-  AUTO_APPROVE: { background: '#f0fff4', color: '#276749', borderColor: '#9ae6b4' },
-  HUMAN_REVIEW: { background: '#fffaf0', color: '#975a16', borderColor: '#fbd38d' },
-  AMENDMENT_REQUEST: { background: '#fff5f5', color: '#9b2c2c', borderColor: '#feb2b2' },
-  RESULT: { background: '#f0fff4', color: '#276749', borderColor: '#9ae6b4' },
-  EMPTY: { background: '#edf2f7', color: '#4a5568', borderColor: '#cbd5e0' },
-  UNSUPPORTED: { background: '#fffaf0', color: '#975a16', borderColor: '#fbd38d' },
-  FAILURE: { background: '#fff5f5', color: '#9b2c2c', borderColor: '#feb2b2' },
+const TONE_MAP: Record<string, string> = {
+  PROCESSING: 'info',
+  ACCEPTED: 'info',
+  EXTRACTED: 'info',
+  VALIDATED: 'info',
+  PROCESSED: 'success',
+  DECIDED: 'success',
+  MATCH: 'success',
+  AUTO_APPROVE: 'success',
+  RESULT: 'success',
+  FAILED: 'danger',
+  MISMATCH: 'danger',
+  AMENDMENT_REQUEST: 'danger',
+  FAILURE: 'danger',
+  UNCERTAIN: 'warning',
+  HUMAN_REVIEW: 'warning',
+  UNSUPPORTED: 'warning',
+  EMPTY: 'neutral',
 }
 
 interface StatusBadgeProps {
-  status: BadgeVariant | DocumentStatus
+  status: BadgeVariant | DocumentStatus | string
   showLifecycle?: boolean
 }
 
@@ -46,27 +53,13 @@ export function StatusBadge({ status, showLifecycle = false }: StatusBadgeProps)
       : null
 
   const displayStatus = lifecycle ?? status
-  const style = VARIANT_STYLES[displayStatus] ?? {
-    background: '#edf2f7',
-    color: '#4a5568',
-    borderColor: '#cbd5e0',
-  }
+  const tone = TONE_MAP[displayStatus] ?? 'neutral'
 
   return (
     <span
       role="status"
       aria-label={`Status: ${displayStatus}`}
-      style={{
-        display: 'inline-block',
-        padding: '0.125rem 0.5rem',
-        border: '1px solid',
-        borderRadius: '2px',
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
-        ...style,
-      }}
+      className={`status-badge status-badge--${tone}`}
     >
       {displayStatus}
       {lifecycle && lifecycle !== status ? (

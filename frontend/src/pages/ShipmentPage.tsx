@@ -31,6 +31,7 @@ export function ShipmentPage() {
   if (shipmentState.status === 'error') {
     return (
       <ErrorPanel
+        title="Failed to load shipment"
         message={shipmentState.error.message}
         code={
           shipmentState.error instanceof ApiClientError
@@ -42,6 +43,12 @@ export function ShipmentPage() {
             ? shipmentState.error.traceId
             : undefined
         }
+        retryable={
+          shipmentState.error instanceof ApiClientError
+            ? shipmentState.error.retryable
+            : true
+        }
+        onRetry={() => shipmentState.reload()}
       />
     )
   }

@@ -34,7 +34,7 @@ describe('UploadPage', () => {
     const fileInput = screen.getByLabelText(/file/i)
     const file = new File(['invoice'], 'invoice.pdf', { type: 'application/pdf' })
     await user.upload(fileInput, file)
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     expect(screen.getByText(/upload in progress/i)).toBeInTheDocument()
 
@@ -53,7 +53,10 @@ describe('UploadPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/upload accepted/i)).toBeInTheDocument()
+      expect(screen.getByText(/document accepted/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/accepted and queued for processing/i),
+      ).toBeInTheDocument()
     })
   })
 
@@ -86,7 +89,7 @@ describe('UploadPage', () => {
 
     const file = new File(['data'], 'doc.pdf', { type: 'application/pdf' })
     await user.upload(screen.getByLabelText(/file/i), file)
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     await waitFor(() => {
       expect(screen.getByText('doc_success')).toBeInTheDocument()
@@ -107,7 +110,7 @@ describe('UploadPage', () => {
     })
     const fileInput = screen.getByLabelText(/file/i)
     fireEvent.change(fileInput, { target: { files: [file] } })
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     expect(screen.getByText(/only pdf, plain text, png, and jpeg/i)).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
@@ -135,7 +138,7 @@ describe('UploadPage', () => {
 
     const file = new File(['data'], 'doc.pdf', { type: 'application/pdf' })
     await user.upload(screen.getByLabelText(/file/i), file)
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/unsupported document type/i)).toBeInTheDocument()
@@ -165,7 +168,7 @@ describe('UploadPage', () => {
 
     const file = new File(['data'], 'doc.pdf', { type: 'application/pdf' })
     await user.upload(screen.getByLabelText(/file/i), file)
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     await waitFor(() => {
       expect(
@@ -189,7 +192,7 @@ describe('UploadPage', () => {
 
     const file = new File(['data'], 'doc.pdf', { type: 'application/pdf' })
     await user.upload(screen.getByLabelText(/file/i), file)
-    await user.click(screen.getByRole('button', { name: /upload/i }))
+    await user.click(screen.getByRole('button', { name: /upload document/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/network error/i)).toBeInTheDocument()

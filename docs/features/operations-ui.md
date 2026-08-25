@@ -45,13 +45,22 @@ Badges cover lifecycle (`PROCESSING` / `PROCESSED` / `FAILED` mapped from wire s
 validation (`MATCH` / `MISMATCH` / `UNCERTAIN`), and decisions
 (`AUTO_APPROVE` / `HUMAN_REVIEW` / `AMENDMENT_REQUEST`). Status is never color-only.
 
+Dashboard metrics expose document pipeline totals, routing dispositions, and validation
+aggregates from `GET /v1/ops/summary`. Recent document rows join in-decision dispositions
+from the same summary payload when available (no invented decisions).
+
 `AUTO_APPROVE` is displayed only when returned by the API.
+
+Upload uses a step-style workflow (Customer → Shipment → Document → Upload → Result)
+and explains acceptance as queued for processing. Query provides example allow-listed
+questions; unsupported intents remain `UNSUPPORTED`.
 
 ## Error handling
 
-Every fetch path exposes loading / success / empty / error. Structured API errors show
-`code`, `message`, `retryable`, and `trace_id` in a technical section. Raw stack traces
-are never rendered. API string fields are rendered as text (no `dangerouslySetInnerHTML`).
+Every fetch path exposes loading / success / empty / error, with a **Try again** action
+when retry is appropriate. Structured API errors show `code`, `message`, `retryable`, and
+`trace_id` in a technical section. Raw stack traces are never rendered. API string fields
+are rendered as text (no `dangerouslySetInnerHTML`).
 
 ## Security
 
