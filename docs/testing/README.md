@@ -19,29 +19,22 @@
 | [pipeline-integration.md](./pipeline-integration.md) | Done — Phase 7 E2E pipeline suite |
 | [query-api.md](./query-api.md) | Done — Phase 8 grounded query suite |
 | [frontend.md](./frontend.md) | Done — Phase 9 Vitest ops UI suite |
+| [phase-10-system-verification.md](./phase-10-system-verification.md) | Done — Phase 10 33-case matrix + integrity |
+
 ## Current automated checks
+
 - Docs structure script
 - Secret pattern script
-- pytest (contracts, documents, API, query, router decisions, pipeline)
+- pytest (contracts, documents, API, query, router, pipeline, e2e)
+- `scripts/run_full_evaluation.py` AI gates
 - Ruff + MyPy on application packages
 - Frontend: `npm test`, `npm run typecheck`, `npm run build`
-## Planned / specified
-| Topic | Status |
-|-------|--------|
-| Suite layout and naming | Phase 3+ |
-| Fixture policy (clean/messy samples) | Phase 5+; Router decision fixtures **done** (`fixtures/evaluation/decision/`) |
-| Contract test catalog | Phase 3–4 |
-| Expanded CI gates | Progressive with toolchain |
-| Database constraint / integrity tests | **Partial** — failsafe CHECK covered in `tests/router/test_decision_persistence.py`; full plan remains in database-test-plan |
-## Principles
-- Tests must be runnable and honest; never fabricate results.
-- Prefer deterministic fixtures; isolate flaky model-dependent checks under evaluation where appropriate.
-- Document how to run each suite in [DEVELOPMENT.md](../../DEVELOPMENT.md) when commands exist.
+
 ## Related
+
 - [TESTING.md](../../TESTING.md)
 - [Evaluation](../evaluation/)
 - [CI/CD](../deployment/ci-cd.md)
 - [AGENTS.md](../../AGENTS.md)
-- [Database test plan](../database/database-test-plan.md)
-- [testing rules](../ai-development/testing-rules.md)
+
 Root: [TESTING.md](../../TESTING.md).

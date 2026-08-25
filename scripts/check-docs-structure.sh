@@ -159,9 +159,13 @@ require "docs/api/versioning.md"
 
 require "docs/api/query-interface.md"
 
+require "docs/audits/phase-10-audit.md"
+require "docs/testing/phase-10-system-verification.md"
+
 # Scripts
 require "scripts/check-docs-structure.sh"
 require "scripts/check-secret-patterns.sh"
+require "scripts/run_full_evaluation.py"
 
 for cat in REQ-PROD REQ-EXT REQ-VAL REQ-ROUTER REQ-DATA REQ-QUERY REQ-UI REQ-AI REQ-OBS REQ-TEST REQ-DEPLOY REQ-DOC REQ-SEC REQ-SUBMISSION REQ-PART2; do
   if ! grep -q "$cat" docs/requirements/inventory.md; then

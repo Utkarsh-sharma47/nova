@@ -23,6 +23,7 @@ Quality and accuracy evaluation for Nova’s extraction, validation, and decisio
 | Router decision evaluation | Implemented (`nova.evaluation.decision`, `fixtures/evaluation/decision/`) |
 | Validator evaluation | Implemented (`nova.evaluation.validator`, fixtures + reports) |
 | Phase 7 pipeline regression | E2E suite `tests/pipeline/` (MockLLM); does not replace agent eval gates |
+| Phase 10 full evaluation command | `scripts/run_full_evaluation.py` (validator + decision + extractor fabrication) |
 | Live LLM quality jobs | Not in this suite |
 
 Primary Router safety gate: **false AUTO_APPROVE rate = 0.0** on regression

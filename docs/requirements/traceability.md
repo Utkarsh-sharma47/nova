@@ -84,3 +84,30 @@ Validator, Router, or LLM implementation exists.
 
 Detail: [`docs/evaluation/decision-evaluation.md`](../evaluation/decision-evaluation.md),
 [`docs/agents/router.md`](../agents/router.md).
+
+## Phase 7–9 implementation evidence (rollup)
+
+| Requirement | Implementation | Test | Evidence |
+|-------------|----------------|------|----------|
+| REQ-ROUTER / pipeline | `PipelineOrchestrator` | `tests/pipeline/` | Extract→validate→route lifecycle |
+| REQ-QUERY-001–003 | Query + ops read APIs | `tests/query/`, `tests/api/` | Grounded intents; no LLM SQL |
+| REQ-UI-001–003 | `frontend/` ops UI | Vitest + `docs/operations/ui-demo.md` | Upload/detail/query workflows |
+| REQ-OBS / deploy | health/ready/metrics + Compose | API + Docker smoke | Phase 9–10 deploy docs |
+
+## Phase 10 system verification evidence
+
+| Requirement | Implementation | Test | Reproducible evidence |
+|-------------|----------------|------|-----------------------|
+| REQ-TEST-001–004 | Full Part 1 pyramid + matrix | `tests/e2e/`, `pytest -q` | 33-case matrix; 205 passed / 2 skipped (local) |
+| REQ-ROUTER-005 / fail-closed | Failure injection matrix | `tests/e2e/test_phase10_matrix.py` m11–m16, m27–m28 | No AUTO_APPROVE on failures |
+| REQ-VAL / unsafe MATCH | Validator eval harness | `scripts/run_full_evaluation.py` | `unsafe_match_count=0` |
+| REQ-ROUTER false AUTO_APPROVE | Decision eval harness | same script + decision report | `false_auto_approve_count=0` |
+| REQ-AI-004 fabrication | Extractor contracts | eval script pytest subset | Fabrication contract gate PASS |
+| REQ-DATA-003 idempotency | Ingestion + pipeline replay | matrix m22–m24 + integrity tests | Replay / 409 mismatch / single decision |
+| REQ-SEC-001–004 | Intake + query security | matrix m17–m21, m30–m31 + secret script | Structured rejects; secret scan PASS |
+| REQ-QUERY grounded | Query API | matrix m29–m33 | UNSUPPORTED / EMPTY / RESULT |
+| REQ-DEPLOY-003–004 | Compose + CI | Docker smoke + `.github/workflows/ci.yml` | Clean volume up; Alembic head `0004` |
+| REQ-SUBMISSION-002 | Audit + eval reports | `docs/audits/phase-10-audit.md` | Verdict PASS WITH LIMITATIONS |
+
+**Requirements without dedicated Phase 10 new evidence (still covered earlier or deferred):**
+live vendor LLM quality jobs; Playwright browser E2E; Part 2 REQ-PART2-*.

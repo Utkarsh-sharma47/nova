@@ -10,14 +10,18 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 9 adds the Part 1 operations UI (`frontend/`) with Vitest coverage. Backend
-suites cover pipeline, query, and ops summary APIs.
+Phase 10 adds full-system verification on top of Phases 3–9: a 33-case E2E
+matrix (`tests/e2e/`), unified AI evaluation gates, and CI frontend coverage.
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
+pytest -q tests/e2e/
+python scripts/run_full_evaluation.py
 cd frontend && npm test && npm run typecheck && npm run build
 ```
+
+Detail: [`docs/testing/phase-10-system-verification.md`](docs/testing/phase-10-system-verification.md).
 
 The default suite skips PostgreSQL migration verification unless
 `TEST_DATABASE_URL` is set. With a disposable PostgreSQL database:

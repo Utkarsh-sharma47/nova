@@ -175,6 +175,44 @@ describe('DocumentPage', () => {
     expect(screen.getByText(/blocking mismatch requires amendment/i)).toBeInTheDocument()
   })
 
+  it('renders failed processing status without inventing a decision', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch((url) => {
+        if (url.includes('/validation') || url.includes('/decision')) {
+          return jsonResponse(
+            {
+              error: {
+                code: 'NOT_FOUND',
+                message: 'Not found',
+                trace_id: 'trace_fail',
+                retryable: false,
+              },
+            },
+            { status: 404 },
+          )
+        }
+        return jsonResponse({
+          ...documentDetail,
+          status: 'FAILED',
+          extraction: {
+            status: 'FAILED',
+            fields: [],
+          },
+        })
+      }),
+    )
+
+    renderDocument()
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /document doc_1/i })).toBeInTheDocument()
+    })
+
+    expect(screen.getAllByText('FAILED').length).toBeGreaterThan(0)
+    expect(screen.queryByText('AUTO_APPROVE')).not.toBeInTheDocument()
+  })
+
   it('does not execute unsafe HTML from API responses', async () => {
     vi.stubGlobal(
       'fetch',

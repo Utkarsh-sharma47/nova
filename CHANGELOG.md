@@ -8,6 +8,11 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 10 system verification (`0.10.0`):
+  - Canonical 33-case E2E matrix (`tests/e2e/`) + data-integrity and API contract smoke
+  - Unified evaluation command `scripts/run_full_evaluation.py` (validator + decision + extractor fabrication gates)
+  - CI: frontend job, Alembic head `0004_phase7_pipeline`, AI evaluation gate
+  - Audit: `docs/audits/phase-10-audit.md`
 - Phase 9 Part 1 operations UI (`0.9.0`):
   - React + TypeScript + Vite app in `frontend/`
   - Dashboard, upload, document/shipment detail, grounded query pages

@@ -1,22 +1,19 @@
 # CI/CD
 
-## Current repository reality (Phase 2)
+## Enforced GitHub Actions (`.github/workflows/ci.yml`)
 
-Documentation + governance + **Pydantic domain contracts**. No FastAPI routes, agents, ORM, or UI yet.
+| Job | Checks |
+|-----|--------|
+| Docs and secrets | `scripts/check-docs-structure.sh`, `scripts/check-secret-patterns.sh` |
+| Python | Ruff, MyPy, pytest (Postgres service), `scripts/run_full_evaluation.py`, Alembic upgrade×2 to `0004_phase7_pipeline`, API `docker build` |
+| Frontend | `npm ci`, typecheck, Vitest, production build |
 
-## CI jobs (enforced)
+Triggers: `pull_request` and `push` to `main`.
 
-| Check | How |
-|-------|-----|
-| Docs structure | `scripts/check-docs-structure.sh` |
-| Secret patterns | `scripts/check-secret-patterns.sh` |
-| Ruff | `ruff check src tests` |
-| MyPy | `mypy` |
-| Contract tests | `pytest -q` |
+CI is deterministic: MockLLM / unit fixtures; Postgres for migration + integration
+tests that use `TEST_DATABASE_URL`. No live vendor LLM calls.
 
-Workflow: `.github/workflows/ci.yml`
-
-## Local run
+## Local parity
 
 ```bash
 ./scripts/check-docs-structure.sh
@@ -25,4 +22,12 @@ pip install -e ".[dev]"
 ruff check src tests
 mypy
 pytest -q
+python scripts/run_full_evaluation.py
+cd frontend && npm ci && npm run typecheck && npm test && npm run build
 ```
+
+## Related
+
+- [TESTING.md](../../TESTING.md)
+- [phase-10-system-verification.md](../testing/phase-10-system-verification.md)
+- [phase-10-audit.md](../audits/phase-10-audit.md)

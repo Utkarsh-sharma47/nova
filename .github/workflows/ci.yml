@@ -69,12 +69,15 @@ jobs:
       - name: Tests
         run: pytest -q
 
+      - name: AI evaluation gates
+        run: python scripts/run_full_evaluation.py
+
       - name: Validate clean migration and revision
         run: |
           alembic downgrade base
           alembic upgrade head
           alembic upgrade head
-          alembic current | grep -q 0001_phase3_foundation
+          alembic current | grep -q 0004_phase7_pipeline
           python - <<'PY'
           import os
           from sqlalchemy import create_engine, inspect
@@ -86,6 +89,9 @@ jobs:
               "document_versions",
               "verification_runs",
               "idempotency_records",
+              "agent_executions",
+              "decisions",
+              "validations",
           }
           engine = create_engine(os.environ["DATABASE_URL"])
           assert required <= set(inspect(engine).get_table_names())
@@ -94,3 +100,32 @@ jobs:
 
       - name: Build API image
         run: docker build -t nova-api:ci .
+
+  frontend:
+    name: Frontend (Vitest, typecheck, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

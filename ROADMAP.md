@@ -63,6 +63,29 @@ fail-closed semantics, and wired validation/decision HTTP reads.
 **Implemented on `feature/phase-9-frontend`:** React/TS/Vite ops UI, Compose `web`
 service, Vitest coverage, and demo runbook for synthetic fixtures.
 
+## Phase 10 — Full system verification
+
+**Implemented on `feature/phase-10-system-verification`:** 33-case E2E matrix,
+AI evaluation regression command, failure/security/data-integrity checks,
+performance baselines (MockLLM), Docker clean-deploy smoke, CI frontend + eval
+gates, and Phase 10 audit.
+
+Audit: [`docs/audits/phase-10-audit.md`](docs/audits/phase-10-audit.md).
+
+## Phase 11 — Deployment, security hardening, observability, production readiness
+
+**Branch:** `feature/phase-11-production-hardening`.
+
+- Harden Compose topology (`api` + `db` + `web`): non-root containers, health/ready/metrics
+- Runtime web auth via `window.__NOVA_RUNTIME__` (no baked production tokens)
+- Configuration reference + production startup gates; Alembic-only schema (no `create_all`)
+- Request/upload limits, CORS production rules, dependency audits in CI
+- Recovery runbook + `scripts/verify-production-readiness.sh`
+- Docs under `docs/deployment/`, `docs/security/`, `docs/observability/`, `docs/operations/recovery.md`
+- Audit checklist: [`docs/audits/phase-11-production-readiness.md`](docs/audits/phase-11-production-readiness.md)
+
+**Remote / cloud production deploy: NOT EXECUTED** (procedure documented only).
+
 ## Part 2 — Forward (after Part 1)
 
 Email/file triggers, multi-attachment, cross-document validation, draft replies, human approval, outbound sending.
