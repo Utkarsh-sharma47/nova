@@ -73,7 +73,7 @@ def test_ingest_runs_extraction_and_persists(client: tuple[TestClient, UUID, Pat
     detail = test_client.get(f"/v1/documents/{document_id}", headers=AUTH)
     assert detail.status_code == 200
     payload = detail.json()
-    assert payload["status"] == "EXTRACTED"
+    assert payload["status"] == "DECIDED"
     assert payload["extraction"] is not None
     assert payload["extraction"]["status"] in {"SUCCEEDED", "PARTIAL"}
     assert payload["extraction"]["prompt_version"] == "extractor.v1"
@@ -86,12 +86,14 @@ def test_ingest_runs_extraction_and_persists(client: tuple[TestClient, UUID, Pat
         executions = session.scalars(
             select(AgentExecution).where(AgentExecution.verification_run_id == UUID(run_id))
         ).all()
-        assert len(executions) == 1
-        assert executions[0].prompt_version == "extractor.v1"
+        assert len(executions) >= 1
+        extractor_execs = [e for e in executions if e.stage == "extractor"]
+        assert len(extractor_execs) == 1
+        assert extractor_execs[0].prompt_version == "extractor.v1"
         calls = session.scalars(
             select(ModelCallMetadata).where(ModelCallMetadata.verification_run_id == UUID(run_id))
         ).all()
-        assert len(calls) == 1
+        assert len(calls) >= 1
 
 
 def test_duplicate_extraction_is_idempotent(client: tuple[TestClient, UUID, Path]) -> None:
@@ -125,12 +127,15 @@ def test_duplicate_extraction_is_idempotent(client: tuple[TestClient, UUID, Path
             trace_id=trace_id,
         )
         assert first.agent_execution_id == second.agent_execution_id
-        count = len(
+        extractor_count = len(
             session.scalars(
-                select(AgentExecution).where(AgentExecution.verification_run_id == run_id)
+                select(AgentExecution).where(
+                    AgentExecution.verification_run_id == run_id,
+                    AgentExecution.stage == "extractor",
+                )
             ).all()
         )
-        assert count == 1
+        assert extractor_count == 1
 
 
 def test_extraction_failure_marks_document_failed(

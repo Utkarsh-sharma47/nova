@@ -10,13 +10,16 @@ from typing import Annotated, cast
 from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session
 
+from nova.agents.validator.agent import ValidatorAgent
 from nova.application.extraction import build_default_llm
 from nova.application.ingestion import IngestionService
+from nova.application.validation_persistence import SqlValidationStore
 from nova.config import Settings
 from nova.domain.errors import NovaError
 from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.persistence.database import get_session
+from nova.router.service import RouterService
 
 
 class AuthenticationError(NovaError):
@@ -61,11 +64,17 @@ def ingestion_service(
         app_settings.llm_api_key,
     )
     extractor = ExtractorService(llm)
+    validation_store = SqlValidationStore(session)
+    validator = ValidatorAgent(store=validation_store, persist=True)
+    router = RouterService()
     return IngestionService(
         session,
         storage,
         max_document_size_bytes=app_settings.max_document_size_bytes,
         allowed_mime_types=app_settings.allowed_mime_types,
         extractor=extractor,
+        validator=validator,
+        router=router,
+        auto_pipeline=True,
         auto_extract=True,
     )

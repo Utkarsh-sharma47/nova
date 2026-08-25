@@ -16,7 +16,9 @@ Operational practices and runbooks for Nova.
 | Incident response | Planned |
 | Common failure runbooks | Planned |
 | Backup and restore (if applicable) | Planned |
-| Demo / submission runbook | Phase 7 |
+| Demo / submission runbook | Phase 8 |
+| Pipeline operations notes | Phase 7 — see [`../architecture/end-to-end-pipeline.md`](../architecture/end-to-end-pipeline.md) |
+| Local pipeline baseline | `scripts/benchmark_pipeline.py` (MockLLM; not a production SLO) |
 
 ## Guidance
 

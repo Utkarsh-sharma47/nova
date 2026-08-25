@@ -93,7 +93,7 @@
       "gold_outcomes": [
         "MISMATCH"
       ],
-      "latency_ms": 0,
+      "latency_ms": 1,
       "llm_checks": 0,
       "notes": "",
       "pred_outcomes": [
@@ -189,7 +189,7 @@
       "gold_outcomes": [
         "UNCERTAIN"
       ],
-      "latency_ms": 1,
+      "latency_ms": 0,
       "llm_checks": 1,
       "notes": "",
       "pred_outcomes": [

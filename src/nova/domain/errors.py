@@ -84,6 +84,18 @@ class ShipmentNotFound(NotFound):
     code = "SHIPMENT_NOT_FOUND"
 
 
+class ValidationNotFound(NotFound):
+    code = "VALIDATION_NOT_FOUND"
+    safe_message = "Validation result is not available yet."
+    retryable = True
+
+
+class DecisionNotFound(NotFound):
+    code = "DECISION_NOT_FOUND"
+    safe_message = "Decision result is not available yet."
+    retryable = True
+
+
 class InvalidLifecycleTransition(NovaError):
     code = "INVALID_LIFECYCLE_TRANSITION"
     status_code = 409

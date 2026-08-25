@@ -100,7 +100,7 @@ def test_ingest_replay_conflict_and_gets(client: tuple[TestClient, UUID]) -> Non
 
     document = test_client.get(f"/v1/documents/{body['document_id']}", headers=AUTH)
     assert document.status_code == 200
-    assert document.json()["status"] == "EXTRACTED"
+    assert document.json()["status"] == "DECIDED"
     assert document.json()["extraction"] is not None
     shipment = test_client.get(f"/v1/shipments/{body['shipment_id']}", headers=AUTH)
     assert shipment.status_code == 200

@@ -8,12 +8,14 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 4 Extractor implemented** on top of Phase 3 foundation: ingestion
-queues a run, then `ExtractorService` (via `LLMPort`, default `MockLLM`)
-produces schema-validated `ExtractionResult` with presence/confidence/evidence.
-Append-only `extracted_fields` / `agent_executions` / `model_call_metadata`
-support audit. Validator, Router, live vendor adapters, and UI remain out of
-scope.
+**Phase 7 end-to-end pipeline integrated** on top of Phases 3–6:
+
+- Ingestion → `PipelineOrchestrator` → Extractor → Validator → Router → persistence
+- Append-only extraction, validation, and decision history
+- Document lifecycle through `extracted → validated → decided` (or `failed`)
+- HTTP reads for validation and decision resources
+
+Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md).
 
 ## Conceptual pipeline
 
@@ -29,19 +31,16 @@ Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-ar
 ## Implemented dependency direction
 
 ```text
-FastAPI routes → application ingestion service → domain policy
+FastAPI routes → application services (ingestion + PipelineOrchestrator)
                                       ├── persistence repositories → PostgreSQL
                                       ├── DocumentStoragePort → local filesystem
                                       ├── DocumentProcessorPort → PDF/text adapters
-                                      └── ExtractorService → LLMPort (MockLLM default)
+                                      ├── ExtractorService → LLMPort (MockLLM default)
+                                      ├── ValidatorAgent → deterministic + optional LLM
+                                      └── RouterService → safety constraints + DecisionResult
 ```
 
-Routes contain no OCR or SQL details. Document bytes are validated for size,
-extension, content signature, and safe filename before storage. Ingestion
-commits document, immutable first version, queued run, and idempotency record as
-one database transaction; raw bytes remain outside PostgreSQL. Extraction then
-runs (Part 1: synchronous post-accept) and appends AI outputs without overwriting
-prior runs.
+Routes contain no OCR, SQL, or agent policy details.
 
 ## Technology stack (summary)
 

@@ -93,7 +93,7 @@ class Document(Base):
         ),
         CheckConstraint(
             "status IN ('registered','content_available','in_pipeline','extracted',"
-            "'failed','superseded','withdrawn')",
+            "'validated','decided','failed','superseded','withdrawn')",
             name="ck_documents_status",
         ),
         CheckConstraint(
@@ -320,7 +320,9 @@ class ExtractedFieldRow(Base):
         ForeignKey("model_call_metadata.model_call_id")
     )
     field_key: Mapped[str] = mapped_column(Text)
-    value_json: Mapped[Any | None] = mapped_column(JSON)
+    # none_as_null: Python None → SQL NULL so ck_extracted_fields_missing_value holds
+    # (default JSON maps None → JSON 'null', which is not SQL NULL on SQLite/Postgres).
+    value_json: Mapped[Any | None] = mapped_column(JSON(none_as_null=True))
     value_type: Mapped[str] = mapped_column(Text, default="string")
     presence: Mapped[str] = mapped_column(Text, default="UNKNOWN")
     confidence: Mapped[float | None] = mapped_column(Float)
@@ -386,3 +388,49 @@ class DecisionRecord(Base):
     llm_rationale: Mapped[str | None] = mapped_column(Text)
     evidence_refs: Mapped[list[str]] = mapped_column(JSON, default=list)
     routing_rule_version: Mapped[str | None] = mapped_column(Text)
+
+
+class ValidationRecordRow(Base):
+    """Append-only validation stage result (one primary row per verification run)."""
+
+    __tablename__ = "validations"
+    __table_args__ = (
+        UniqueConstraint("verification_run_id", name="uq_validations_verification_run"),
+        CheckConstraint(
+            "status IN ('completed','failed')",
+            name="ck_validations_status",
+        ),
+        CheckConstraint(
+            "(status <> 'completed') OR (aggregate_result IN ('MATCH','MISMATCH','UNCERTAIN'))",
+            name="ck_validations_completed_aggregate",
+        ),
+        CheckConstraint(
+            "(status <> 'failed') OR (aggregate_result IS NULL OR aggregate_result <> 'MATCH')",
+            name="ck_validations_failed_not_match",
+        ),
+    )
+
+    validation_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    verification_run_id: Mapped[UUID] = mapped_column(
+        ForeignKey("verification_runs.verification_run_id"),
+        nullable=False,
+    )
+    shipment_id: Mapped[UUID] = mapped_column(ForeignKey("shipments.shipment_id"), nullable=False)
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.document_id"), nullable=False)
+    document_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("document_versions.document_version_id"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    aggregate_result: Mapped[str | None] = mapped_column(Text)
+    ruleset_id: Mapped[str | None] = mapped_column(Text)
+    ruleset_version: Mapped[str | None] = mapped_column(Text)
+    engine_version: Mapped[str] = mapped_column(Text, nullable=False)
+    validator_version: Mapped[str] = mapped_column(Text, nullable=False)
+    result_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    summary_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    error_code: Mapped[str | None] = mapped_column(Text)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    trace_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -8,6 +8,15 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 7 end-to-end pipeline integration:
+  - `PipelineOrchestrator` coordinates extract → validate → route after ingestion
+  - Document lifecycle `extracted → validated → decided` (or `failed`)
+  - SQL `validations` table + wired `GET .../validation` and `GET .../decision`
+  - Shipment aliases for validation/decision reads
+  - Fail-closed stage semantics; append-only AI history preserved across stage failures
+  - E2E suite `tests/pipeline/` (20+ scenarios, MockLLM only)
+  - Local baseline script `scripts/benchmark_pipeline.py`
+  - Docs: `docs/architecture/end-to-end-pipeline.md`
 - Phase 4 Extractor Agent (`0.4.0`):
   - `LLMPort` + `MockLLM` (default test/local provider; no API key required)
   - `ExtractorService` with versioned prompt `extractor.v1`, 60s timeout, max 2 retries
@@ -33,7 +42,7 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Non-root Docker/Compose runtime with migration entrypoint and PostgreSQL health checks
   - Unit, API, failure/security, and optional PostgreSQL migration tests
   - Phase 3 integration audit (`docs/audits/phase-3-audit.md`) — PASS
-- Phase 3 queues verification runs; Phase 4 adds Extractor (Validator/Router still deferred).
+- Phase 3 queues verification runs; Phase 7 runs the full extract→validate→route pipeline.
 - Phase 2 technology stack ADRs (backend, database, API, AI provider, document processing, observability, deployment, frontend)
 - Phase 2 Pydantic contract package (`src/nova/contracts/`) with contract tests and Python CI
 - Phase 2 domain and database architecture:

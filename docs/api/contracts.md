@@ -82,9 +82,9 @@ Headers:
 ```
 
 Phase 3 stores normalized document content and creates a queued verification
-run. Phase 4 runs the Extractor Agent after accept (MockLLM by default);
-clients polling the document see `EXTRACTED` / `FAILED` with an extraction
-summary. Validator and Router remain deferred.
+run. Phase 7 runs the full Extractor → Validator → Router pipeline after accept
+(MockLLM by default). Clients polling the document see `DECIDED` / `FAILED`
+(and intermediate statuses) with extraction/validation/decision resources.
 
 ### Status codes
 

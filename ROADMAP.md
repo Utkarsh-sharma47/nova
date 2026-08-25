@@ -48,9 +48,13 @@ evaluation harness. Core ingestion entities and HTTP idempotency landed in Phase
 
 Query API, grounded NL query, minimal B2B operations UI (React/TS/Vite).
 
-## Phase 7 — Hardening & Part 1 submission
+## Phase 7 — End-to-end pipeline integration
 
-Demo runbook, failure-path demo, simple deploy, submission completeness.
+**Implemented on `feature/phase-7-pipeline-integration`:** Part 1 orchestrator wires
+ingestion → extraction → validation → routing with append-only persistence,
+fail-closed semantics, and wired validation/decision HTTP reads.
+
+Still ahead for submission hardening: demo runbook polish, failure-path demo packaging.
 
 ## Part 2 — Forward (after Part 1)
 

@@ -169,7 +169,7 @@
       "gold_outcomes": [
         "UNCERTAIN"
       ],
-      "latency_ms": 1,
+      "latency_ms": 0,
       "llm_checks": 1,
       "notes": "",
       "pred_outcomes": [
@@ -316,7 +316,7 @@
     "false_match_rate": 0.0,
     "false_mismatch_rate": 0.0,
     "llm_assisted_validation_rate": 0.2,
-    "mean_latency_ms": 0.13333333333333333,
+    "mean_latency_ms": 0.06666666666666667,
     "uncertainty_rate": 0.5333333333333333,
     "unsafe_match_count": 0,
     "unsafe_match_rate": 0.0,

@@ -77,12 +77,8 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
 
 
 def _extract_required_fields(user: str) -> list[str]:
-    marker = user.find("{")
-    if marker < 0:
-        return []
-    try:
-        payload = json.loads(user[marker:])
-    except json.JSONDecodeError:
+    payload = _extract_user_payload(user)
+    if payload is None:
         return []
     fields = payload.get("required_fields")
     if not isinstance(fields, list):
@@ -91,16 +87,29 @@ def _extract_required_fields(user: str) -> list[str]:
 
 
 def _extract_document_text(user: str) -> str:
-    marker = user.find("{")
-    if marker < 0:
-        return ""
-    try:
-        payload = json.loads(user[marker:])
-    except json.JSONDecodeError:
+    payload = _extract_user_payload(user)
+    if payload is None:
         return ""
     document = payload.get("document") or {}
     text = document.get("text")
     return text if isinstance(text, str) else ""
+
+
+def _extract_user_payload(user: str) -> dict[str, Any] | None:
+    """Locate the document JSON object (not the inline schema example braces)."""
+    marker = user.find('"document_type_hint"')
+    if marker < 0:
+        marker = user.find('"required_fields"')
+    if marker < 0:
+        return None
+    start = user.rfind("{", 0, marker)
+    if start < 0:
+        return None
+    try:
+        payload = json.loads(user[start:])
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def _find_value(field_name: str, text: str) -> tuple[str, str] | None:

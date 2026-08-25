@@ -16,6 +16,7 @@
 | [failure-testing.md](./failure-testing.md) | Done — fail-safe catalog |
 | [performance-testing.md](./performance-testing.md) | Done — latency/throughput/cost (no tooling yet) |
 | [validator-evaluation.md](./validator-evaluation.md) | Done — Validator safety + eval suites |
+| [pipeline-integration.md](./pipeline-integration.md) | Done — Phase 7 E2E pipeline suite |
 ## Current automated checks
 - Docs structure script
 - Secret pattern script

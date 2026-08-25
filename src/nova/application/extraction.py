@@ -268,14 +268,14 @@ class ExtractionApplicationService:
                 DocumentStatus.EXTRACTED,
             )
             document.status = DocumentStatus.EXTRACTED.value
-            # Phase 4 stops after extraction; mark run succeeded for extraction stage.
-            # Validator/Router will open new runs or extend status in later phases.
-            assert_run_transition(
-                VerificationRunStatus(run.status),
-                VerificationRunStatus.SUCCEEDED,
-            )
-            run.status = VerificationRunStatus.SUCCEEDED.value
-            run.completed_at = now
+            # Keep verification run RUNNING so validator/router can continue the same run.
+            if VerificationRunStatus(run.status) is VerificationRunStatus.QUEUED:
+                assert_run_transition(
+                    VerificationRunStatus.QUEUED,
+                    VerificationRunStatus.RUNNING,
+                )
+                run.status = VerificationRunStatus.RUNNING.value
+                run.started_at = now
         document.updated_at = now
         self.repository.flush()
 

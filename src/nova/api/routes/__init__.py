@@ -106,6 +106,26 @@ def get_document(
     return service.get_document(document_id, str(request.state.trace_id))
 
 
+@router.get("/v1/documents/{document_id}/validation", tags=["documents"])
+def get_document_validation(
+    document_id: UUID,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[IngestionService, Depends(ingestion_service)],
+) -> dict[str, object]:
+    return service.get_validation(document_id, str(request.state.trace_id))
+
+
+@router.get("/v1/documents/{document_id}/decision", tags=["documents"])
+def get_document_decision(
+    document_id: UUID,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[IngestionService, Depends(ingestion_service)],
+) -> dict[str, object]:
+    return service.get_decision(document_id, str(request.state.trace_id))
+
+
 @router.get("/v1/shipments/{shipment_id}", tags=["shipments"])
 def get_shipment(
     shipment_id: UUID,
@@ -114,3 +134,39 @@ def get_shipment(
     service: Annotated[IngestionService, Depends(ingestion_service)],
 ) -> dict[str, object]:
     return service.get_shipment(shipment_id, str(request.state.trace_id))
+
+
+@router.get("/v1/shipments/{shipment_id}/validation", tags=["shipments"])
+def get_shipment_validation(
+    shipment_id: UUID,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[IngestionService, Depends(ingestion_service)],
+) -> dict[str, object]:
+    """Convenience alias: validation for the latest document on the shipment."""
+    shipment = service.get_shipment(shipment_id, str(request.state.trace_id))
+    docs = shipment.get("documents") or []
+    if not docs:
+        from nova.domain.errors import ValidationNotFound
+
+        raise ValidationNotFound(details={"shipment_id": str(shipment_id)})
+    document_id = UUID(str(docs[0]["document_id"]))
+    return service.get_validation(document_id, str(request.state.trace_id))
+
+
+@router.get("/v1/shipments/{shipment_id}/decision", tags=["shipments"])
+def get_shipment_decision(
+    shipment_id: UUID,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[IngestionService, Depends(ingestion_service)],
+) -> dict[str, object]:
+    """Convenience alias: decision for the latest document on the shipment."""
+    shipment = service.get_shipment(shipment_id, str(request.state.trace_id))
+    docs = shipment.get("documents") or []
+    if not docs:
+        from nova.domain.errors import DecisionNotFound
+
+        raise DecisionNotFound(details={"shipment_id": str(shipment_id)})
+    document_id = UUID(str(docs[0]["document_id"]))
+    return service.get_decision(document_id, str(request.state.trace_id))

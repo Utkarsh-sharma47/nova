@@ -17,26 +17,26 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 | REQ-VAL-002–004 | Validation outcomes | MATCH/MISMATCH/UNCERTAIN | 5 | Golden + eval | fixtures + `docs/evaluation/reports/` / `results/` |
 | REQ-VAL-005 | Deterministic vs LLM boundary | `ValidationCheck.deterministic` | 5 | Safety unit | `tests/agents/validator/test_safety_invariants.py` |
 | REQ-VAL-006 | Auditable validation | append-only store | 5 | Unit + eval | `src/nova/validation_store/`, invariant tests |
-| REQ-ROUTER-001–003 | Router decisions | DecisionResult enums | 4 | Unit + eval | `docs/agents/router.md` |
+| REQ-ROUTER-001–003 | Router decisions | DecisionResult enums | 6–7 | Unit + eval + E2E | `docs/agents/router.md`, `tests/pipeline/` |
 | REQ-ROUTER-004 | Explicit policy | RoutingPolicySnapshot | 2–4 | Design + tests | router + routing contracts |
-| REQ-ROUTER-005 | Fail-safe routing | safety constraints | 4 | Failure tests | trust-model + failure catalog |
+| REQ-ROUTER-005 | Fail-safe routing | safety constraints | 6–7 | Failure + E2E | trust-model + `tests/pipeline/` |
 | REQ-DATA-001 | Persistence architecture | DB schema | 5 | Integration | `docs/database/*` |
 | REQ-DATA-002 | 1:N documents | schema relationships | 2–5 | Schema review | ERD + relationships.md |
 | REQ-DATA-003 | Idempotent writes | Idempotency-Key + DB keys | 5 | Integration | api/idempotency + schema |
 | REQ-DATA-004 | Retention/PII policy | security baseline | 1–5 | Doc review | `docs/security/` |
-| REQ-QUERY-001 | Query API | GET shipment/document | 5–6 | Integration | api/contracts |
+| REQ-QUERY-001 | Query API | GET shipment/document/validation/decision | 7 | Integration | api/contracts + wired routes |
 | REQ-QUERY-002–003 | NL query, grounded | `POST /v1/query` | 6 | Eval + integration | query-interface.md (**no LLM SQL**) |
 | REQ-UI-001–003 | Frontend ADR-0009 | — | 6 | Manual/smoke | ADR-0009 + UI feature docs |
 | REQ-AI-001–003 | Agent architecture | Extractor/Validator/Router contracts | 3–4 | Contract tests | `docs/agents/*`, `tests/contracts/` |
 | REQ-AI-004 | No silent fabrication | FieldPresence invariants | 3–4 | Contract + eval | extraction.py validators |
 | REQ-AI-005 | Timeouts/retries/cost | timeout_ms + UsageMetrics | 3–4 | Unit/integration | agent docs + contracts |
 | REQ-AI-006 | Model/prompt versions | ModelMetadata | 3–5 | Integration | trust-model prompt governance |
-| REQ-OBS-001–004 | Observability ADR-0007 | TraceContext / health | 3–5 | Integration | observability architecture |
+| REQ-OBS-001–004 | Observability ADR-0007 | TraceContext / health | 3–7 | Integration | pipeline events + health/ready/metrics |
 | REQ-TEST-001–004 | Testing architecture | contract tests (now) | 1 / 2 / 3+ | CI | `docs/testing/*`, pytest |
 | REQ-DEPLOY-001–004 | Deploy ADR-0008 + CI | Docker Compose skeleton | 1 / 2 / 7 | CI | workflows + ci-cd.md |
 | REQ-DOC-001–004 | Docs system + ADRs | — | 1–2 | Docs script | `docs/**`, ADR-0001…0010 |
 | REQ-SEC-001–005 | Security baseline + arch | API auth assumptions | 1–5 | Secret scan + review | security docs + CI |
-| REQ-SUBMISSION-001–003 | Demo/runbook (future) | — | 7 | Demo | ops runbook |
+| REQ-SUBMISSION-001–003 | Demo/runbook (future) | — | 8 | Demo | ops runbook |
 | REQ-PART2-001–007 | Extension points | related_extractions, stubs | 1–2 design | Design review | part2-extension-points + schema stubs |
 
 ## Traceability rules

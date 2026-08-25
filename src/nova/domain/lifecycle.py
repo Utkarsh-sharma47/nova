@@ -1,4 +1,4 @@
-"""Pure lifecycle policy for Phase 3 entities."""
+"""Pure lifecycle policy for Part 1 pipeline entities."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ class DocumentStatus(StrEnum):
     CONTENT_AVAILABLE = "content_available"
     IN_PIPELINE = "in_pipeline"
     EXTRACTED = "extracted"
+    VALIDATED = "validated"
+    DECIDED = "decided"
     FAILED = "failed"
     SUPERSEDED = "superseded"
     WITHDRAWN = "withdrawn"
@@ -23,6 +25,18 @@ class VerificationRunStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class PipelineStage(StrEnum):
+    """Logical pipeline stage for observability and status projection."""
+
+    INGESTED = "ingested"
+    DOCUMENT_PROCESSING = "document_processing"
+    EXTRACTION = "extraction"
+    VALIDATION = "validation"
+    ROUTING = "routing"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 _DOCUMENT_TRANSITIONS: dict[DocumentStatus, frozenset[DocumentStatus]] = {
@@ -41,8 +55,22 @@ _DOCUMENT_TRANSITIONS: dict[DocumentStatus, frozenset[DocumentStatus]] = {
         {DocumentStatus.EXTRACTED, DocumentStatus.FAILED, DocumentStatus.WITHDRAWN}
     ),
     DocumentStatus.EXTRACTED: frozenset(
-        {DocumentStatus.SUPERSEDED, DocumentStatus.WITHDRAWN}
+        {
+            DocumentStatus.VALIDATED,
+            DocumentStatus.FAILED,
+            DocumentStatus.SUPERSEDED,
+            DocumentStatus.WITHDRAWN,
+        }
     ),
+    DocumentStatus.VALIDATED: frozenset(
+        {
+            DocumentStatus.DECIDED,
+            DocumentStatus.FAILED,
+            DocumentStatus.SUPERSEDED,
+            DocumentStatus.WITHDRAWN,
+        }
+    ),
+    DocumentStatus.DECIDED: frozenset({DocumentStatus.SUPERSEDED, DocumentStatus.WITHDRAWN}),
     DocumentStatus.FAILED: frozenset({DocumentStatus.WITHDRAWN}),
     DocumentStatus.SUPERSEDED: frozenset(),
     DocumentStatus.WITHDRAWN: frozenset(),

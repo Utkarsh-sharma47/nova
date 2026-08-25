@@ -15,6 +15,10 @@ from uuid import UUID, uuid4
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from nova.agents.validator.agent import ValidatorAgent
+from nova.application.pipeline import PipelineOrchestrator
+from nova.application.validation_persistence import SqlValidationStore
+from nova.contracts.validation import CustomerRuleSnapshot
 from nova.documents import (
     DocumentLimits,
     DocumentProcessingRequest,
@@ -36,6 +40,7 @@ from nova.documents.errors import (
 )
 from nova.domain.errors import (
     CustomerNotFound,
+    DecisionNotFound,
     DocumentNotFound,
     DocumentUnreadable,
     ExternalReferenceConflict,
@@ -46,6 +51,7 @@ from nova.domain.errors import (
     UnsafeFilename,
     UnsupportedMediaType,
     ValidationFailure,
+    ValidationNotFound,
 )
 from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import DocumentStoragePort
@@ -57,6 +63,8 @@ from nova.persistence.models import (
     VerificationRun,
 )
 from nova.persistence.repositories import NovaRepository
+from nova.router.persistence import DecisionRepository
+from nova.router.service import RouterService
 
 logger = logging.getLogger("nova.ingestion")
 
@@ -78,6 +86,8 @@ _STATUS_TO_WIRE = {
     "content_available": "ACCEPTED",
     "in_pipeline": "PROCESSING",
     "extracted": "EXTRACTED",
+    "validated": "VALIDATED",
+    "decided": "DECIDED",
     "failed": "FAILED",
     "superseded": "FAILED",
     "withdrawn": "FAILED",
@@ -108,7 +118,12 @@ class IngestionService:
         allowed_mime_types: tuple[str, ...],
         processor: DocumentProcessingService | None = None,
         extractor: ExtractorService | None = None,
+        validator: ValidatorAgent | None = None,
+        router: RouterService | None = None,
         auto_extract: bool = True,
+        auto_pipeline: bool = True,
+        pipeline_rules: list[CustomerRuleSnapshot] | None = None,
+        force_failsafe: bool = False,
     ) -> None:
         self.session = session
         self.storage = storage
@@ -119,7 +134,12 @@ class IngestionService:
             limits=DocumentLimits(max_bytes=max_document_size_bytes)
         )
         self.extractor = extractor
+        self.validator = validator
+        self.router = router
         self.auto_extract = auto_extract
+        self.auto_pipeline = auto_pipeline
+        self.pipeline_rules = pipeline_rules
+        self.force_failsafe = force_failsafe
 
     def load_staged(self, source_path: str) -> tuple[bytes, str, str]:
         filename, blob = self.storage.read_staged(source_path)
@@ -285,7 +305,9 @@ class IngestionService:
                 run_id,
             )
             self.session.commit()
-            if self.auto_extract and self.extractor is not None:
+            if self.auto_pipeline and self.extractor is not None:
+                self._run_pipeline(document_id, run_id, command.trace_id)
+            elif self.auto_extract and self.extractor is not None:
                 self._run_extraction(document_id, run_id, command.trace_id)
             return response
         except IntegrityError as exc:
@@ -364,11 +386,151 @@ class IngestionService:
             "status": shipment.status.upper(),
             "document_ids": [item["document_id"] for item in documents],
             "documents": documents,
-            "latest_decision": None,
+            "latest_decision": self._latest_decision(shipment.shipment_id),
             "created_at": _iso(shipment.created_at),
             "updated_at": _iso(shipment.updated_at),
             "trace_id": trace_id,
         }
+
+    def get_validation(self, document_id: UUID, trace_id: str) -> dict[str, Any]:
+        document = self.repository.document(document_id)
+        if document is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        run = self.repository.run_for_shipment(document.shipment_id)
+        if run is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        store = SqlValidationStore(self.session)
+        record = store.find_by_run(run.verification_run_id)
+        if record is None:
+            raise ValidationNotFound(
+                details={
+                    "document_id": str(document_id),
+                    "status": _STATUS_TO_WIRE[document.status],
+                }
+            )
+        result = record.result
+        overall = "MATCH"
+        if result.mismatch_count > 0:
+            overall = "MISMATCH"
+        elif result.uncertain_count > 0:
+            overall = "UNCERTAIN"
+        if result.status.value == "FAILED" and overall == "MATCH":
+            overall = "UNCERTAIN"
+        return {
+            "validation_id": str(record.validation_result_id),
+            "document_id": str(document.document_id),
+            "shipment_id": str(document.shipment_id),
+            "run_id": str(run.verification_run_id),
+            "overall_result": overall,
+            "status": result.status.value,
+            "checks": [
+                {
+                    "check_id": c.check_id,
+                    "rule_id": str(c.rule_id),
+                    "rule_code": c.rule_code,
+                    "field_name": c.field_name,
+                    "result": c.outcome.value,
+                    "reason": c.reason,
+                    "expected": c.expected_value,
+                    "actual": {"value": c.actual_value, "confidence": c.confidence},
+                    "evidence_ids": [e.evidence_id for e in c.evidence],
+                    "blocking": c.blocking,
+                }
+                for c in result.checks
+            ],
+            "error_code": result.error_code,
+            "created_at": _iso(record.created_at),
+            "trace_id": trace_id,
+        }
+
+    def get_decision(self, document_id: UUID, trace_id: str) -> dict[str, Any]:
+        document = self.repository.document(document_id)
+        if document is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        run = self.repository.run_for_shipment(document.shipment_id)
+        if run is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        repo = DecisionRepository(self.session)
+        record = repo.find_by_run(run.verification_run_id)
+        if record is None:
+            raise DecisionNotFound(
+                details={
+                    "document_id": str(document_id),
+                    "status": _STATUS_TO_WIRE[document.status],
+                }
+            )
+        store = SqlValidationStore(self.session)
+        validation = store.find_by_run(run.verification_run_id)
+        overall = None
+        if validation is not None:
+            if validation.result.mismatch_count > 0:
+                overall = "MISMATCH"
+            elif validation.result.uncertain_count > 0:
+                overall = "UNCERTAIN"
+            else:
+                overall = "MATCH"
+        return {
+            "decision_id": str(record.decision_id),
+            "document_id": str(document.document_id),
+            "shipment_id": str(document.shipment_id),
+            "run_id": str(run.verification_run_id),
+            "decision": record.disposition,
+            "rationale": "; ".join(record.reasons) if record.reasons else record.llm_rationale,
+            "reason_codes": record.reason_codes,
+            "policy_version": record.policy_version,
+            "actor_type": record.actor_type,
+            "safety_constraints_applied": record.safety_constraints_applied,
+            "inputs": {
+                "overall_validation": overall,
+                "confidence": record.confidence,
+            },
+            "created_at": _iso(record.decided_at),
+            "approval_state": "NONE",
+            "trace_id": trace_id,
+        }
+
+    def _latest_decision(self, shipment_id: UUID) -> dict[str, Any] | None:
+        run = self.repository.run_for_shipment(shipment_id)
+        if run is None:
+            return None
+        record = DecisionRepository(self.session).find_by_run(run.verification_run_id)
+        if record is None:
+            return None
+        return {
+            "document_id": str(record.document_id),
+            "decision": record.disposition,
+            "decision_id": str(record.decision_id),
+            "actor_type": record.actor_type,
+        }
+
+    def _run_pipeline(self, document_id: UUID, run_id: UUID, trace_id: str) -> None:
+        assert self.extractor is not None
+        try:
+            orchestrator = PipelineOrchestrator(
+                self.session,
+                self.storage,
+                extractor=self.extractor,
+                validator=self.validator,
+                router=self.router,
+                rules=self.pipeline_rules,
+                force_failsafe=self.force_failsafe,
+            )
+            orchestrator.run(
+                document_id=document_id,
+                verification_run_id=run_id,
+                trace_id=_as_uuid(trace_id) or uuid4(),
+            )
+        except Exception:
+            logger.exception(
+                "pipeline_after_ingest_failed",
+                extra={
+                    "event": "pipeline.ingest_hook_failed",
+                    "extra_fields": {
+                        "document_id": str(document_id),
+                        "run_id": str(run_id),
+                    },
+                },
+            )
 
     def _run_extraction(self, document_id: UUID, run_id: UUID, trace_id: str) -> None:
         from nova.application.extraction import ExtractionApplicationService

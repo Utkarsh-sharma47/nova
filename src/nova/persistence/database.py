@@ -23,6 +23,7 @@ _REQUIRED_TABLES = {
     "model_call_metadata",
     "extracted_fields",
     "decisions",
+    "validations",
 }
 
 
