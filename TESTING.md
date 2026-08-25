@@ -10,13 +10,13 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 6 adds the Router / Decision Agent (`nova.router`) with deterministic
-safety constraints, system failsafe, decision persistence, and unit/contract
-tests under `tests/agents/router/` and `tests/router/`.
+Phase 9 adds the Part 1 operations UI (`frontend/`) with Vitest coverage. Backend
+suites cover pipeline, query, and ops summary APIs.
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
+cd frontend && npm test && npm run typecheck && npm run build
 ```
 
 The default suite skips PostgreSQL migration verification unless
@@ -30,10 +30,12 @@ pytest -q
 
 The migration test downgrades that database to base and upgrades it twice.
 
-Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
+Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md));
+frontend **Vitest** ([ADR-0009](docs/decisions/0009-frontend-stack.md)).
 
-Required future suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
+Required suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).
 Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
+Frontend: [`docs/testing/frontend.md`](docs/testing/frontend.md).
 
 Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing/test-strategy.md).
 

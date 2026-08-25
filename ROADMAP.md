@@ -44,9 +44,9 @@ Still deferred: Validator, Router, golden eval harness, live vendor LLM adapters
 Persist validation/decision/audit entities, clean + messy samples, and add the
 evaluation harness. Core ingestion entities and HTTP idempotency landed in Phase 3.
 
-## Phase 6 — Query & UI
+## Phase 6 — Query & UI (split)
 
-Query API, grounded NL query, minimal B2B operations UI (React/TS/Vite).
+Query API and UI were delivered as Phases 8–9 after pipeline integration.
 
 ## Phase 7 — End-to-end pipeline integration
 
@@ -54,7 +54,14 @@ Query API, grounded NL query, minimal B2B operations UI (React/TS/Vite).
 ingestion → extraction → validation → routing with append-only persistence,
 fail-closed semantics, and wired validation/decision HTTP reads.
 
-Still ahead for submission hardening: demo runbook polish, failure-path demo packaging.
+## Phase 8 — Grounded Query API
+
+**Implemented:** `POST /v1/query` with allow-listed intents and no LLM SQL.
+
+## Phase 9 — Part 1 operations UI
+
+**Implemented on `feature/phase-9-frontend`:** React/TS/Vite ops UI, Compose `web`
+service, Vitest coverage, and demo runbook for synthetic fixtures.
 
 ## Part 2 — Forward (after Part 1)
 

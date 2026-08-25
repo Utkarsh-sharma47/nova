@@ -8,19 +8,16 @@ This is an operational verification system — not a generic chatbot and not a h
 
 ## Status
 
-**Phase 3 — Application foundation and document ingestion**
+**Phase 9 — Part 1 operations UI** (on top of Phases 3–8 pipeline + grounded query)
 
 | Area | Status |
 |------|--------|
 | Phase 1 foundation | Complete |
 | Technology ADRs (0002–0009) | Accepted |
-| System / AI / DB / API architecture docs | Documented |
-| Pydantic domain contracts | In `src/nova/contracts/` |
-| FastAPI ingestion and retrieval | Implemented |
-| PostgreSQL / Alembic foundation | Implemented |
-| Local document processing/storage | PDF and UTF-8 text |
-| Extractor / Validator / Router agents | **Not implemented** |
-| UI / live LLM | **Not implemented** |
+| End-to-end pipeline | Implemented (Extractor → Validator → Router) |
+| Grounded Query API | Implemented (`POST /v1/query`) |
+| Operations UI (React/TS/Vite) | Implemented (`frontend/`) |
+| Live vendor LLM | Optional; MockLLM default |
 
 ## Quick links
 
@@ -28,6 +25,7 @@ This is an operational verification system — not a generic chatbot and not a h
 |----------|------------|
 | AI coding agents | [AGENTS.md](./AGENTS.md) |
 | Contributors | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| UI demo | [docs/operations/ui-demo.md](./docs/operations/ui-demo.md) |
 | Requirements | [docs/requirements/inventory.md](./docs/requirements/inventory.md) |
 | Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) · [docs/architecture/](./docs/architecture/) |
 | Stack ADRs | [docs/decisions/](./docs/decisions/) |
@@ -51,6 +49,7 @@ pip install -e ".[dev]"
 ruff check src tests
 mypy
 pytest -q
+cd frontend && npm test && npm run typecheck && npm run build
 ```
 
 ## Run locally
@@ -60,12 +59,14 @@ Set a non-placeholder `API_AUTH_TOKEN` and database password in `.env`, then:
 ```bash
 docker compose up --build
 curl http://localhost:8000/health
+# UI: http://localhost:8080
 ```
 
 Authenticated endpoints accept `Authorization: Bearer <token>` or `X-API-Key`.
 `POST /v1/documents` requires multipart form data and an `Idempotency-Key`, and
-returns `202 Accepted`. Phase 3 stores and normalizes content, creates a queued
-verification run, and does not execute extraction or any LLM agent.
+returns `202 Accepted`. The pipeline runs Extractor → Validator → Router (MockLLM by default).
+
+Frontend env template: `frontend/.env.example`. Demo walkthrough: [docs/operations/ui-demo.md](./docs/operations/ui-demo.md).
 
 ## License
 

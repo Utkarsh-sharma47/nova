@@ -10,6 +10,8 @@ Per-feature documentation for Nova.
 | Document ingestion | [document-ingestion.md](./document-ingestion.md) | Phase 3 implemented |
 | Extractor agent | [extractor-agent.md](./extractor-agent.md) | Phase 4 implemented |
 | End-to-end pipeline | [end-to-end-pipeline.md](./end-to-end-pipeline.md) | Phase 7 implemented |
+| Query / Intelligence API | [query-intelligence-api.md](./query-intelligence-api.md) | Phase 8 implemented (adapted on Phase 7 schema) |
+| Part 1 operations UI | [operations-ui.md](./operations-ui.md) | Phase 9 implemented |
 
 ## Creating a feature doc
 

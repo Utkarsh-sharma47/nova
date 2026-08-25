@@ -2,7 +2,7 @@
 
 Contract for `POST /v1/query` — grounded Q&A over **persisted** Nova verification data (`REQ-QUERY-002`, `REQ-QUERY-003`).
 
-**Status:** Contract only — not implemented yet.
+**Status:** Implemented (Phase 8+; adapted to Phase 7 persistence schema).
 
 ## Security requirement (normative)
 

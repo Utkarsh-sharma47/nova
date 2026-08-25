@@ -7,6 +7,7 @@ Operational practices and runbooks for Nova.
 | Document | Status |
 |----------|--------|
 | [git-workflow.md](./git-workflow.md) | Done — branch model, conventional commits, PR rules |
+| [ui-demo.md](./ui-demo.md) | Done — Phase 9 synthetic UI demo flow |
 
 ## Planned (when the system is operable)
 
@@ -16,7 +17,7 @@ Operational practices and runbooks for Nova.
 | Incident response | Planned |
 | Common failure runbooks | Planned |
 | Backup and restore (if applicable) | Planned |
-| Demo / submission runbook | Phase 8 |
+| Demo / submission runbook | Phase 8–9 — see [ui-demo.md](./ui-demo.md) |
 | Pipeline operations notes | Phase 7 — see [`../architecture/end-to-end-pipeline.md`](../architecture/end-to-end-pipeline.md) |
 | Local pipeline baseline | `scripts/benchmark_pipeline.py` (MockLLM; not a production SLO) |
 

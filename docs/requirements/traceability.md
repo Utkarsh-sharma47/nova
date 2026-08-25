@@ -24,9 +24,9 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 | REQ-DATA-002 | 1:N documents | schema relationships | 2–5 | Schema review | ERD + relationships.md |
 | REQ-DATA-003 | Idempotent writes | Idempotency-Key + DB keys | 5 | Integration | api/idempotency + schema |
 | REQ-DATA-004 | Retention/PII policy | security baseline | 1–5 | Doc review | `docs/security/` |
-| REQ-QUERY-001 | Query API | GET shipment/document/validation/decision | 7 | Integration | api/contracts + wired routes |
-| REQ-QUERY-002–003 | NL query, grounded | `POST /v1/query` | 6 | Eval + integration | query-interface.md (**no LLM SQL**) |
-| REQ-UI-001–003 | Frontend ADR-0009 | — | 6 | Manual/smoke | ADR-0009 + UI feature docs |
+| REQ-QUERY-001 | Query API | GET shipment/document/validation/decision + list/summary | 7–9 | Integration | api/contracts + ops routes + UI |
+| REQ-QUERY-002–003 | NL query, grounded | `POST /v1/query` | 8–9 | Eval + integration + UI | query-interface.md (**no LLM SQL**) |
+| REQ-UI-001–003 | Frontend ADR-0009 | ops UI pages | 9 | Manual/smoke + Vitest | `frontend/`, `docs/features/operations-ui.md` |
 | REQ-AI-001–003 | Agent architecture | Extractor/Validator/Router contracts | 3–4 | Contract tests | `docs/agents/*`, `tests/contracts/` |
 | REQ-AI-004 | No silent fabrication | FieldPresence invariants | 3–4 | Contract + eval | extraction.py validators |
 | REQ-AI-005 | Timeouts/retries/cost | timeout_ms + UsageMetrics | 3–4 | Unit/integration | agent docs + contracts |

@@ -17,11 +17,14 @@
 | [performance-testing.md](./performance-testing.md) | Done — latency/throughput/cost (no tooling yet) |
 | [validator-evaluation.md](./validator-evaluation.md) | Done — Validator safety + eval suites |
 | [pipeline-integration.md](./pipeline-integration.md) | Done — Phase 7 E2E pipeline suite |
+| [query-api.md](./query-api.md) | Done — Phase 8 grounded query suite |
+| [frontend.md](./frontend.md) | Done — Phase 9 Vitest ops UI suite |
 ## Current automated checks
 - Docs structure script
 - Secret pattern script
-- pytest (contracts, documents, API, router decisions, decision persistence)
+- pytest (contracts, documents, API, query, router decisions, pipeline)
 - Ruff + MyPy on application packages
+- Frontend: `npm test`, `npm run typecheck`, `npm run build`
 ## Planned / specified
 | Topic | Status |
 |-------|--------|

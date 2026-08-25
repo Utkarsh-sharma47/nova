@@ -8,6 +8,14 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 9 Part 1 operations UI (`0.9.0`):
+  - React + TypeScript + Vite app in `frontend/`
+  - Dashboard, upload, document/shipment detail, grounded query pages
+  - Typed API client with structured error/`trace_id` handling
+  - Vitest component tests; Docker/nginx Compose `web` service
+  - Justified ops APIs: `GET /v1/ops/summary`, `GET /v1/documents`, `POST /v1/customers`
+  - Phase 8 query service adapted onto Phase 7 validation/decision persistence
+  - Synthetic demo fixture + runbook `docs/operations/ui-demo.md`
 - Phase 7 end-to-end pipeline integration:
   - `PipelineOrchestrator` coordinates extract → validate → route after ingestion
   - Document lifecycle `extracted → validated → decided` (or `failed`)

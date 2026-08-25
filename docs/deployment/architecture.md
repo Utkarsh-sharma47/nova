@@ -7,14 +7,14 @@ ADR: [0008](../decisions/0008-deployment.md). Philosophy: [philosophy.md](./phil
 ```text
 ┌────────────┐     ┌────────────┐     ┌────────────┐
 │  web (UI)  │────▶│    api     │────▶│  postgres  │
-│  (Phase 6) │     │  FastAPI   │     │            │
+│  (Phase 9) │     │  FastAPI   │     │            │
 └────────────┘     └─────┬──────┘     └────────────┘
                          │
                    object storage / volume
                    (document bytes)
 ```
 
-Compose services: `api`, `db`, optional `web`.
+Compose services: `api`, `db`, `web` (nginx static UI + `/v1` proxy).
 
 ## Priorities
 

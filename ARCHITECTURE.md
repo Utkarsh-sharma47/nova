@@ -8,14 +8,16 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 7 end-to-end pipeline integrated** on top of Phases 3–6:
+**Phase 9 Part 1 operations UI** on top of Phases 3–8:
 
 - Ingestion → `PipelineOrchestrator` → Extractor → Validator → Router → persistence
+- Grounded `POST /v1/query`
+- React/Vite ops UI (`frontend/`) consuming typed APIs
 - Append-only extraction, validation, and decision history
 - Document lifecycle through `extracted → validated → decided` (or `failed`)
-- HTTP reads for validation and decision resources
 
-Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md).
+Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md),
+[`docs/architecture/frontend.md`](docs/architecture/frontend.md).
 
 ## Conceptual pipeline
 
@@ -31,16 +33,18 @@ Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-ar
 ## Implemented dependency direction
 
 ```text
-FastAPI routes → application services (ingestion + PipelineOrchestrator)
+UI (React/Vite) → FastAPI routes
+FastAPI routes → application services (ingestion + PipelineOrchestrator + ops + query)
                                       ├── persistence repositories → PostgreSQL
                                       ├── DocumentStoragePort → local filesystem
                                       ├── DocumentProcessorPort → PDF/text adapters
                                       ├── ExtractorService → LLMPort (MockLLM default)
                                       ├── ValidatorAgent → deterministic + optional LLM
-                                      └── RouterService → safety constraints + DecisionResult
+                                      ├── RouterService → safety constraints + DecisionResult
+                                      └── QueryService → allow-listed intents → repository
 ```
 
-Routes contain no OCR, SQL, or agent policy details.
+Routes contain no OCR, SQL, or agent policy details. The UI does not duplicate routing logic.
 
 ## Technology stack (summary)
 
