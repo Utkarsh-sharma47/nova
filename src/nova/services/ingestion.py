@@ -19,6 +19,7 @@ from nova.domain.errors import (
     MissingIdempotencyKeyError,
     PayloadTooLargeError,
     ShipmentNotFoundError,
+    StorageError,
     UnsupportedDocumentTypeError,
     ValidationFailedError,
 )
@@ -376,28 +377,20 @@ class DocumentIngestionService:
         # via a relative path (demo path-based intake).
         from pathlib import Path
 
-        from nova.infrastructure.storage import LocalFilesystemDocumentStorage
-
-        if not isinstance(self._storage, LocalFilesystemDocumentStorage):
-            raise ValidationFailedError(
-                "source_path ingestion requires local filesystem storage.",
-                code="SOURCE_PATH_UNSUPPORTED",
-            )
         rel = source_path.strip().lstrip("/")
-        target = (self._storage.root / rel).resolve()
         try:
-            target.relative_to(self._storage.root)
-        except ValueError as exc:
+            data = self._storage.retrieve(rel)
+        except ValidationFailedError as exc:
             raise ValidationFailedError(
-                "source_path escapes storage root.",
+                "source_path escapes storage root or is invalid.",
                 code="INVALID_SOURCE_PATH",
+                details={"source_path": source_path},
             ) from exc
-        if not target.is_file():
+        except StorageError as exc:
             raise ValidationFailedError(
                 "source_path does not refer to an existing file.",
                 code="INVALID_SOURCE_PATH",
                 details={"source_path": source_path},
-            )
-        data = target.read_bytes()
+            ) from exc
         mime = (media_type or "application/octet-stream").split(";")[0].strip().lower()
-        return data, mime, IngestionChannel.PATH, Path(target).name
+        return data, mime, IngestionChannel.PATH, Path(rel).name

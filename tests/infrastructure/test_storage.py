@@ -21,14 +21,28 @@ def test_safe_filename_rejects_empty() -> None:
     assert safe_filename(None) == "document.bin"
 
 
-def test_store_and_reject_overwrite(tmp_path: Path) -> None:
+def test_store_retrieve_and_reject_overwrite(tmp_path: Path) -> None:
     storage = LocalFilesystemDocumentStorage(tmp_path)
     uri = storage.store(relative_path="a/b.txt", data=b"hello")
     assert uri.startswith("file://")
+    assert storage.retrieve("a/b.txt") == b"hello"
     assert (tmp_path / "a" / "b.txt").read_bytes() == b"hello"
     with pytest.raises(StorageError) as exc:
         storage.store(relative_path="a/b.txt", data=b"other")
     assert exc.value.code == "STORAGE_OVERWRITE_REFUSED"
+
+
+def test_retrieve_missing_object(tmp_path: Path) -> None:
+    storage = LocalFilesystemDocumentStorage(tmp_path)
+    with pytest.raises(StorageError) as exc:
+        storage.retrieve("missing.bin")
+    assert exc.value.code == "STORAGE_OBJECT_NOT_FOUND"
+
+
+def test_retrieve_path_traversal_rejected(tmp_path: Path) -> None:
+    storage = LocalFilesystemDocumentStorage(tmp_path)
+    with pytest.raises(ValidationFailedError):
+        storage.retrieve("../escape.txt")
 
 
 def test_path_traversal_rejected(tmp_path: Path) -> None:

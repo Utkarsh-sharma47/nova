@@ -8,14 +8,24 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Optional host port overrides when defaults are busy:
+
+```bash
+POSTGRES_PORT=25432 API_PORT=28000 docker compose up --build
+```
+
 Services:
 
 | Service | Port | Notes |
 |---------|------|-------|
-| `db` | 5432 | Postgres 16, user/db `nova` / `nova` |
-| `api` | 8000 | Migrates then serves FastAPI |
+| `db` | `${POSTGRES_PORT:-5432}` | Postgres 16, user/db `nova` / `nova` |
+| `api` | `${API_PORT:-8000}` | Migrates then serves FastAPI |
 
 Endpoints: `GET /health`, `GET /ready`, `POST /v1/documents`.
+
+**Intake behavior:** `POST /v1/documents` persists bytes + metadata and creates a
+`verification_runs` row in `queued` status, then returns **202 Accepted**.
+Phase 3 does **not** run Extractor/Validator/Router asynchronously after accept.
 
 ## Alembic only (host Python)
 

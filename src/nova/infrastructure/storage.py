@@ -41,6 +41,10 @@ class DocumentStoragePort(ABC):
         """Persist bytes under a relative path. Returns a storage URI."""
 
     @abstractmethod
+    def retrieve(self, relative_path: str) -> bytes:
+        """Return stored bytes for a relative path. Raises if missing/unsafe."""
+
+    @abstractmethod
     def exists(self, relative_path: str) -> bool:
         """Return True if the relative path already exists."""
 
@@ -106,6 +110,22 @@ class LocalFilesystemDocumentStorage(DocumentStoragePort):
                 details={"relative_path": relative_path},
             ) from exc
         return f"file://{target}"
+
+    def retrieve(self, relative_path: str) -> bytes:
+        target = self._resolve_safe(relative_path)
+        if not target.is_file():
+            raise StorageError(
+                "Stored document was not found.",
+                code="STORAGE_OBJECT_NOT_FOUND",
+                details={"relative_path": relative_path},
+            )
+        try:
+            return target.read_bytes()
+        except OSError as exc:
+            raise StorageError(
+                "Failed to read document bytes from storage.",
+                details={"relative_path": relative_path},
+            ) from exc
 
     def exists(self, relative_path: str) -> bool:
         try:

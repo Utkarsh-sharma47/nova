@@ -40,3 +40,13 @@ def test_allowed_mime_types_parsed(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ALLOWED_DOCUMENT_TYPES", "application/pdf, text/plain")
     settings = Settings()  # type: ignore[call-arg]
     assert settings.allowed_mime_types == frozenset({"application/pdf", "text/plain"})
+
+
+def test_max_document_size_alias(monkeypatch: pytest.MonkeyPatch) -> None:
+    clear_settings_cache()
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://nova:nova@localhost:5432/nova")
+    monkeypatch.setenv("API_AUTH_TOKEN", "test-token-not-for-production")
+    monkeypatch.delenv("MAX_DOCUMENT_SIZE_BYTES", raising=False)
+    monkeypatch.setenv("MAX_DOCUMENT_SIZE", "2048")
+    settings = Settings()  # type: ignore[call-arg]
+    assert settings.max_document_size_bytes == 2048

@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,7 +34,11 @@ class Settings(BaseSettings):
     )
 
     document_storage_path: str = Field(default="./data/uploads")
-    max_document_size_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
+    max_document_size_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        ge=1,
+        validation_alias=AliasChoices("MAX_DOCUMENT_SIZE_BYTES", "MAX_DOCUMENT_SIZE"),
+    )
     allowed_document_types: str = Field(
         default="application/pdf,image/png,image/jpeg,image/tiff,text/plain",
         description="Comma-separated MIME allow-list",
