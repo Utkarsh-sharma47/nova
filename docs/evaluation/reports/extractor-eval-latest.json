@@ -1,0 +1,155 @@
+{
+  "metrics": {
+    "n": 2,
+    "field_presence_accuracy": 1.0,
+    "known_value_accuracy": 1.0,
+    "fabrication_count": 0,
+    "gate_passed": true
+  },
+  "cases": [
+    {
+      "case_id": "ext_assignment_clean_invoice",
+      "expected_fields": {
+        "invoice_number": {
+          "presence": "KNOWN",
+          "value": "INV-CLEAN-2001"
+        },
+        "consignee_name": {
+          "presence": "KNOWN",
+          "value": "Harbor Goods BV"
+        },
+        "hs_code": {
+          "presence": "KNOWN",
+          "value": "8471.30"
+        },
+        "port_of_loading": {
+          "presence": "KNOWN",
+          "value": "Singapore"
+        },
+        "port_of_discharge": {
+          "presence": "KNOWN",
+          "value": "Rotterdam"
+        },
+        "incoterms": {
+          "presence": "KNOWN",
+          "value": "FOB"
+        },
+        "description_of_goods": {
+          "presence": "KNOWN",
+          "value": "Synthetic clean invoice for Nova Part 1 evaluation."
+        },
+        "gross_weight": {
+          "presence": "KNOWN",
+          "value": "10250 KG"
+        }
+      },
+      "actual_fields": {
+        "consignee_name": {
+          "presence": "KNOWN",
+          "value": "Harbor Goods BV"
+        },
+        "hs_code": {
+          "presence": "KNOWN",
+          "value": "8471.30"
+        },
+        "port_of_loading": {
+          "presence": "KNOWN",
+          "value": "Singapore"
+        },
+        "port_of_discharge": {
+          "presence": "KNOWN",
+          "value": "Rotterdam"
+        },
+        "incoterms": {
+          "presence": "KNOWN",
+          "value": "FOB"
+        },
+        "description_of_goods": {
+          "presence": "KNOWN",
+          "value": "Synthetic clean invoice for Nova Part 1 evaluation."
+        },
+        "gross_weight": {
+          "presence": "KNOWN",
+          "value": "10250 KG"
+        },
+        "invoice_number": {
+          "presence": "KNOWN",
+          "value": "INV-CLEAN-2001"
+        }
+      },
+      "status": "SUCCEEDED"
+    },
+    {
+      "case_id": "ext_assignment_missing_fields",
+      "expected_fields": {
+        "invoice_number": {
+          "presence": "KNOWN",
+          "value": "INV-PARTIAL-1"
+        },
+        "consignee_name": {
+          "presence": "KNOWN",
+          "value": "Harbor Goods BV"
+        },
+        "hs_code": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "port_of_loading": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "port_of_discharge": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "incoterms": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "description_of_goods": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "gross_weight": {
+          "presence": "MISSING",
+          "value": null
+        }
+      },
+      "actual_fields": {
+        "consignee_name": {
+          "presence": "KNOWN",
+          "value": "Harbor Goods BV"
+        },
+        "hs_code": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "port_of_loading": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "port_of_discharge": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "incoterms": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "description_of_goods": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "gross_weight": {
+          "presence": "MISSING",
+          "value": null
+        },
+        "invoice_number": {
+          "presence": "KNOWN",
+          "value": "INV-PARTIAL-1"
+        }
+      },
+      "status": "PARTIAL"
+    }
+  ]
+}

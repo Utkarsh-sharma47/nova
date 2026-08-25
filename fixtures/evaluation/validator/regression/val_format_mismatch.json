@@ -1,0 +1,48 @@
+{
+  "case_id": "val_format_mismatch",
+  "category": "format_mismatch",
+  "description": "BL format fails regex",
+  "extracted_fields": [
+    {
+      "field_name": "bl_number",
+      "value": "XX-BAD",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "XX-BAD",
+          "page": 1,
+          "evidence_id": "9511c587-0808-4932-8a5d-d432e96ed6b9"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "cfd23f56-efde-4629-87a0-46075dec5442",
+      "rule_code": "BL_FORMAT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "format",
+        "field": "bl_number",
+        "pattern": "^BL-[0-9]+$"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression"
+  ]
+}

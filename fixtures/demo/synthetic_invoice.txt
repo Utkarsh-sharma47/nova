@@ -1,0 +1,14 @@
+Invoice Number: INV-DEMO-1001
+Invoice Date: 2026-08-20
+Shipper: Acme Logistics Pte Ltd
+Consignee: Demo Trading Co
+Port of Loading: Singapore
+Port of Discharge: Rotterdam
+Container Number: MSKU1234567
+HS Code: 8471.30
+Incoterms: FOB
+Gross Weight: 12500 KG
+Currency: USD
+Total Amount: 18450.00
+Description of Goods: Synthetic demo invoice for Nova Part 1 UI walkthrough.
+Note: This file is synthetic fixture content only. It is not a real customer document.

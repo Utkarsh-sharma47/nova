@@ -1,0 +1,15 @@
+{
+  "case_id": "ext_assignment_missing_fields",
+  "document_type": "INVOICE",
+  "document_text": "Invoice Number: INV-PARTIAL-1\nConsignee: Harbor Goods BV\n",
+  "expected_fields": {
+    "invoice_number": {"presence": "KNOWN", "value": "INV-PARTIAL-1"},
+    "consignee_name": {"presence": "KNOWN", "value": "Harbor Goods BV"},
+    "hs_code": {"presence": "MISSING", "value": null},
+    "port_of_loading": {"presence": "MISSING", "value": null},
+    "port_of_discharge": {"presence": "MISSING", "value": null},
+    "incoterms": {"presence": "MISSING", "value": null},
+    "description_of_goods": {"presence": "MISSING", "value": null},
+    "gross_weight": {"presence": "MISSING", "value": null}
+  }
+}

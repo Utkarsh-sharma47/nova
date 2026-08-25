@@ -1,0 +1,58 @@
+{
+  "case_id": "val_llm_override_deterministic_mismatch",
+  "category": "llm_override_deterministic_mismatch",
+  "description": "LLM says MATCH but deterministic equals is MISMATCH \u2192 locked MISMATCH",
+  "extracted_fields": [
+    {
+      "field_name": "shipper",
+      "value": "Wrong Co",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Wrong Co",
+          "page": 1,
+          "evidence_id": "5601d85f-f72e-4049-aefc-f9b235dfa7a0"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "569dc40f-ed76-438b-a6c4-e5b1202a79ee",
+      "rule_code": "SHIPPER_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": true,
+      "expression": {
+        "op": "equals",
+        "field": "shipper",
+        "expected": "Acme Shipping"
+      }
+    }
+  ],
+  "llm": {
+    "mode": "response",
+    "response": {
+      "outcome": "MATCH",
+      "reason": "close enough",
+      "confidence": 0.99
+    }
+  },
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety",
+    "llm"
+  ]
+}

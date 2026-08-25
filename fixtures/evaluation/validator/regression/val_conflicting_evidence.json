@@ -1,0 +1,49 @@
+{
+  "case_id": "val_conflicting_evidence",
+  "category": "conflicting_evidence",
+  "description": "Conflicting evidence forces UNCERTAIN not MATCH",
+  "extracted_fields": [
+    {
+      "field_name": "shipper",
+      "value": "Acme",
+      "presence": "KNOWN",
+      "confidence": 0.7,
+      "confidence_band": "LOW",
+      "uncertainty": "CONFLICTING_EVIDENCE",
+      "uncertainty_codes": [
+        "CONTRADICTORY"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Acme",
+          "page": 1,
+          "evidence_id": "92dfdaa0-c6f4-4034-803b-32dbd6a5b34f"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "05cbda24-598b-473b-83d5-7d6b3fd039db",
+      "rule_code": "SHIPPER_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "equals",
+        "field": "shipper",
+        "expected": "Acme"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety"
+  ]
+}

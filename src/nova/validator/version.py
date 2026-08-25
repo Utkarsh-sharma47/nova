@@ -1,0 +1,8 @@
+"""Validator package versions."""
+
+VALIDATOR_VERSION = "1.0.0"
+RULES_ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = f"validator-{VALIDATOR_VERSION}+rules-{RULES_ENGINE_VERSION}"
+JUDGMENT_PROMPT_ID = "validator.judgment"
+JUDGMENT_PROMPT_VERSION = "1.0.0"
+MAX_LLM_RETRIES = 2
