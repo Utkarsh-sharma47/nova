@@ -10,6 +10,10 @@ def detect_media_type(blob: bytes) -> str:
         raise DocumentProcessingError(DOC_EMPTY, "Document blob is empty")
     if blob.startswith(b"%PDF"):
         return "application/pdf"
+    if blob.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if blob.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
     if b"\x00" in blob[:8192]:
         raise DocumentProcessingError(
             DOC_CORRUPT, "Binary content does not match a supported media type"

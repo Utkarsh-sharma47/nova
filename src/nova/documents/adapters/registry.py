@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from nova.documents.adapters.digital_pdf import DigitalPdfAdapter
 from nova.documents.adapters.passthrough_text import PassthroughTextAdapter
+from nova.documents.adapters.raster_image import RasterImageAdapter
 from nova.documents.errors import DOC_UNSUPPORTED_MEDIA_TYPE, DocumentProcessingError
 from nova.documents.limits import DEFAULT_LIMITS, DocumentLimits
 from nova.documents.port import DocumentProcessorPort
@@ -36,4 +37,5 @@ def default_registry(limits: DocumentLimits = DEFAULT_LIMITS) -> ProcessorRegist
     registry = ProcessorRegistry()
     registry.register(DigitalPdfAdapter(limits=limits))
     registry.register(PassthroughTextAdapter())
+    registry.register(RasterImageAdapter())
     return registry

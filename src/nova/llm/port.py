@@ -1,10 +1,19 @@
-"""LLMPort abstraction (ADR-0005)."""
+"""LLMPort abstraction (ADR-0005) with optional vision attachments."""
 
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class LLMImagePart(BaseModel):
+    """Base64 image attachment for vision-capable providers."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    media_type: str
+    data_base64: str = Field(min_length=1)
 
 
 class LLMMessage(BaseModel):
@@ -20,6 +29,7 @@ class LLMRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     messages: list[LLMMessage] = Field(default_factory=list)
+    images: list[LLMImagePart] = Field(default_factory=list)
     response_format: str = "json"
     temperature: float | None = Field(default=0.0, ge=0.0, le=2.0)
     max_tokens: int | None = Field(default=4096, ge=1)

@@ -17,7 +17,20 @@ class DocumentLimits:
 
 DEFAULT_LIMITS = DocumentLimits()
 
-SUPPORTED_MEDIA_TYPES: frozenset[str] = frozenset({"application/pdf", "text/plain"})
-SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({".pdf", ".txt"})
-EXTENSION_TO_MEDIA_TYPE: dict[str, str] = {".pdf": "application/pdf", ".txt": "text/plain"}
-PROCESSOR_PACKAGE_VERSION = "1.0.0"
+SUPPORTED_MEDIA_TYPES: frozenset[str] = frozenset(
+    {
+        "application/pdf",
+        "text/plain",
+        "image/png",
+        "image/jpeg",
+    }
+)
+SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({".pdf", ".txt", ".png", ".jpg", ".jpeg"})
+EXTENSION_TO_MEDIA_TYPE: dict[str, str] = {
+    ".pdf": "application/pdf",
+    ".txt": "text/plain",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
+PROCESSOR_PACKAGE_VERSION = "1.1.0"

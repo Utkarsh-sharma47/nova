@@ -289,8 +289,8 @@ def _current_version(document: Document) -> DocumentVersion | None:
 
 def build_default_llm(provider: str, model: str | None, api_key: str | None) -> LLMPort:
     """Factory: tests/local default to MockLLM. Live providers are adapters only."""
-    del api_key  # never pass secrets into domain; adapters read env themselves later
-    if provider.lower() in {"mock", "test", "none", ""}:
+    normalized = provider.lower().strip()
+    if normalized in {"mock", "test", "none", ""}:
         from nova.extraction.heuristic import heuristic_extractor_response
         from nova.llm.mock import MockLLM
 
@@ -298,7 +298,26 @@ def build_default_llm(provider: str, model: str | None, api_key: str | None) -> 
             factory=heuristic_extractor_response,
             model=model or "mock-extractor-v1",
         )
-    # Part 1: no hard-coded OpenAI/Anthropic in domain. Unsupported → mock.
+    if normalized in {"openai", "openai_compatible", "openai-compatible"}:
+        if not api_key or not api_key.strip():
+            logger.warning(
+                "openai_provider_missing_api_key_falling_back_to_mock",
+                extra={
+                    "event": "llm.provider_fallback",
+                    "extra_fields": {"provider": provider, "reason": "missing_api_key"},
+                },
+            )
+            from nova.extraction.heuristic import heuristic_extractor_response
+            from nova.llm.mock import MockLLM
+
+            return MockLLM(
+                factory=heuristic_extractor_response,
+                model=model or "mock-extractor-v1",
+            )
+        from nova.llm.openai_compatible import OpenAICompatibleLLM
+
+        return OpenAICompatibleLLM(api_key=api_key, model=model, provider_name="openai")
+
     logger.warning(
         "unsupported_llm_provider_falling_back_to_mock",
         extra={

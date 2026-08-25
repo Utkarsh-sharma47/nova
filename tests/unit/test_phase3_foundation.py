@@ -115,9 +115,9 @@ def test_validation_rejects_oversized_and_unsupported() -> None:
     assert oversized.value.error_code == DOC_PAYLOAD_TOO_LARGE
     with pytest.raises(DocumentProcessingError) as unsupported:
         validate_document(
-            b"\x89PNG\r\n",
-            original_filename="x.png",
-            declared_media_type="image/png",
+            b"GIF89a\x00\x00",
+            original_filename="x.gif",
+            declared_media_type="image/gif",
         )
     assert unsupported.value.error_code == DOC_UNSUPPORTED_EXTENSION
 

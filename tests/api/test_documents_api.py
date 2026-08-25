@@ -114,15 +114,43 @@ def test_rejects_unsupported_mime_and_hides_stack_traces(
     response = upload(
         test_client,
         customer_id,
-        content_type="image/png",
-        filename="x.png",
-        body=b"\x89PNG\r\n",
+        content_type="image/gif",
+        filename="x.gif",
+        body=b"GIF89a",
     )
     assert response.status_code == 422
     body = response.json()
     assert body["error"]["code"] == "UNSUPPORTED_MEDIA_TYPE"
     assert "traceback" not in response.text.lower()
     assert "nova-test-token" not in response.text
+
+
+def test_accepts_png_and_serves_content(client: tuple[TestClient, UUID]) -> None:
+    # Minimal 1x1 PNG
+    png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01"
+        b"\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    test_client, customer_id = client
+    response = upload(
+        test_client,
+        customer_id,
+        key="png-upload-0001",
+        content_type="image/png",
+        filename="scan.png",
+        body=png,
+    )
+    assert response.status_code == 202
+    document_id = response.json()["document_id"]
+    detail = test_client.get(f"/v1/documents/{document_id}", headers=AUTH)
+    assert detail.status_code == 200
+    assert detail.json()["content"]["download_url"] == f"/v1/documents/{document_id}/content"
+    assert detail.json()["content"]["media_type"] == "image/png"
+    content = test_client.get(f"/v1/documents/{document_id}/content", headers=AUTH)
+    assert content.status_code == 200
+    assert content.headers["content-type"].startswith("image/png")
+    assert content.content.startswith(b"\x89PNG")
 
 
 def test_ready_reports_database_down(tmp_path: Path) -> None:

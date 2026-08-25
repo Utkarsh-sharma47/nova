@@ -124,12 +124,20 @@ class ModelMetadata(ContractModel):
     invoked_at: datetime | None = None
 
 
+class DocumentImage(ContractModel):
+    """Inline image payload for vision-capable LLM adapters (not logged as body)."""
+
+    media_type: str
+    data_base64: str = Field(min_length=1)
+
+
 class DocumentContent(ContractModel):
     """Normalized document content produced by DocumentProcessorPort."""
 
     media_type: str
     text: str | None = None
     page_texts: list[str] | None = None
+    images: list[DocumentImage] = Field(default_factory=list)
     layout: dict[str, Any] | None = None
     processor_name: str
     processor_version: str

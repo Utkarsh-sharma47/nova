@@ -9,10 +9,11 @@ from nova.llm.errors import (
     RetryExhaustedError,
 )
 from nova.llm.mock import MockLLM, scripted_error, scripted_json, scripted_text
-from nova.llm.port import LLMMessage, LLMPort, LLMRequest, LLMResponse
+from nova.llm.port import LLMImagePart, LLMMessage, LLMPort, LLMRequest, LLMResponse
 
 __all__ = [
     "LLMError",
+    "LLMImagePart",
     "LLMMalformedOutputError",
     "LLMMessage",
     "LLMOutputError",

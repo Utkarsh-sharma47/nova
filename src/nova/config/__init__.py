@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     allowed_mime_types: Annotated[tuple[str, ...], NoDecode] = (
         "application/pdf",
         "text/plain",
+        "image/png",
+        "image/jpeg",
     )
     database_connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
     llm_provider: str = "mock"
