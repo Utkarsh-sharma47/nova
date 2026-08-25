@@ -201,6 +201,7 @@ class ValidatorAgent:
                     reason="LLM_UNAVAILABLE",
                     deterministic=False,
                     severity=rule.severity,
+                    blocking=rule.blocking,
                     details={"validation_code": "LLM_UNAVAILABLE"},
                 ),
                 None,
@@ -307,6 +308,7 @@ class ValidatorAgent:
                         confidence=confidence if isinstance(confidence, int | float) else None,
                         deterministic=False,
                         severity=rule.severity,
+                        blocking=rule.blocking,
                         evidence=list(baseline.evidence),
                         details={
                             "validation_code": reason,
@@ -337,6 +339,7 @@ class ValidatorAgent:
                 reason="LLM_FAILURE",
                 deterministic=False,
                 severity=rule.severity,
+                blocking=rule.blocking,
                 details={
                     "validation_code": last_error or RetryExhaustedError.code,
                     "retries": self._max_llm_retries,

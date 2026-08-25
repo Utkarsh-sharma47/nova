@@ -23,10 +23,13 @@ from nova.contracts.extraction import (
     ExtractionStatus,
 )
 from nova.contracts.routing import (
+    DecisionActorType,
     DecisionKind,
     DecisionResult,
+    LlmRoutingSuggestion,
     RoutingPolicySnapshot,
     RoutingRequest,
+    validation_blocks_auto_approve,
 )
 from nova.contracts.validation import (
     CustomerRuleSnapshot,
@@ -42,6 +45,7 @@ __all__ = [
     "ConfidenceBand",
     "ConfidenceSource",
     "CustomerRuleSnapshot",
+    "DecisionActorType",
     "DecisionKind",
     "DecisionResult",
     "DocumentContent",
@@ -55,6 +59,7 @@ __all__ = [
     "ExtractionResult",
     "ExtractionStatus",
     "FieldPresence",
+    "LlmRoutingSuggestion",
     "ModelMetadata",
     "RoutingPolicySnapshot",
     "RoutingRequest",
@@ -67,4 +72,5 @@ __all__ = [
     "ValidationRequest",
     "ValidationResult",
     "ValidationStatus",
+    "validation_blocks_auto_approve",
 ]

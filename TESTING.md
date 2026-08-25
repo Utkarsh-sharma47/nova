@@ -10,9 +10,9 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 3 includes contract, lifecycle, processor/storage, API, security/failure,
-and PostgreSQL migration tests. No LLM or agent behavior is tested because those
-agents are outside this phase.
+Phase 6 adds the Router / Decision Agent (`nova.router`) with deterministic
+safety constraints, system failsafe, decision persistence, and unit/contract
+tests under `tests/agents/router/` and `tests/router/`.
 
 ```bash
 pip install -e ".[dev]"

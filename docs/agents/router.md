@@ -2,12 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Proposed (contract defined; not implemented) |
-| Owner | AI Systems Architect |
+| Status | Implemented (Phase 6) |
+| Owner | Decision and Routing Engineer |
 | Last updated | 2026-08-25 |
 | Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
-| Related feature(s) | Part 1 document verification pipeline |
+| Related feature(s) | Part 1 document verification pipeline; [router-decision-agent.md](../features/router-decision-agent.md) |
 | Contract | [contracts.md](./contracts.md#router-contract) |
+| Runtime | `src/nova/router/` (`RouterService`) |
 
 ## 1. Purpose
 
@@ -133,33 +134,54 @@ Not allowed to:
 
 ## 8. Testing
 
-- Golden cases for all three decisions
+- Golden cases for all three decisions (`tests/agents/router/`, `tests/router/`)
 - Constraint tests: uncertainty never yields `AUTO_APPROVE`
-- Failure tests: timeout/malformed → `HUMAN_REVIEW`
+- Failure tests: timeout/malformed/failsafe → `HUMAN_REVIEW`
 - Adversarial: LLM returns `AUTO_APPROVE` while blocking mismatch present → overridden
+- Fixed decision regression dataset: `fixtures/evaluation/decision/` (tag `regression`)
 
 ## 9. Evaluation
 
-- Decision agreement vs labeled gold
-- **False `AUTO_APPROVE` rate** (primary safety bar)
-- Over-routing to `HUMAN_REVIEW` is acceptable relative to false approve
+Harness: [`docs/evaluation/decision-evaluation.md`](../evaluation/decision-evaluation.md)
+(`nova.evaluation.decision`).
+
+| Metric | Role |
+|--------|------|
+| Decision agreement vs labeled gold | Quality |
+| **False `AUTO_APPROVE` rate** | **Primary safety bar** |
+| AUTO_APPROVE precision | Safety companion |
+| HUMAN_REVIEW / AMENDMENT_REQUEST rates | Routing mix |
+| Unsafe LLM attempt count | Adversarial pressure |
+| Decision latency / failure rate | Ops |
+
+Over-routing to `HUMAN_REVIEW` is acceptable relative to false approve.
+
+**Calibration target (dataset `nova-decision-eval` rev `2026-08-25.r1`):**
+false AUTO_APPROVE rate **0.0** on the regression set — an evaluation-policy gate,
+not a production SLO claim.
 
 ## 10. Observability
 
 - `run_id`, stage=`router`, `decision`, policy ids/versions
 - `safety_constraints_applied`
 - `triggering_check_ids`
-- Whether LLM assist ran and whether it was overridden
+- Whether LLM assist ran and whether it was overridden (`llm_overridden`, `unsafe_llm_attempt`)
 - Latency, errors, attempts
+- `input_fingerprint` for deterministic replay
 
 ## 11. Known limitations
 
-- Concrete threshold numbers are customer/policy-specific and not hard-coded here.
-- Human approval workflow UX is Part 2; Part 1 still emits `HUMAN_REVIEW` as a first-class decision.
-- No runtime implementation yet.
+- Concrete threshold numbers are customer/policy-specific and calibrated via
+  versioned `RoutingPolicySnapshot` (defaults: high=0.85, low=0.60).
+- Human approval workflow UX is Part 2; Part 1 still emits `HUMAN_REVIEW` as a
+  first-class decision.
+- Live provider LLM assist is optional; Part 1 safety does not depend on it.
+- Decision evaluation fixtures are synthetic stage payloads (not live OCR).
 
 ## 12. Change history
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-08-25 | Initial contract and agent governance doc | AI Systems Architect |
+| 2026-08-25 | Phase 6 runtime: `RouterService`, failsafe, persistence | Decision and Routing Engineer |
+| 2026-08-25 | Decision evaluation dataset + metrics harness | Safety and Evaluation Engineer |

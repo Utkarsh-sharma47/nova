@@ -1,4 +1,4 @@
-"""Evaluation harness packages (extractor, validator, decision)."""
+"""Decision / routing evaluation package."""
 
 from nova.evaluation.decision.metrics import DecisionMetrics, compute_decision_metrics
 from nova.evaluation.decision.runner import DecisionEvalReport, run_decision_evaluation

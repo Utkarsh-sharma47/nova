@@ -109,6 +109,7 @@ def _base_check(
         evidence=list(evidence or []),
         deterministic=deterministic,
         severity=rule.severity,
+        blocking=rule.blocking,
         details={"validation_code": reason, **(details or {})},
     )
 

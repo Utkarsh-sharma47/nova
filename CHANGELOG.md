@@ -15,6 +15,15 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Append-only `agent_executions`, `model_call_metadata`, `extracted_fields`
   - Document lifecycle `content_available → in_pipeline → extracted|failed`
   - Unit, integration, and security tests under `tests/extraction/`
+- Phase 5 Validator Agent (`nova.validator` / `nova.agents.validator`):
+  - Deterministic rules + optional LLM judgment with fail-closed safety
+  - Append-only validation persistence port
+- Phase 6 Router / Decision Agent (`nova.router`):
+  - Deterministic safety constraints; AUTO_APPROVE only when fully eligible
+  - Optional advisory LLM assist that cannot authorize AUTO_APPROVE
+  - System failsafe → HUMAN_REVIEW; `system_failsafe` cannot store AUTO_APPROVE
+  - Append-only `decisions` table
+  - Decision evaluation harness (false AUTO_APPROVE target 0.0)
 - Phase 3 application foundation (`0.3.0`):
   - FastAPI health/readiness, authenticated ingestion, and document/shipment retrieval
   - Required HTTP idempotency with replay and mismatch conflict behavior
