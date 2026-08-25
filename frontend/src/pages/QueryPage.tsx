@@ -7,9 +7,30 @@ import { ErrorPanel } from '../components/ErrorPanel'
 import { LoadingState } from '../components/LoadingState'
 import { StatusBadge } from '../components/StatusBadge'
 import { readStoredCustomerId, storeCustomerId } from '../utils/customer'
+import { formatConfidence } from '../utils/status'
 import { isUuid } from '../utils/uuid'
 
 const EXAMPLE_QUERIES = [
+  {
+    label: 'How many strong agreement documents are there?',
+    question: 'How many strong agreement documents are there?',
+  },
+  {
+    label: 'How many weak agreement documents are there?',
+    question: 'How many weak agreement documents are there?',
+  },
+  {
+    label: 'Show strong agreement documents.',
+    question: 'Show strong agreement documents.',
+  },
+  {
+    label: 'Show weak agreement documents.',
+    question: 'Show weak agreement documents.',
+  },
+  {
+    label: 'How many documents require attention?',
+    question: 'How many documents require attention?',
+  },
   {
     label: 'How many shipments are in human review?',
     question: 'How many shipments are in human review?',
@@ -24,11 +45,6 @@ const EXAMPLE_QUERIES = [
     question: 'What is the decision for this document?',
     needsDocument: true,
   },
-  {
-    label: 'Summarize this verification run',
-    question: 'Summarize this verification run',
-    needsRun: true,
-  },
 ] as const
 
 const SUPPORTED_INTENTS = [
@@ -39,10 +55,32 @@ const SUPPORTED_INTENTS = [
   'list_shipments_by_decision — filter by AUTO_APPROVE | HUMAN_REVIEW | AMENDMENT_REQUEST',
   'list_documents_for_shipment — documents for a shipment',
   'summarize_run — summarize extraction/validation/decision for a run_id',
+  'count_documents_by_agreement — count STRONG / PARTIAL / WEAK agreement docs',
+  'list_documents_by_agreement — list documents by agreement category',
+  'count_documents_requiring_attention — partial + weak agreement count',
+  'count_documents_by_decision — count by AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST',
+  'count_documents_with_mismatches — count documents with validation MISMATCH',
 ]
 
 function recordHasStatus(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0
+}
+
+function recordCount(record: Record<string, unknown>): number | null {
+  const raw = record.count
+  return typeof raw === 'number' ? raw : null
+}
+
+function confidenceDisplay(record: Record<string, unknown>): string {
+  const percent = record.document_confidence_percent
+  if (typeof percent === 'number') {
+    return `${percent}%`
+  }
+  const score = record.document_confidence
+  if (typeof score === 'number') {
+    return formatConfidence(score)
+  }
+  return 'Confidence unavailable'
 }
 
 export function QueryPage() {
@@ -126,9 +164,6 @@ export function QueryPage() {
         'This example needs a document ID in the scope fields below.',
       )
     }
-    if ('needsRun' in example && example.needsRun && !runId.trim()) {
-      setClientError('This example needs a run ID in the scope fields below.')
-    }
   }
 
   return (
@@ -188,7 +223,7 @@ export function QueryPage() {
             onChange={(event) => setQuestion(event.target.value)}
             required
             disabled={loading}
-            placeholder="e.g. How many shipments are in human review?"
+            placeholder="e.g. How many strong agreement documents are there?"
           />
         </div>
         <div className="form-row">
@@ -311,72 +346,119 @@ export function QueryPage() {
           {response.status === 'RESULT' && response.result ? (
             <>
               <p className="query-summary">
-                <strong>Summary:</strong> {response.result.answer_summary}
+                <strong>Answer:</strong>
               </p>
+              <pre className="query-answer">{response.result.answer_summary}</pre>
               {response.result.records.length > 0 ? (
                 <div className="table-wrap">
                   <table className="data-table">
                     <thead>
                       <tr>
                         <th scope="col">Type</th>
-                        <th scope="col">IDs</th>
-                        <th scope="col">Status / decision</th>
+                        <th scope="col">Identifier</th>
+                        <th scope="col">Confidence</th>
+                        <th scope="col">Agreement</th>
+                        <th scope="col">Decision / status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {response.result.records.map((record, index) => (
-                        <tr key={`record-${index}`}>
-                          <td>{String(record.type ?? 'record')}</td>
-                          <td className="id-cell">
-                            {'document_id' in record && record.document_id ? (
-                              <div>
-                                Document:{' '}
-                                <Link
-                                  to={`/documents/${String(record.document_id)}`}
-                                >
-                                  {String(record.document_id)}
-                                </Link>
-                              </div>
-                            ) : null}
-                            {'shipment_id' in record && record.shipment_id ? (
-                              <div>
-                                Shipment:{' '}
-                                <Link
-                                  to={`/shipments/${String(record.shipment_id)}`}
-                                >
-                                  {String(record.shipment_id)}
-                                </Link>
-                              </div>
-                            ) : null}
-                            {'run_id' in record && record.run_id ? (
-                              <div>Run: {String(record.run_id)}</div>
-                            ) : null}
-                            {!record.document_id &&
-                            !record.shipment_id &&
-                            !record.run_id
-                              ? '—'
-                              : null}
-                          </td>
-                          <td>
-                            <div className="badge-row">
-                              {recordHasStatus(record.decision) ? (
-                                <StatusBadge status={record.decision} />
+                      {response.result.records.map((record, index) => {
+                        const count = recordCount(record)
+                        const agreement =
+                          typeof record.agreement === 'string'
+                            ? record.agreement
+                            : null
+                        const invoice =
+                          typeof record.invoice_number === 'string'
+                            ? record.invoice_number
+                            : null
+                        return (
+                          <tr key={`record-${index}`}>
+                            <td>{String(record.type ?? 'record')}</td>
+                            <td className="id-cell">
+                              {count != null ? (
+                                <div>
+                                  Count: <strong>{count}</strong>
+                                  {agreement ? ` · ${agreement}` : ''}
+                                  {typeof record.decision === 'string'
+                                    ? ` · ${record.decision}`
+                                    : ''}
+                                </div>
                               ) : null}
-                              {recordHasStatus(record.status) ? (
-                                <StatusBadge status={record.status} />
+                              {invoice ? <div>Invoice: {invoice}</div> : null}
+                              {'document_id' in record && record.document_id ? (
+                                <div>
+                                  Document:{' '}
+                                  <Link
+                                    to={`/documents/${String(record.document_id)}`}
+                                  >
+                                    {String(record.document_id)}
+                                  </Link>
+                                </div>
                               ) : null}
-                              {recordHasStatus(record.overall_result) ? (
-                                <StatusBadge status={record.overall_result} />
+                              {'shipment_id' in record && record.shipment_id ? (
+                                <div>
+                                  Shipment:{' '}
+                                  <Link
+                                    to={`/shipments/${String(record.shipment_id)}`}
+                                  >
+                                    {String(record.shipment_id)}
+                                  </Link>
+                                </div>
                               ) : null}
-                              {!record.decision &&
-                              !record.status &&
-                              !record.overall_result
+                              {'run_id' in record && record.run_id ? (
+                                <div>Run: {String(record.run_id)}</div>
+                              ) : null}
+                              {count == null &&
+                              !invoice &&
+                              !record.document_id &&
+                              !record.shipment_id &&
+                              !record.run_id
                                 ? '—'
                                 : null}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td>
+                              {record.type === 'document' ||
+                              record.document_confidence != null ||
+                              record.document_confidence_percent != null
+                                ? confidenceDisplay(record)
+                                : '—'}
+                            </td>
+                            <td>
+                              {agreement ? (
+                                <StatusBadge status={agreement} />
+                              ) : (
+                                '—'
+                              )}
+                            </td>
+                            <td>
+                              <div className="badge-row">
+                                {recordHasStatus(record.decision) ? (
+                                  <StatusBadge status={record.decision} />
+                                ) : null}
+                                {recordHasStatus(record.status) ? (
+                                  <StatusBadge status={record.status} />
+                                ) : null}
+                                {recordHasStatus(record.overall_result) ? (
+                                  <StatusBadge status={record.overall_result} />
+                                ) : null}
+                                {recordHasStatus(record.validation_result) ? (
+                                  <StatusBadge
+                                    status={record.validation_result}
+                                  />
+                                ) : null}
+                                {!record.decision &&
+                                !record.status &&
+                                !record.overall_result &&
+                                !record.validation_result &&
+                                count == null
+                                  ? '—'
+                                  : null}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

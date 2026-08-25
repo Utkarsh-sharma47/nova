@@ -93,7 +93,40 @@ def test_missing_required_extraction_not_strong() -> None:
     )
     assert result.category != AgreementCategory.STRONG_AGREEMENT
     assert result.category == AgreementCategory.WEAK_AGREEMENT
-    assert result.document_confidence is None
+    # Score reflects available fields only; never fabricates the missing one.
+    assert result.document_confidence == 0.95
+
+
+def test_document_confidence_differs_for_different_field_scores() -> None:
+    high = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields_custom([0.98, 0.97, 0.95]),
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    low = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields_custom([0.65, 0.72, 0.61]),
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    assert high.document_confidence is not None
+    assert low.document_confidence is not None
+    assert high.document_confidence > low.document_confidence
+    assert high.document_confidence_percent != low.document_confidence_percent
+
+
+def _fields_custom(cycle: list[float]) -> list[FieldConfidenceInput]:
+    out: list[FieldConfidenceInput] = []
+    for index, name in enumerate(_REQUIRED):
+        out.append(
+            FieldConfidenceInput(
+                field_name=name,
+                confidence=cycle[index % len(cycle)],
+                presence="KNOWN",
+            )
+        )
+    return out
 
 
 def test_low_extraction_confidence_not_strong() -> None:

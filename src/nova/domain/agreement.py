@@ -53,26 +53,45 @@ def average_required_confidence(
     required_fields: Sequence[str],
     fields: Sequence[FieldConfidenceInput],
 ) -> float | None:
-    """Average confidence of required extracted fields.
+    """Average confidence of required fields that have real scores.
 
-    Returns None when any required field is missing or lacks a numeric confidence
-    (never invents scores).
+    Never invents scores. Missing/unknown required fields are skipped for the
+    average; callers use ``missing_required_confidence`` for completeness.
+    Returns None only when no required field has a usable confidence value.
     """
     by_name = {item.field_name: item for item in fields}
     scores: list[float] = []
     for name in required_fields:
         item = by_name.get(name)
         if item is None or item.is_missing:
-            return None
+            continue
         presence = (item.presence or "").upper()
         if presence in {"MISSING", "UNKNOWN", "AMBIGUOUS"}:
-            return None
+            continue
         if item.confidence is None:
-            return None
+            continue
         scores.append(float(item.confidence))
     if not scores:
         return None
     return round(sum(scores) / len(scores), 6)
+
+
+def missing_required_confidence(
+    required_fields: Sequence[str],
+    fields: Sequence[FieldConfidenceInput],
+) -> bool:
+    """True when any required field lacks a usable extraction confidence."""
+    by_name = {item.field_name: item for item in fields}
+    for name in required_fields:
+        item = by_name.get(name)
+        if item is None or item.is_missing:
+            return True
+        presence = (item.presence or "").upper()
+        if presence in {"MISSING", "UNKNOWN", "AMBIGUOUS"}:
+            return True
+        if item.confidence is None:
+            return True
+    return False
 
 
 def classify_document_agreement(
@@ -87,6 +106,7 @@ def classify_document_agreement(
     """Classify agreement from persisted extraction + validation evidence only."""
     reasons: list[str] = []
     document_confidence = average_required_confidence(required_fields, fields)
+    incomplete_extraction = missing_required_confidence(required_fields, fields)
 
     status = (validation_status or "").strip().lower()
     if not status or status not in {"completed", "complete"}:
@@ -110,11 +130,11 @@ def classify_document_agreement(
             reasons=tuple(reasons),
         )
 
-    if document_confidence is None:
+    if incomplete_extraction or document_confidence is None:
         reasons.append("missing_required_extraction_confidence")
         return DocumentAgreement(
             category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=None,
+            document_confidence=document_confidence,
             reasons=tuple(reasons),
         )
 

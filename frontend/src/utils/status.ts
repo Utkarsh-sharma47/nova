@@ -50,7 +50,7 @@ export function shortId(value: string, keep = 8): string {
 
 export function formatConfidence(value: number | null | undefined): string {
   if (value == null) {
-    return '—'
+    return 'Confidence unavailable'
   }
   return `${Math.round(value * 100)}%`
 }

@@ -2,6 +2,9 @@
 
 Parses simple ``Field: value`` lines from the document text embedded in the
 prompt user message. Never invents values absent from the text.
+
+Confidence is derived from match evidence (label specificity + value clarity),
+not a constant.
 """
 
 from __future__ import annotations
@@ -14,29 +17,51 @@ from nova.extraction.fields import is_supported_field
 from nova.llm.port import LLMRequest
 
 _FIELD_ALIASES: dict[str, tuple[str, ...]] = {
-    "invoice_number": ("invoice number", "invoice #", "invoice no", "inv no"),
+    "invoice_number": ("invoice number", "invoice #", "invoice no", "inv no", "inv#"),
     "invoice_date": ("invoice date", "date"),
     "seller_name": ("seller", "seller name", "from"),
     "buyer_name": ("buyer", "buyer name", "bill to"),
     "currency": ("currency", "ccy"),
-    "total_amount": ("total amount", "total", "amount due"),
+    "total_amount": ("total amount", "amount due", "total", "amt"),
     "bl_number": ("bl number", "b/l number", "bill of lading", "bol"),
     "vessel_name": ("vessel", "vessel name", "ship"),
     "shipper_name": ("shipper", "shipper name"),
     "consignee_name": ("consignee", "consignee name"),
-    "port_of_loading": ("port of loading", "pol", "load port"),
-    "port_of_discharge": ("port of discharge", "pod", "discharge port"),
-    "container_number": ("container", "container number", "container no"),
+    "port_of_loading": ("port of loading", "load port", "pol"),
+    "port_of_discharge": ("port of discharge", "discharge port", "pod"),
+    "container_number": ("container number", "container no", "container"),
     "hs_code": ("hs code", "hs-code", "harmonized code", "hscode", "tariff code"),
     "incoterms": ("incoterms", "incoterm", "terms of delivery", "delivery terms"),
     "description_of_goods": (
         "description of goods",
         "goods description",
-        "description",
         "commodity",
+        "description",
+        "goods",
     ),
-    "gross_weight": ("gross weight", "gross wt", "g.w.", "gw", "weight"),
+    "gross_weight": ("gross weight", "gross wt", "g.w.", "weight", "gw"),
 }
+
+# Short / ambiguous labels that are weak evidence even when they match.
+_WEAK_ALIASES = frozenset(
+    {
+        "date",
+        "from",
+        "total",
+        "amt",
+        "ship",
+        "pol",
+        "pod",
+        "gw",
+        "ccy",
+        "goods",
+        "description",
+        "weight",
+        "container",
+        "inv#",
+        "inv no",
+    }
+)
 
 
 def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
@@ -62,15 +87,16 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
                 }
             )
             continue
-        value, snippet = match
+        value, snippet, alias = match
+        confidence = _confidence_from_evidence(field_name=name, alias=alias, value=value)
         fields.append(
             {
                 "field_name": name,
                 "value": value,
                 "value_type": "string",
                 "presence": "KNOWN",
-                "confidence": 0.9,
-                "uncertainty": "NONE",
+                "confidence": confidence,
+                "uncertainty": "NONE" if confidence >= 0.85 else "LOW_CONFIDENCE",
                 "evidence": [
                     {
                         "evidence_id": f"h-{name}",
@@ -83,6 +109,41 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
             }
         )
     return {"fields": fields}
+
+
+def _confidence_from_evidence(*, field_name: str, alias: str, value: str) -> float:
+    """Score extraction confidence from label specificity and value clarity."""
+    aliases = _FIELD_ALIASES.get(field_name, (field_name.replace("_", " "),))
+    alias_key = alias.strip().lower()
+    try:
+        rank = next(i for i, item in enumerate(aliases) if item.lower() == alias_key)
+    except StopIteration:
+        rank = len(aliases)
+
+    # Preferred canonical labels score higher than trailing short aliases.
+    span = max(len(aliases) - 1, 1)
+    specificity = 1.0 - (rank / (span + 1.0))
+    score = 0.82 + (0.16 * specificity)
+
+    if alias_key in _WEAK_ALIASES or len(alias_key) <= 3:
+        score -= 0.10
+
+    value_text = value.strip()
+    lower = value_text.lower()
+    if any(marker in value_text for marker in ("?", "~", "???")):
+        score -= 0.12
+    if " or " in lower or ("/" in value_text and any(ch in value_text for ch in "?~")):
+        score -= 0.08
+    if "ignore" in lower or "#####" in value_text:
+        score -= 0.15
+    if len(value_text) < 2:
+        score -= 0.05
+
+    # Exact preferred label + clean value stays in the high band.
+    if rank == 0 and alias_key not in _WEAK_ALIASES:
+        score = max(score, 0.93)
+
+    return round(min(0.99, max(0.55, score)), 4)
 
 
 def _extract_required_fields(user: str) -> list[str]:
@@ -121,7 +182,7 @@ def _extract_user_payload(user: str) -> dict[str, Any] | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _find_value(field_name: str, text: str) -> tuple[str, str] | None:
+def _find_value(field_name: str, text: str) -> tuple[str, str, str] | None:
     aliases = _FIELD_ALIASES.get(field_name, (field_name.replace("_", " "),))
     for alias in aliases:
         pattern = re.compile(
@@ -132,5 +193,5 @@ def _find_value(field_name: str, text: str) -> tuple[str, str] | None:
             value = found.group(1).strip()
             if value:
                 snippet = found.group(0).strip()
-                return value, snippet
+                return value, snippet, alias
     return None

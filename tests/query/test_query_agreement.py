@@ -280,15 +280,38 @@ def test_list_strong_agreement(
     assert str(ids["old_strong"]) in listed
     assert str(ids["weak"]) not in listed
     assert "AUTO_APPROVE" in body["result"]["answer_summary"]
+    assert "Confidence:" in body["result"]["answer_summary"]
+    assert "Agreement: STRONG_AGREEMENT" in body["result"]["answer_summary"]
 
 
-def test_list_weak_agreement(
+def test_list_weak_variations(
     agreement_world: tuple[TestClient, UUID, dict[str, UUID]],
 ) -> None:
     client, customer_id, ids = agreement_world
-    body = _query(client, customer_id, "Show weak agreement documents.")
-    assert body["status"] == "RESULT"
-    assert str(ids["weak"]) in {row["document_id"] for row in body["result"]["records"]}
+    for question in (
+        "Show weak agreement documents.",
+        "Show me documents with weak agreement.",
+        "List weak agreement docs.",
+    ):
+        body = _query(client, customer_id, question)
+        assert body["interpreted_intent"]["name"] == "list_documents_by_agreement"
+        assert body["interpreted_intent"]["parameters"]["agreement"] == "WEAK_AGREEMENT"
+        listed = {row["document_id"] for row in body["result"]["records"]}
+        assert str(ids["weak"]) in listed
+
+
+def test_count_strong_variations(
+    agreement_world: tuple[TestClient, UUID, dict[str, UUID]],
+) -> None:
+    client, customer_id, _ = agreement_world
+    for question in (
+        "How many strong agreement docs?",
+        "Count strong agreement documents.",
+        "How many documents strongly agree?",
+    ):
+        body = _query(client, customer_id, question)
+        assert body["interpreted_intent"]["name"] == "count_documents_by_agreement"
+        assert body["result"]["records"][0]["count"] == 2
 
 
 def test_require_attention_count(

@@ -265,6 +265,22 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
         )
 
     if agreement is not None and re.search(
+        r"(?i)\b(documents?\s+with\s+(strong|partial|weak)\s+agreement)\b",
+        q,
+    ):
+        parameters = {"agreement": agreement}
+        time_range = _resolve_time_range(q, scoped)
+        if time_range is not None:
+            parameters["time_range"] = time_range
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.LIST_DOCUMENTS_BY_AGREEMENT,
+                parameters=parameters,
+                confidence=0.9,
+            )
+        )
+
+    if agreement is not None and re.search(
         r"(?i)\b(how many|count|number of)\b",
         q,
     ):

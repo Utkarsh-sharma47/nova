@@ -146,7 +146,7 @@ export function DocumentPage() {
           <dd>
             {doc.document_confidence_percent != null
               ? `${doc.document_confidence_percent}%`
-              : '—'}
+              : 'Confidence unavailable'}
           </dd>
           <dt>Agreement</dt>
           <dd>

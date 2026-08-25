@@ -97,6 +97,56 @@ describe('QueryPage', () => {
     })
   })
 
+  it('renders grounded agreement count and list answers', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(() =>
+        jsonResponse({
+          question: 'How many strong agreement documents are there?',
+          interpreted_intent: {
+            name: 'count_documents_by_agreement',
+            version: '1',
+            parameters: { agreement: 'STRONG_AGREEMENT' },
+            confidence: 0.92,
+          },
+          status: 'RESULT',
+          result: {
+            answer_summary: '2 documents have STRONG_AGREEMENT.',
+            records: [
+              {
+                type: 'agreement_count',
+                agreement: 'STRONG_AGREEMENT',
+                count: 2,
+              },
+            ],
+            citations: [],
+          },
+          trace_id: 'trace_agreement',
+        }),
+      ),
+    )
+
+    render(
+      <MemoryRouter>
+        <QueryPage />
+      </MemoryRouter>,
+    )
+
+    await user.type(
+      screen.getByLabelText(/question/i),
+      'How many strong agreement documents are there?',
+    )
+    await user.click(screen.getByRole('button', { name: /submit query/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('RESULT')).toBeInTheDocument()
+      expect(screen.getByText(/2 documents have STRONG_AGREEMENT/)).toBeInTheDocument()
+      expect(screen.getByText('STRONG AGREEMENT')).toBeInTheDocument()
+      expect(screen.getByText('2')).toBeInTheDocument()
+    })
+  })
+
   it('renders EMPTY status', async () => {
     const user = userEvent.setup()
     vi.stubGlobal(

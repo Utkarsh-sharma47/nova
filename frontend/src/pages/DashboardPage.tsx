@@ -32,7 +32,7 @@ function MetricCard({ label, value, tone = 'neutral', hint }: MetricCardProps) {
 
 function confidenceLabel(percent: number | null | undefined): string {
   if (percent == null) {
-    return '—'
+    return 'Confidence unavailable'
   }
   return `${percent}%`
 }

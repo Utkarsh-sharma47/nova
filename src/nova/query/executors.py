@@ -447,12 +447,16 @@ def _list_documents_by_agreement(
         )
     records: list[dict[str, Any]] = []
     citations: list[QueryCitation] = []
-    lines: list[str] = []
+    lines: list[str] = [f"{agreement.replace('_', ' ').title()} documents{window_note}:"]
     for document, result, decision, invoice_number in rows:
         label = invoice_number or str(document.document_id)
         confidence_pct = result.document_confidence_percent
-        confidence_text = f"{confidence_pct}%" if confidence_pct is not None else "n/a"
+        confidence_text = (
+            f"{confidence_pct}%" if confidence_pct is not None else "Confidence unavailable"
+        )
         decision_text = decision.disposition if decision else "—"
+        validation = repository.validation_for_document(customer_id, document.document_id)
+        validation_text = validation.aggregate_result if validation else "—"
         records.append(
             {
                 "type": "document",
@@ -463,6 +467,7 @@ def _list_documents_by_agreement(
                 "document_confidence": result.document_confidence,
                 "document_confidence_percent": confidence_pct,
                 "decision": decision.disposition if decision else None,
+                "validation_result": validation.aggregate_result if validation else None,
             }
         )
         citations.append(
@@ -474,10 +479,13 @@ def _list_documents_by_agreement(
                 code=result.category.value,
             )
         )
-        lines.append(f"- {label} — {confidence_text} — {decision_text}")
-    summary = f"{agreement.replace('_', ' ').title()} documents{window_note}:\n" + "\n".join(lines)
+        lines.append(f"- {label}")
+        lines.append(f"  Confidence: {confidence_text}")
+        lines.append(f"  Agreement: {result.category.value}")
+        lines.append(f"  Decision: {decision_text}")
+        lines.append(f"  Validation: {validation_text}")
     return QueryStatus.RESULT, QueryResultPayload(
-        answer_summary=summary,
+        answer_summary="\n".join(lines),
         records=records,
         citations=citations,
     )
