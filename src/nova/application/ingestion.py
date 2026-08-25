@@ -566,9 +566,39 @@ class IngestionService:
         if execution is None or execution.result_json is None:
             return None
         result = execution.result_json
+        fields_out: list[dict[str, Any]] = []
+        for field in result.get("fields") or []:
+            if not isinstance(field, dict):
+                continue
+            evidence_raw = field.get("evidence") or []
+            evidence = [
+                {
+                    "evidence_id": item.get("evidence_id"),
+                    "text": item.get("snippet") or item.get("text"),
+                    "page": item.get("page"),
+                    "source": item.get("source_type") or item.get("source"),
+                }
+                for item in evidence_raw
+                if isinstance(item, dict)
+            ]
+            uncertainty = field.get("uncertainty")
+            if isinstance(uncertainty, dict):
+                uncertainty = uncertainty.get("flag") or uncertainty.get("code")
+            fields_out.append(
+                {
+                    "name": field.get("field_name") or field.get("name"),
+                    "field_name": field.get("field_name") or field.get("name"),
+                    "value": field.get("value"),
+                    "presence": field.get("presence"),
+                    "confidence": field.get("confidence"),
+                    "uncertainty": uncertainty,
+                    "evidence": evidence,
+                }
+            )
         return {
             "status": result.get("status"),
-            "field_count": len(result.get("fields") or []),
+            "field_count": len(fields_out),
+            "fields": fields_out,
             "prompt_version": (result.get("model_metadata") or {}).get("prompt_version"),
             "agent_execution_id": result.get("agent_execution_id"),
             "error_code": result.get("error_code"),

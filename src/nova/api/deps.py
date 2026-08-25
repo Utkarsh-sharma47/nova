@@ -13,12 +13,15 @@ from sqlalchemy.orm import Session
 from nova.agents.validator.agent import ValidatorAgent
 from nova.application.extraction import build_default_llm
 from nova.application.ingestion import IngestionService
+from nova.application.ops import OpsService
 from nova.application.validation_persistence import SqlValidationStore
 from nova.config import Settings
 from nova.domain.errors import NovaError
 from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.persistence.database import get_session
+from nova.query.llm import build_query_llm
+from nova.query.service import QueryService
 from nova.router.service import RouterService
 
 
@@ -78,3 +81,22 @@ def ingestion_service(
         auto_pipeline=True,
         auto_extract=True,
     )
+
+
+def query_service(
+    request: Request,
+    session: Annotated[Session, Depends(session_dependency)],
+) -> QueryService:
+    app_settings = settings(request)
+    llm = build_query_llm(
+        app_settings.llm_provider,
+        app_settings.llm_model,
+        app_settings.llm_api_key,
+    )
+    return QueryService(session, llm=llm)
+
+
+def ops_service(
+    session: Annotated[Session, Depends(session_dependency)],
+) -> OpsService:
+    return OpsService(session)

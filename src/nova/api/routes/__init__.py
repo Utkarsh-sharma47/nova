@@ -1,21 +1,35 @@
-"""Phase 3 HTTP routes."""
+"""Phase 3+ HTTP routes including Phase 8 query and Phase 9 ops reads."""
 
 from __future__ import annotations
 
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, Query, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel, Field
 
-from nova.api.deps import authenticate, ingestion_service, settings
+from nova.api.deps import (
+    authenticate,
+    ingestion_service,
+    ops_service,
+    query_service,
+    settings,
+)
 from nova.application.ingestion import IngestCommand, IngestionService
+from nova.application.ops import OpsService
+from nova.contracts.query import QueryRequest, QueryResponse
 from nova.domain.errors import MissingIdempotencyKey, ValidationFailure
 from nova.infrastructure.storage import LocalFilesystemStorage
 from nova.observability.metrics import render_metrics
 from nova.persistence.database import database_ready
+from nova.query.service import QueryService
 
 router = APIRouter()
+
+
+class CreateCustomerBody(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
 
 
 @router.get("/health", tags=["ops"])
@@ -56,6 +70,26 @@ def ready(request: Request) -> JSONResponse:
     )
 
 
+@router.post("/v1/customers", status_code=201, tags=["customers"])
+def create_customer(
+    body: CreateCustomerBody,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[OpsService, Depends(ops_service)],
+) -> dict[str, object]:
+    return service.create_customer(name=body.name, trace_id=str(request.state.trace_id))
+
+
+@router.get("/v1/ops/summary", tags=["ops"])
+def ops_summary(
+    request: Request,
+    customer_id: Annotated[UUID, Query()],
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[OpsService, Depends(ops_service)],
+) -> dict[str, object]:
+    return service.summary(customer_id, trace_id=str(request.state.trace_id))
+
+
 @router.post("/v1/documents", status_code=202, tags=["documents"])
 async def ingest_document(
     request: Request,
@@ -93,6 +127,21 @@ async def ingest_document(
             principal=principal,
             trace_id=str(request.state.trace_id),
         )
+    )
+
+
+@router.get("/v1/documents", tags=["documents"])
+def list_documents(
+    request: Request,
+    customer_id: Annotated[UUID, Query()],
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[OpsService, Depends(ops_service)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> dict[str, object]:
+    return service.list_documents(
+        customer_id,
+        limit=limit,
+        trace_id=str(request.state.trace_id),
     )
 
 
@@ -170,3 +219,13 @@ def get_shipment_decision(
         raise DecisionNotFound(details={"shipment_id": str(shipment_id)})
     document_id = UUID(str(docs[0]["document_id"]))
     return service.get_decision(document_id, str(request.state.trace_id))
+
+
+@router.post("/v1/query", tags=["query"])
+def post_query(
+    body: QueryRequest,
+    request: Request,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[QueryService, Depends(query_service)],
+) -> QueryResponse:
+    return service.answer(body, trace_id=str(request.state.trace_id))

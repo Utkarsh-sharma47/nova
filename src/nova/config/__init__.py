@@ -47,10 +47,23 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"
     llm_model: str | None = None
     llm_api_key: str | None = None
+    cors_origins: Annotated[tuple[str, ...], NoDecode] = (
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    )
 
     @field_validator("allowed_mime_types", mode="before")
     @classmethod
     def parse_mime_types(cls, value: object) -> object:
+        if isinstance(value, str):
+            return tuple(item.strip() for item in value.split(",") if item.strip())
+        return value
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: object) -> object:
         if isinstance(value, str):
             return tuple(item.strip() for item in value.split(",") if item.strip())
         return value

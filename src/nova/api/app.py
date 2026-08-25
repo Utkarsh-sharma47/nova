@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from nova import __version__
@@ -59,6 +60,20 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(title="Nova API", version=__version__, lifespan=lifespan)
     application.state.settings = configured_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(configured_settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "Idempotency-Key",
+            "X-API-Key",
+            "X-Request-Id",
+        ],
+        expose_headers=["X-Request-Id", "X-Trace-Id"],
+    )
     application.add_middleware(ObservabilityMiddleware)
     application.include_router(router)
 

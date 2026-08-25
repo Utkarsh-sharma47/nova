@@ -31,6 +31,14 @@ def _normalize_path(path: str) -> str:
         return "/v1/documents/{document_id}"
     if path.startswith("/v1/shipments/"):
         return "/v1/shipments/{shipment_id}"
-    if path in {"/health", "/ready", "/metrics", "/v1/documents"}:
+    if path in {
+        "/health",
+        "/ready",
+        "/metrics",
+        "/v1/documents",
+        "/v1/query",
+        "/v1/ops/summary",
+        "/v1/customers",
+    }:
         return path
     return "unmatched"
