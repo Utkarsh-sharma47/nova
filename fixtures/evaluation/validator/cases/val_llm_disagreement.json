@@ -1,0 +1,55 @@
+{
+  "case_id": "val_llm_disagreement",
+  "category": "llm_disagreement",
+  "description": "Judgment rule; LLM returns MISMATCH",
+  "extracted_fields": [
+    {
+      "field_name": "commodity",
+      "value": "Steel coils grade A",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "Steel coils grade A",
+          "page": 1,
+          "evidence_id": "2b3ad572-9877-4a23-8a0b-db08ca439f96"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "c1fdc1db-4ca1-45a4-87a0-4d5a1edfa22d",
+      "rule_code": "COMMODITY_JUDGMENT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": true,
+      "expression": {
+        "op": "judgment",
+        "field": "commodity"
+      }
+    }
+  ],
+  "llm": {
+    "mode": "response",
+    "response": {
+      "outcome": "MISMATCH",
+      "reason": "grade mismatch",
+      "confidence": 0.6
+    }
+  },
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "llm"
+  ]
+}

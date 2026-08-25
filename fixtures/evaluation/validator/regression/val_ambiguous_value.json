@@ -1,0 +1,56 @@
+{
+  "case_id": "val_ambiguous_value",
+  "category": "ambiguous_value",
+  "description": "AMBIGUOUS presence \u2192 UNCERTAIN",
+  "extracted_fields": [
+    {
+      "field_name": "shipper",
+      "value": null,
+      "presence": "AMBIGUOUS",
+      "confidence": 0.4,
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "AMBIGUOUS"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "ambiguous",
+          "page": 1,
+          "evidence_id": "5ff47978-f6ff-4578-b34f-7de8bee42fa5"
+        }
+      ],
+      "candidates": [
+        {
+          "value": "Acme"
+        },
+        {
+          "value": "Acme Ltd"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "367d5764-7fce-4618-b125-d0d672d09e3c",
+      "rule_code": "SHIPPER_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "equals",
+        "field": "shipper",
+        "expected": "Acme"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety"
+  ]
+}

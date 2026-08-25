@@ -2,141 +2,39 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Proposed (contract defined; not implemented) |
-| Owner | AI Systems Architect |
+| Status | Implemented (Phase 5) |
+| Owner | Validation / AI Systems |
 | Last updated | 2026-08-25 |
-| Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md) |
-| Related feature(s) | Part 1 document verification pipeline |
+| Related ADR(s) | [ADR-0010](../decisions/0010-ai-agent-contracts-and-trust-model.md), [ADR-0005](../decisions/0005-ai-provider-abstraction.md) |
 | Contract | [contracts.md](./contracts.md#validator-contract) |
+| Implementation | `src/nova/agents/validator/` |
+| Audit | [phase-5-audit.md](../audits/phase-5-audit.md) |
 
-## 1. Purpose
+## Purpose
 
-Compare extracted fields to **customer-specific rules** and emit auditable checks with status `MATCH`, `MISMATCH`, or `UNCERTAIN`.
+Compare extracted fields to customer-specific rules and emit auditable `MATCH` / `MISMATCH` / `UNCERTAIN` checks. Deterministic evaluation is default; LLM judgment is optional and cannot override crisp mismatches or invent evidence.
 
-The Validator is the primary place for **deterministic** rule evaluation. LLM judgment is optional and narrowly scoped.
+## Non-responsibilities
 
-### Responsibilities
+- Extraction (Extractor)
+- Routing dispositions (Router) — Validator never emits `AUTO_APPROVE` / `HUMAN_REVIEW` / `AMENDMENT_REQUEST`
 
-- Load and apply the customer ruleset (`ruleset_id` + `ruleset_version`).
-- Emit one or more `ValidationCheck` records per applicable rule.
-- Prefer deterministic evaluation for equality, presence, numeric tolerance, allow-lists, and similar crisp checks.
-- Propagate extraction uncertainty into `UNCERTAIN` (or explicit absence `MISMATCH` when the rule says so).
-- Preserve evidence and reasons for every check.
-- Never upgrade uncertainty into `MATCH` to “be helpful.”
+## Runtime notes
 
-### Non-responsibilities
+- Entry point: `ValidatorAgent.validate(ValidationRequest) -> ValidationResult`
+- Persistence: append-only `validation_store` (tests/eval); SQL tables when migrations applied
+- Default LLM: `MockLLM` via `LLMPort`
 
-- Field extraction from documents (Extractor).
-- Final disposition `AUTO_APPROVE` / `HUMAN_REVIEW` / `AMENDMENT_REQUEST` (Router).
-- Editing customer rules in production without versioning.
-- Inventing expected values not present in the ruleset.
-- Overriding deterministic results with free-form LLM prose.
+## Testing
 
-## 2. Inputs
+- `tests/agents/validator/` — unit + safety invariants
+- `tests/evaluation/validator/` — eval harness
+- `tests/failure/validator/` — provider/malformed failures
+- Fixtures: `fixtures/evaluation/validator/`
 
-See `ValidationRequest` in [contracts.md](./contracts.md#validationrequest).
+## Change history
 
-**Preconditions**
-
-- `extraction.status` is `SUCCEEDED` or `PARTIAL`.
-- Ruleset version is resolvable for `customer_id`.
-- `timeout_ms` set by orchestrator.
-
-If extraction `FAILED`, orchestrator should skip normal validation or pass through to Router fail-safe — Validator must not invent a full `MATCH` suite.
-
-## 3. Outputs
-
-See `ValidationResult` and `ValidationCheck` in [contracts.md](./contracts.md#validator-contract).
-
-| Outcome | When |
-|---------|------|
-| `COMPLETED` | Checks produced for applicable rules (may include UNCERTAIN/MISMATCH) |
-| `FAILED` | Ruleset unavailable, engine crash, timeout exhausted, unrecoverable error |
-
-## 4. Behavior
-
-### Deterministic path (default)
-
-1. For each applicable rule, bind `expected` from ruleset and `actual` from extraction.
-2. Apply documented comparison (normalize per rule: case fold, whitespace, date parse, money tolerance, etc.).
-3. Assign `MATCH` / `MISMATCH` / `UNCERTAIN` per [deterministic comparison rules](./contracts.md#deterministic-comparison-rules-normative).
-4. Set `deterministic = true`.
-
-### Judgment path (optional, explicit)
-
-1. Only for rules flagged `requires_judgment = true`.
-2. LLM may propose a check outcome with reason and confidence.
-3. Schema-validate the proposal.
-4. Still cannot emit `MATCH` when inputs are `UNKNOWN`/`MISSING`/`AMBIGUOUS` unless the rule explicitly defines that semantics (default remains `UNCERTAIN`).
-5. Set `deterministic = false` and record `ModelInvocationMetadata`.
-
-### Obvious comparison examples
-
-| Rule kind | Example | Result |
-|-----------|---------|--------|
-| Exact string (normalized) | Shipper name equals allow-list entry | `MATCH` / `MISMATCH` |
-| Required presence | BL number must be present | `MISSING` → `MISMATCH` (if rule = must-present) or `UNCERTAIN` (if rule = compare-when-present) |
-| Numeric tolerance | Weight within ±0.5% | Inside → `MATCH`; outside → `MISMATCH`; non-numeric actual → `UNCERTAIN` |
-| Low extraction confidence | Confidence below threshold | `UNCERTAIN` even if strings equal |
-| Ambiguous extraction | `presence = AMBIGUOUS` | `UNCERTAIN` |
-
-## 5. Dependencies
-
-| Direction | Component |
-|-----------|-----------|
-| Upstream | Extractor (`ExtractionResult`) |
-| Downstream | Router (`ValidationResult`) |
-| External | Customer rules store; optional LLM for judgment rules |
-
-## 6. Failure modes
-
-| Failure | Detection | Handling |
-|---------|-----------|----------|
-| Ruleset missing / corrupt | Load errors | `FAILED`; Router fail-safe |
-| Timeout | Exceeds `timeout_ms` | Default `FAILED` (do not invent MATCH for unchecked rules) |
-| Type coercion unsafe | Parse errors | Check `UNCERTAIN` |
-| LLM judgment malformed | Schema fail | Bounded retry; else check `UNCERTAIN` |
-| Extraction critical fields absent | Presence flags | Per-rule `UNCERTAIN`/`MISMATCH`; never blanket `MATCH` |
-
-**Default timeout:** recommended orchestrator default **30_000 ms** for Part 1 deterministic-heavy validation (configurable).
-
-**Retry policy:** Deterministic engine: **0** retries for logic errors; **1** retry for transient ruleset store I/O. LLM judgment: max **2** retries for malformed/transient errors. Never retry “into” a `MATCH` after uncertainty.
-
-## 7. Security and data handling
-
-- Rules and field values may contain commercial sensitive data — treat as sensitive.
-- Do not log full rulesets with secrets; log `rule_id` + outcome.
-- Validate LLM judgment output before use.
-
-## 8. Testing
-
-- Golden fixtures for MATCH / MISMATCH / UNCERTAIN
-- Deterministic equality and tolerance cases
-- Uncertainty propagation from extraction presence flags
-- Proof that LLM path cannot override deterministic results
-
-## 9. Evaluation
-
-- Agreement with labeled check outcomes
-- False `MATCH` rate (critical)
-- Calibration on messy documents (expect more `UNCERTAIN`)
-
-## 10. Observability
-
-- `run_id`, stage=`validator`, ruleset ids/versions
-- Summary counts (match/mismatch/uncertain/blocking)
-- Per-check `rule_id`, `result`, `deterministic`
-- Model metadata when judgment used
-- Latency and error codes
-
-## 11. Known limitations
-
-- Rules DSL / storage format not chosen (future ADR).
-- Cross-document consistency is Part 2; ValidationRequest may later accept multi-doc context without changing check statuses.
-- No runtime implementation yet.
-
-## 12. Change history
-
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-08-25 | Initial contract and agent governance doc | AI Systems Architect |
+| Date | Change |
+|------|--------|
+| 2026-08-25 | Contract defined |
+| 2026-08-25 | Runtime Validator + Phase 5 audit PASS |

@@ -1,0 +1,48 @@
+{
+  "case_id": "val_date_mismatch",
+  "category": "date_mismatch",
+  "description": "Ship date differs",
+  "extracted_fields": [
+    {
+      "field_name": "ship_date",
+      "value": "2026-02-01",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "2026-02-01",
+          "page": 1,
+          "evidence_id": "829a0015-a81d-497c-84ac-9eee97bc79ee"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "c341a60a-803e-412a-941b-9ce63555ac6e",
+      "rule_code": "DATE_EQ",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "date",
+        "field": "ship_date",
+        "expected": "2026-01-15"
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression"
+  ]
+}

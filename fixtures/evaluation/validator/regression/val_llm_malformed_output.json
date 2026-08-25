@@ -1,0 +1,54 @@
+{
+  "case_id": "val_llm_malformed_output",
+  "category": "llm_malformed_output",
+  "description": "Malformed LLM JSON \u2192 UNCERTAIN",
+  "extracted_fields": [
+    {
+      "field_name": "commodity",
+      "value": "steel",
+      "presence": "KNOWN",
+      "confidence": 0.95,
+      "confidence_band": "HIGH",
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "NONE"
+      ],
+      "evidence": [
+        {
+          "source_type": "DOCUMENT_SPAN",
+          "snippet": "steel",
+          "page": 1,
+          "evidence_id": "275de925-e8f1-4b27-8f80-2a26292d326f"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "6fa55190-3bdb-45c2-9415-5c2d9f2f19ba",
+      "rule_code": "COMMODITY_JUDGMENT",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": true,
+      "expression": {
+        "op": "judgment",
+        "field": "commodity"
+      }
+    }
+  ],
+  "llm": {
+    "mode": "malformed",
+    "response": "NOT_JSON{{"
+  },
+  "gold_outcomes": [
+    "UNCERTAIN"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression",
+    "safety",
+    "failure",
+    "llm"
+  ]
+}

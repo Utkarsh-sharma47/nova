@@ -1,4 +1,4 @@
-"""LLM port error types."""
+"""LLM port error types (ADR-0005)."""
 
 from __future__ import annotations
 
@@ -28,3 +28,13 @@ class LLMProviderError(LLMError):
 class LLMOutputError(LLMError):
     retryable = True
     code = "AI_OUTPUT_INVALID"
+
+
+class LLMMalformedOutputError(LLMOutputError):
+    retryable = True
+    code = "AI_OUTPUT_MALFORMED"
+
+
+class RetryExhaustedError(LLMError):
+    retryable = False
+    code = "AI_RETRY_EXHAUSTED"

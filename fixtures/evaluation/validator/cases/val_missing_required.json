@@ -1,0 +1,40 @@
+{
+  "case_id": "val_missing_required",
+  "category": "missing_required_value",
+  "description": "Required field absent \u2192 MISMATCH",
+  "extracted_fields": [
+    {
+      "field_name": "bl_number",
+      "value": null,
+      "presence": "MISSING",
+      "confidence": null,
+      "uncertainty": "NONE",
+      "uncertainty_codes": [
+        "MISSING"
+      ],
+      "evidence": []
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "6a856677-bc29-467a-9a9c-92df36d22139",
+      "rule_code": "BL_REQUIRED",
+      "version": "1",
+      "severity": "HIGH",
+      "blocking": true,
+      "requires_judgment": false,
+      "expression": {
+        "op": "required",
+        "field": "bl_number",
+        "mismatch_if_absent": true
+      }
+    }
+  ],
+  "gold_outcomes": [
+    "MISMATCH"
+  ],
+  "gold_status": "COMPLETED",
+  "tags": [
+    "regression"
+  ]
+}

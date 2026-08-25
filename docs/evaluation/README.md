@@ -7,6 +7,7 @@ Quality and accuracy evaluation for Nova’s extraction, validation, and decisio
 |----------|--------|
 | [philosophy.md](./philosophy.md) | Done (Phase 1) |
 | [agent-evaluation.md](./agent-evaluation.md) | Done (spec only — no harness) |
+| [validator-evaluation.md](./validator-evaluation.md) | Done — Validator harness + reports |
 | [evaluation-framework.md](./evaluation-framework.md) | Done — process and agent dimensions |
 | [datasets.md](./datasets.md) | Done — Part 1 categories + Part 2 future |
 | [metrics.md](./metrics.md) | Done — definitions; thresholds as calibration targets |

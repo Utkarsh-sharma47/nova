@@ -14,6 +14,7 @@
 | [contract-testing.md](./contract-testing.md) | Done — agent/API contract surfaces |
 | [failure-testing.md](./failure-testing.md) | Done — fail-safe catalog |
 | [performance-testing.md](./performance-testing.md) | Done — latency/throughput/cost (no tooling yet) |
+| [validator-evaluation.md](./validator-evaluation.md) | Done — Validator safety + eval suites |
 ## Current automated checks
 - Docs structure script
 - Secret pattern script
