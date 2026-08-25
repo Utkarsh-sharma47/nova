@@ -8,16 +8,22 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 9 Part 1 operations UI** on top of Phases 3–8:
+**Phase 11 production hardening** on top of Phases 3–10:
 
 - Ingestion → `PipelineOrchestrator` → Extractor → Validator → Router → persistence
 - Grounded `POST /v1/query`
-- React/Vite ops UI (`frontend/`) consuming typed APIs
+- React/Vite ops UI (`frontend/`) with **runtime** `window.__NOVA_RUNTIME__` auth in Compose
+- Compose `api` + `db` + `web` (non-root; Alembic-only schema — **no `create_all` in production**)
+- Observability: `request_id` / `trace_id` / `run_id` / `agent_execution_id`, `/metrics`, `/health`, `/ready`
 - Append-only extraction, validation, and decision history
 - Document lifecycle through `extracted → validated → decided` (or `failed`)
+- Remote deploy: **NOT EXECUTED** (procedure documented)
 
 Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md),
-[`docs/architecture/frontend.md`](docs/architecture/frontend.md).
+[`docs/architecture/frontend.md`](docs/architecture/frontend.md),
+[`docs/deployment/`](docs/deployment/),
+[`docs/audits/phase-11-production-readiness.md`](docs/audits/phase-11-production-readiness.md).
+
 
 ## Conceptual pipeline
 

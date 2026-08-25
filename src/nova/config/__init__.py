@@ -13,9 +13,18 @@ _PLACEHOLDER_TOKENS = {
     "changeme",
     "example",
     "replace-me",
+    "replace-with-a-long-random-token",
     "your-api-key",
+    "your-api-key-here",
     "your-token-here",
 }
+
+_WEAK_DB_MARKERS = (
+    "nova:nova@",
+    ":password@",
+    ":replace-me@",
+    ":changeme@",
+)
 
 
 class Settings(BaseSettings):
@@ -39,6 +48,7 @@ class Settings(BaseSettings):
     api_auth_token: str | None = None
     document_storage_path: str = "./var/documents"
     max_document_size_bytes: int = Field(default=10 * 1024 * 1024, gt=0)
+    max_request_body_bytes: int = Field(default=12 * 1024 * 1024, gt=0)
     allowed_mime_types: Annotated[tuple[str, ...], NoDecode] = (
         "application/pdf",
         "text/plain",
@@ -52,6 +62,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
     )
 
     @field_validator("allowed_mime_types", mode="before")
@@ -79,10 +91,13 @@ class Settings(BaseSettings):
     @field_validator("api_auth_token")
     @classmethod
     def require_non_test_token(cls, value: str | None, info: object) -> str | None:
-        # Cross-field enforcement is performed at app startup to keep test construction simple.
         if value == "":
             return None
         return value
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.lower() in {"production", "prod"}
 
     def validate_runtime(self) -> None:
         if self.app_env.lower() in {"test", "testing"}:
@@ -96,6 +111,22 @@ class Settings(BaseSettings):
             or (normalized.startswith("<") and normalized.endswith(">"))
         ):
             raise ValueError("API_AUTH_TOKEN must not be a placeholder")
+        if self.max_request_body_bytes < self.max_document_size_bytes:
+            raise ValueError(
+                "MAX_REQUEST_BODY_BYTES must be greater than or equal to MAX_DOCUMENT_SIZE_BYTES"
+            )
+        if self.is_production:
+            if len(self.api_auth_token) < 24:
+                raise ValueError("API_AUTH_TOKEN must be at least 24 characters in production")
+            lowered_db = self.database_url.lower()
+            if any(marker in lowered_db for marker in _WEAK_DB_MARKERS):
+                raise ValueError("DATABASE_URL must not use a weak default password in production")
+            if self.cors_origins == ("*",) or "*" in self.cors_origins:
+                raise ValueError("CORS_ORIGINS must not use wildcard origins in production")
+            if self.llm_provider.lower() != "mock" and not self.llm_api_key:
+                raise ValueError(
+                    "LLM_API_KEY is required when LLM_PROVIDER is not mock in production"
+                )
 
 
 @lru_cache

@@ -4,15 +4,15 @@ Local development guidance for Nova.
 
 ## Current status
 
-**Phase 9:** Part 1 React operations UI plus grounded query API on the Phase 7
-pipeline. FastAPI, SQLAlchemy/Alembic, local document storage, and PDF/text
-ingestion remain the backend foundation.
+**Phase 11:** Production hardening for the Part 1 stack — Compose (api + db + web), non-root containers, runtime web auth injection (`window.__NOVA_RUNTIME__`), request limits, observability (health/ready/metrics + JSON logs), and recovery docs. Application architecture is unchanged from Phases 7–9.
+
+Remote deploy remains **NOT EXECUTED**. See [`docs/deployment/production.md`](docs/deployment/production.md).
 
 ## Prerequisites
 
 - Python **3.12+**
-- Node.js **20+** (frontend)
-- Docker (optional, for Compose Postgres + full stack)
+- Node.js **20+** (frontend; CI uses 22)
+- Docker (Compose Postgres + full stack)
 
 ## Setup
 
@@ -27,7 +27,7 @@ cp .env.example .env
 npm install
 ```
 
-Align `API_AUTH_TOKEN` (root `.env`) with `VITE_API_AUTH_TOKEN` (frontend `.env`).
+Align `API_AUTH_TOKEN` (root `.env`) with `VITE_API_AUTH_TOKEN` (frontend `.env`) for Vite-only demos. Compose `web` injects the token at runtime instead of baking it.
 
 ## Local checks
 
@@ -38,6 +38,7 @@ ruff check src tests
 mypy
 pytest -q
 cd frontend && npm test && npm run typecheck && npm run build
+./scripts/verify-production-readiness.sh
 ```
 
 PostgreSQL integration tests run when `TEST_DATABASE_URL` is set. They reset the
@@ -55,6 +56,14 @@ Or API via Compose/uvicorn and UI via Vite:
 ```bash
 cd frontend && npm run dev
 ```
+
+## Production-readiness verify script
+
+```bash
+./scripts/verify-production-readiness.sh
+```
+
+Uses `API_PORT=18000`, `WEB_PORT=18080`, `POSTGRES_PORT=15432` by default. Checks health/ready/metrics, runtime-config (without printing the token), API/DB/web restart recovery, and `alembic current` for `0004_phase7_pipeline`.
 
 ## Repository layout
 
@@ -89,6 +98,7 @@ Follow [`docs/operations/git-workflow.md`](docs/operations/git-workflow.md):
 ## Environment configuration
 
 Use `.env.example` and `frontend/.env.example` as templates. Never commit secrets.
+Full reference: [`docs/deployment/configuration.md`](docs/deployment/configuration.md).
 See [`docs/security/baseline.md`](docs/security/baseline.md).
 
 ## Related documents
@@ -98,3 +108,5 @@ See [`docs/security/baseline.md`](docs/security/baseline.md).
 - [docs/architecture/frontend.md](docs/architecture/frontend.md)
 - [docs/deployment/frontend.md](docs/deployment/frontend.md)
 - [docs/operations/ui-demo.md](docs/operations/ui-demo.md)
+- [docs/operations/recovery.md](docs/operations/recovery.md)
+- [docs/audits/phase-11-production-readiness.md](docs/audits/phase-11-production-readiness.md)

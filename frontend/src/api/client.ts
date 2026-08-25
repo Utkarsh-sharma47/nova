@@ -1,4 +1,5 @@
 import type { ApiErrorBody } from './types'
+import { getRuntimeApiBaseUrl, getRuntimeAuthToken } from '../runtime-config'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -53,7 +54,9 @@ export interface RequestOptions {
 }
 
 function getBaseUrl(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL
+  const runtimeBase = getRuntimeApiBaseUrl()
+  const configured =
+    runtimeBase !== undefined ? runtimeBase : import.meta.env.VITE_API_BASE_URL
   if (configured === '' || configured === '/') {
     // Same-origin (Compose nginx proxy or relative deployments).
     return ''
@@ -62,7 +65,7 @@ function getBaseUrl(): string {
 }
 
 function getAuthHeaders(): Record<string, string> {
-  const token = import.meta.env.VITE_API_AUTH_TOKEN
+  const token = getRuntimeAuthToken()
   if (!token) {
     return {}
   }

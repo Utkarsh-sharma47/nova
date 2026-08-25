@@ -8,7 +8,7 @@ This is an operational verification system — not a generic chatbot and not a h
 
 ## Status
 
-**Phase 9 — Part 1 operations UI** (on top of Phases 3–8 pipeline + grounded query)
+**Phase 11 — Deployment, security hardening, observability, and production readiness** (on top of Phases 3–10)
 
 | Area | Status |
 |------|--------|
@@ -17,7 +17,13 @@ This is an operational verification system — not a generic chatbot and not a h
 | End-to-end pipeline | Implemented (Extractor → Validator → Router) |
 | Grounded Query API | Implemented (`POST /v1/query`) |
 | Operations UI (React/TS/Vite) | Implemented (`frontend/`) |
+| Compose deploy (api + db + web) | Hardened (non-root, runtime web secrets) |
+| Remote production deploy | **NOT EXECUTED** |
 | Live vendor LLM | Optional; MockLLM default |
+
+Production readiness audit (checklist): [`docs/audits/phase-11-production-readiness.md`](./docs/audits/phase-11-production-readiness.md).
+
+Deploy runbook: [`docs/deployment/production.md`](./docs/deployment/production.md).
 
 ## Quick links
 
@@ -26,6 +32,7 @@ This is an operational verification system — not a generic chatbot and not a h
 | AI coding agents | [AGENTS.md](./AGENTS.md) |
 | Contributors | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | UI demo | [docs/operations/ui-demo.md](./docs/operations/ui-demo.md) |
+| Recovery | [docs/operations/recovery.md](./docs/operations/recovery.md) |
 | Requirements | [docs/requirements/inventory.md](./docs/requirements/inventory.md) |
 | Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) · [docs/architecture/](./docs/architecture/) |
 | Stack ADRs | [docs/decisions/](./docs/decisions/) |
@@ -50,6 +57,7 @@ ruff check src tests
 mypy
 pytest -q
 cd frontend && npm test && npm run typecheck && npm run build
+./scripts/verify-production-readiness.sh
 ```
 
 ## Run locally

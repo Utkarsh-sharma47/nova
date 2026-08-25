@@ -26,10 +26,12 @@ See [`../features/operations-ui.md`](../features/operations-ui.md).
 
 `frontend/src/api/client.ts` centralizes:
 
-- base URL (`VITE_API_BASE_URL`; empty = same-origin)
-- auth headers (`VITE_API_AUTH_TOKEN` → Bearer + `X-API-Key`)
+- base URL — Compose/runtime prefers `window.__NOVA_RUNTIME__.apiBaseUrl`; otherwise `VITE_API_BASE_URL` (empty = same-origin)
+- auth headers — Compose injects `window.__NOVA_RUNTIME__.apiAuthToken` at container start via `/runtime-config.js` (see `frontend/src/runtime-config.ts`); local Vite may use build-time `VITE_API_AUTH_TOKEN` → Bearer + `X-API-Key`
 - timeouts
 - structured error parsing (`code`, `message`, `details`, `trace_id`, `retryable`)
+
+Production Compose **must not** bake auth tokens into the static build. Runtime config is the source of truth for containerized UI auth.
 
 ## Styling
 

@@ -2,30 +2,28 @@
 
 Operational practices and runbooks for Nova.
 
-## Documents (Phase 1)
+## Documents
 
 | Document | Status |
 |----------|--------|
 | [git-workflow.md](./git-workflow.md) | Done — branch model, conventional commits, PR rules |
 | [ui-demo.md](./ui-demo.md) | Done — Phase 9 synthetic UI demo flow |
+| [recovery.md](./recovery.md) | Done — Phase 11 API/DB/web restart, migration failure, DB outage, verify script |
 
-## Planned (when the system is operable)
+## Planned
 
 | Topic | Status |
 |-------|--------|
 | On-call / ownership | Planned |
 | Incident response | Planned |
-| Common failure runbooks | Planned |
-| Backup and restore (if applicable) | Planned |
-| Demo / submission runbook | Phase 8–9 — see [ui-demo.md](./ui-demo.md) |
-| Pipeline operations notes | Phase 7 — see [`../architecture/end-to-end-pipeline.md`](../architecture/end-to-end-pipeline.md) |
-| Local pipeline baseline | `scripts/benchmark_pipeline.py` (MockLLM; not a production SLO) |
+| Backup and restore automation | Planned (volume restore is operator-owned today) |
 
 ## Guidance
 
 - Link metrics and alerts from [`../observability/`](../observability/).
 - Keep runbooks actionable and short.
 - Never paste production secrets or raw customer documents into docs.
+- Remote production deploy remains **NOT EXECUTED** until recorded in the Phase 11 audit — see [`../deployment/production.md`](../deployment/production.md).
 
 ## Related
 

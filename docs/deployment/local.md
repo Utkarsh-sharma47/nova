@@ -1,23 +1,40 @@
 # Local deployment
 
 1. Copy `.env.example` to `.env`.
-2. Replace the database password and `API_AUTH_TOKEN` placeholders (non-placeholder tokens required outside `APP_ENV=test`).
+2. Replace `POSTGRES_PASSWORD` and `API_AUTH_TOKEN` placeholders (non-placeholder tokens required outside `APP_ENV=test`).
 3. Optionally set `POSTGRES_PORT` / `API_PORT` / `WEB_PORT` if host ports are busy.
 4. Run `docker compose up --build`.
-5. Check `/health` for liveness and `/ready` for PostgreSQL/storage readiness.
-6. Open the ops UI at `http://localhost:8080` (Compose `web` service).
+5. Check `/health` (liveness) and `/ready` (PostgreSQL + schema + storage).
+6. Open the ops UI at `http://localhost:8080` (Compose `web`).
 
-The Compose API service builds `DATABASE_URL` as
-`postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB`.
-Do not point the API at a host `DATABASE_URL` with `127.0.0.1` — that breaks
-in-container networking.
+## Compose networking
 
-The `web` service builds the Vite app with empty `VITE_API_BASE_URL` so the
-browser calls same-origin `/v1/*`, which nginx proxies to `api`.
+The Compose API service builds `DATABASE_URL` as:
 
-The API image runs as UID/GID 10001. Its entrypoint waits for PostgreSQL, runs
-`alembic upgrade head`, then starts uvicorn. PostgreSQL and document files use
-separate named volumes. Changing a migration already applied to a persistent
-volume is unsupported; create a forward migration instead.
+`postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB`
 
-Frontend-only local notes: [`frontend.md`](./frontend.md). UI demo: [`../operations/ui-demo.md`](../operations/ui-demo.md).
+Do not point the API at a host `DATABASE_URL` with `127.0.0.1` — that breaks in-container networking.
+
+## Runtime-config injection (web)
+
+Phase 11: the `web` service does **not** bake `API_AUTH_TOKEN` into the Vite build.
+
+- Build arg: `VITE_API_BASE_URL=""` (same-origin `/v1` via nginx).
+- Runtime env: `API_AUTH_TOKEN` → entrypoint writes `runtime-config.js` as `window.__NOVA_RUNTIME__`.
+- Browser loads `/runtime-config.js` (Cache-Control: no-store) before using the API client.
+
+Local Vite-only development still uses `frontend/.env` (`VITE_API_BASE_URL`, `VITE_API_AUTH_TOKEN`) against a host API.
+
+## API container
+
+The API image runs as UID/GID 10001. Entrypoint waits for PostgreSQL, runs `alembic upgrade head`, then starts uvicorn. PostgreSQL and document files use separate named volumes. Changing a migration already applied to a persistent volume is unsupported; create a forward migration instead. Production must not use `create_all`.
+
+## Smoke / recovery
+
+```bash
+./scripts/verify-production-readiness.sh
+```
+
+Defaults: `API_PORT=18000`, `WEB_PORT=18080`, `POSTGRES_PORT=15432`.
+
+Frontend-only notes: [`frontend.md`](./frontend.md). UI demo: [`../operations/ui-demo.md`](../operations/ui-demo.md). Recovery: [`../operations/recovery.md`](../operations/recovery.md).

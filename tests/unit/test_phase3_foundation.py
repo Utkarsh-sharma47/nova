@@ -41,6 +41,34 @@ def test_non_test_runtime_rejects_placeholder_auth_token() -> None:
         Settings(app_env="production", api_auth_token="change-me").validate_runtime()
 
 
+def test_production_rejects_short_auth_token() -> None:
+    with pytest.raises(ValueError, match="24 characters"):
+        Settings(
+            app_env="production",
+            api_auth_token="too-short-token",
+            database_url="postgresql+psycopg://nova:strong-local-secret@db:5432/nova",
+        ).validate_runtime()
+
+
+def test_production_rejects_weak_database_password() -> None:
+    with pytest.raises(ValueError, match="weak default password"):
+        Settings(
+            app_env="production",
+            api_auth_token="a-sufficiently-long-production-token",
+            database_url="postgresql+psycopg://nova:nova@db:5432/nova",
+        ).validate_runtime()
+
+
+def test_production_accepts_strong_runtime_config() -> None:
+    Settings(
+        app_env="production",
+        api_auth_token="a-sufficiently-long-production-token",
+        database_url="postgresql+psycopg://nova:strong-local-secret@db:5432/nova",
+        cors_origins=("https://ops.example.com",),
+        llm_provider="mock",
+    ).validate_runtime()
+
+
 def test_lifecycle_allows_forward_transitions_and_rejects_terminal() -> None:
     assert_document_transition(
         DocumentStatus.REGISTERED,

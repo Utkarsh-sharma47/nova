@@ -8,6 +8,16 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 11 production hardening:
+  - Compose deploy docs (architecture, configuration, local, frontend, production, CI/CD)
+  - Non-root API + nginx-unprivileged web; runtime `__NOVA_RUNTIME__` auth (no baked tokens)
+  - Request body limits, production config gates, CORS/upload security docs
+  - Observability docs (request/trace/run/agent IDs, metrics, health, JSON log fields)
+  - Recovery runbook + `scripts/verify-production-readiness.sh`
+  - Phase 11 production-readiness audit checklist (`docs/audits/phase-11-production-readiness.md`)
+  - Remote production deploy marked **NOT EXECUTED**
+
+
 - Phase 9 Part 1 operations UI (`0.9.0`):
   - React + TypeScript + Vite app in `frontend/`
   - Dashboard, upload, document/shipment detail, grounded query pages

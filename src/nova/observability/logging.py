@@ -18,6 +18,11 @@ _STANDARD_FIELDS = (
     "method",
     "http_status",
     "error_code",
+    "run_id",
+    "agent_execution_id",
+    "document_id",
+    "customer_id",
+    "stage",
 )
 
 

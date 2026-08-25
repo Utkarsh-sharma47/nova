@@ -17,6 +17,7 @@ from nova.config import Settings, get_settings
 from nova.domain.errors import NovaError
 from nova.observability.logging import configure_logging
 from nova.observability.middleware import ObservabilityMiddleware
+from nova.observability.request_limits import RequestSizeLimitMiddleware
 from nova.persistence.database import configure_database, dispose_database
 
 logger = logging.getLogger("nova.api")
@@ -71,9 +72,11 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
             "Idempotency-Key",
             "X-API-Key",
             "X-Request-Id",
+            "X-Trace-Id",
         ],
         expose_headers=["X-Request-Id", "X-Trace-Id"],
     )
+    application.add_middleware(RequestSizeLimitMiddleware, settings=configured_settings)
     application.add_middleware(ObservabilityMiddleware)
     application.include_router(router)
 

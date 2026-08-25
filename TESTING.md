@@ -10,13 +10,19 @@ Testing strategy for Nova.
 
 ## Current status
 
-Phase 9 adds the Part 1 operations UI (`frontend/`) with Vitest coverage. Backend
-suites cover pipeline, query, and ops summary APIs.
+**Phase 11** adds production-readiness verification on top of Phase 9 UI and Phases 3–8 backend suites:
+
+- Backend: pytest (unit, contract, API, pipeline, query, failure)
+- Frontend: Vitest + typecheck + production build
+- Migrations: clean upgrade to `0004_phase7_pipeline` (CI + local)
+- Compose smoke / recovery: `scripts/verify-production-readiness.sh`
+- CI: docs/secrets, Ruff, MyPy, pytest, pip-audit, frontend checks, Docker builds
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
 cd frontend && npm test && npm run typecheck && npm run build
+./scripts/verify-production-readiness.sh
 ```
 
 The default suite skips PostgreSQL migration verification unless
@@ -38,6 +44,7 @@ Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 Frontend: [`docs/testing/frontend.md`](docs/testing/frontend.md).
 
 Full pyramid and layer ownership: [`docs/testing/test-strategy.md`](docs/testing/test-strategy.md).
+
 
 ## Test layers (planned)
 | Layer | Intent |
@@ -67,6 +74,7 @@ Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/cont
 - Bug fixes include a regression test when feasible.
 - Run relevant tests before claiming success.
 - Do not fabricate test results. If tests cannot run, say so.
+- Never mark remote deploy as PASS when status is **NOT EXECUTED**.
 
 ## Fixtures and data
 
@@ -77,5 +85,6 @@ Exact tooling will be recorded when chosen. Detail: [contract](docs/testing/cont
 
 - [docs/testing/](docs/testing/)
 - [docs/evaluation/](docs/evaluation/)
+- [docs/audits/phase-11-production-readiness.md](docs/audits/phase-11-production-readiness.md)
 - [AGENTS.md](AGENTS.md)
 - [DEVELOPMENT.md](DEVELOPMENT.md)
