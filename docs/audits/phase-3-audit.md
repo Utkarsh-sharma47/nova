@@ -213,17 +213,18 @@ Entrypoint waits for DB, runs `alembic upgrade head`, then uvicorn (non-root ima
 
 Local CI-equivalent steps above: **PASS**.
 
-Prior GitHub Actions on PR [#5](https://github.com/Utkarsh-sharma47/nova/pull/5) (head before this hardening commit):
+Prior GitHub Actions on PR [#5](https://github.com/Utkarsh-sharma47/nova/pull/5):
 
 | Job | Result |
 |-----|--------|
-| Docs and secrets checks | **pass** |
-| Python (Ruff, MyPy, pytest) incl. migrations + docker build | **pass** |
+| Docs and secrets checks (incl. Dockerfile structure) | **pass** (11s) |
+| Python (Ruff, MyPy, pytest) incl. migrations + docker build | **pass** (1m0s) |
 
-Run: https://github.com/Utkarsh-sharma47/nova/actions/runs/32790690980  
+Run: https://github.com/Utkarsh-sharma47/nova/actions/runs/32830990176  
+Head SHA: `c150a49`  
 Conclusion: **success**
 
-This commit adds Dockerfile structure to the docs/secrets job. **Post-push CI must be re-checked**; do not treat prior success as covering this commit until the new run completes.
+Earlier successful run on prior head: https://github.com/Utkarsh-sharma47/nova/actions/runs/32790690980
 
 Workflow (`.github/workflows/ci.yml`) includes: docs/secrets/Dockerfile checks, ruff, mypy, pytest with Postgres service, migration validation for six tables, `docker build`.
 
@@ -306,8 +307,7 @@ No open CRITICAL or HIGH issues remain.
 | Ruff / MyPy / tests / failure / security | PASS (local) |
 | Documentation + traceability updated | PASS |
 | Phase 3 audit PASS | **PASS** |
-| GitHub Actions CI (prior PR head) | **PASS** (run 32790690980) |
-| GitHub Actions CI (this commit) | **PENDING push** — re-verify after push |
+| GitHub Actions CI | **PASS** (run 32830990176 on `c150a49`) |
 
 ## Appendix — key paths
 
