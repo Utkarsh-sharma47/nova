@@ -12,14 +12,16 @@ authority for business disposition.
 
 ## Rules (deterministic)
 
+Document confidence = average of **available** required-field extraction confidence
+scores (never invents values). Missing required fields are omitted from the average
+and block `STRONG_AGREEMENT`. Heuristic MockLLM scores come from label specificity +
+value clarity — not a constant `0.9`.
+
 | Category | Conditions |
 |----------|------------|
-| `STRONG_AGREEMENT` | Validation completed; all required fields `MATCH`; no `UNCERTAIN`/`MISMATCH`; average required-field extraction confidence ≥ 0.85 |
+| `STRONG_AGREEMENT` | Validation completed; all required fields `MATCH`; no `UNCERTAIN`/`MISMATCH`; complete required extraction; avg confidence ≥ 0.85 |
 | `PARTIAL_AGREEMENT` | Some `MATCH` plus attention needed (e.g. `UNCERTAIN`, or medium confidence) without `MISMATCH` / low-confidence / missing validation |
 | `WEAK_AGREEMENT` | Any `MISMATCH`, low/missing extraction confidence, failed/missing validation, or insufficient evidence |
-
-Document confidence score = average confidence of **required** extracted fields.
-Missing required fields ⇒ no invented score ⇒ not `STRONG_AGREEMENT`.
 
 ## Surfaces
 
