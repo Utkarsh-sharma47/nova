@@ -1,11 +1,13 @@
 # Local deployment
 
 1. Copy `.env.example` to `.env`.
-2. Replace `POSTGRES_PASSWORD` and `API_AUTH_TOKEN` placeholders (non-placeholder tokens required outside `APP_ENV=test`).
+2. Replace `POSTGRES_PASSWORD` and `API_AUTH_TOKEN` placeholders with real values (startup rejects known placeholders outside `APP_ENV=test`).
 3. Optionally set `POSTGRES_PORT` / `API_PORT` / `WEB_PORT` if host ports are busy.
 4. Run `docker compose up --build`.
 5. Check `/health` (liveness) and `/ready` (PostgreSQL + schema + storage).
 6. Open the ops UI at `http://localhost:8080` (Compose `web`).
+
+Default host ports: API `8000`, UI `8080`, Postgres `5432`.
 
 ## Compose networking
 
@@ -14,6 +16,22 @@ The Compose API service builds `DATABASE_URL` as:
 `postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB`
 
 Do not point the API at a host `DATABASE_URL` with `127.0.0.1` — that breaks in-container networking.
+
+## Fresh local DB volume
+
+Compose keeps Postgres data in the `nova_pg` named volume. Reset it when:
+
+- switching from another Nova branch/worktree whose Alembic revisions differ (`Can't locate revision …`)
+- changing `POSTGRES_PASSWORD` after the volume was already initialized
+
+Disposable local reset only:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+This destroys local DB + document volumes.
 
 ## Runtime-config injection (web)
 

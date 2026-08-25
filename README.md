@@ -44,11 +44,14 @@ Python 3.12 · FastAPI · Pydantic · SQLAlchemy/Alembic · PostgreSQL 16 · Rea
 ## Run with Docker
 
 ```bash
-cp .env.example .env   # set API_AUTH_TOKEN + POSTGRES_PASSWORD
+cp .env.example .env
+# Replace placeholders: API_AUTH_TOKEN and POSTGRES_PASSWORD (startup rejects replace-me tokens)
 docker compose up --build
 # API http://localhost:8000  UI http://localhost:8080
 curl http://localhost:8000/health && curl http://localhost:8000/ready
 ```
+
+If startup fails with an unknown Alembic revision after switching branches, reset local volumes: `docker compose down -v` then `up --build` again.
 
 Optional live LLM: `LLM_PROVIDER=openai`, `LLM_API_KEY`, vision-capable `LLM_MODEL` (e.g. `gpt-4o-mini`). Without credentials, MockLLM keeps CI/demo deterministic.
 
