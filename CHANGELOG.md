@@ -8,6 +8,16 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
 
 ### Added
 
+- Phase 12 final Part 1 release audit:
+  - Requirements coverage matrix (`docs/audits/final-part1-audit.md`)
+  - Final release checklist + known limitations
+  - Submission demo runbook (`docs/operations/demo-runbook.md`)
+  - Clean/messy/BOL synthetic fixtures under `fixtures/demo/`
+  - `scripts/run_full_evaluation.py` + checked-in decision eval report
+  - Submission-quality README / architecture diagram updates
+  - Corrected stale API surface/endpoint/idempotency status claims
+  - Verdict: **PASS WITH LIMITATIONS** (remote deploy NOT EXECUTED)
+
 - Phase 11 production hardening:
   - Compose deploy docs (architecture, configuration, local, frontend, production, CI/CD)
   - Non-root API + nginx-unprivileged web; runtime `__NOVA_RUNTIME__` auth (no baked tokens)

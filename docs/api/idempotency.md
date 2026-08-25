@@ -2,7 +2,7 @@
 
 How Nova avoids accidental duplicate processing when clients retry document ingestion (`REQ-DATA-003`, architecture principle: idempotency).
 
-**Status:** Contract only — not implemented yet.
+**Status:** Implemented for `POST /v1/documents` (Phase 3+). Replay and conflict behavior are covered by API tests.
 
 ## Problem
 

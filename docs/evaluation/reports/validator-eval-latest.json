@@ -93,7 +93,7 @@
       "gold_outcomes": [
         "MISMATCH"
       ],
-      "latency_ms": 1,
+      "latency_ms": 3,
       "llm_checks": 0,
       "notes": "",
       "pred_outcomes": [
@@ -336,7 +336,7 @@
     "false_match_rate": 0.0,
     "false_mismatch_rate": 0.0,
     "llm_assisted_validation_rate": 0.25,
-    "mean_latency_ms": 0.1875,
+    "mean_latency_ms": 0.3125,
     "uncertainty_rate": 0.5,
     "unsafe_match_count": 0,
     "unsafe_match_rate": 0.0,

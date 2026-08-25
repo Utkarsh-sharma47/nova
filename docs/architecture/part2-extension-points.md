@@ -1,6 +1,6 @@
 # Part 2 extension points
 
-Part 2 is **not** implemented in Part 1. Part 1 must avoid designs that make these additions unnecessarily hard.
+Part 2 is **PLANNED — NOT IMPLEMENTED IN PART 1**. Part 1 must avoid designs that make these additions unnecessarily hard.
 
 ## Principles for extension
 
@@ -12,15 +12,15 @@ Part 2 is **not** implemented in Part 1. Part 1 must avoid designs that make the
 
 ## Extension map
 
-| Part 2 capability | Part 1 design obligation | Anti-pattern to avoid |
-|-------------------|--------------------------|------------------------|
-| Email ingestion | Define an ingestion port; UI is one adapter | Coupling pipeline entry to a single HTTP upload handler with no interface |
-| File/attachment ingestion | Same ingestion port; attachment metadata fields reserved | Assuming exactly one blob forever with no document entity |
-| Multiple documents per shipment | Schema: shipment has many documents | One table row that mixes shipment + single file blobs inseparably |
-| Cross-document consistency | Validator accepts list/context of extractions | Validator signature that can never take more than one extraction |
-| Draft replies | Communication draft interface; unused in Part 1 | Embedding email-send side effects inside router |
-| Human approval | Decision record allows future approval transitions | Overwriting router decision without history |
-| Outbound sending | Outbound adapter; requires explicit approval gate in Part 2 | Auto-sending from Part 1 router path |
+| Part 2 capability | Part 1 status | Part 1 design obligation | Anti-pattern to avoid |
+|-------------------|---------------|--------------------------|------------------------|
+| Email ingestion | **PLANNED** | Define an ingestion port; UI is one adapter | Coupling pipeline entry to a single HTTP upload handler with no interface |
+| File/attachment ingestion | **PLANNED** | Same ingestion port; attachment metadata fields reserved | Assuming exactly one blob forever with no document entity |
+| Multiple documents per shipment | **PLANNED** (schema 1:N ready) | Schema: shipment has many documents | One table row that mixes shipment + single file blobs inseparably |
+| Cross-document consistency | **PLANNED** | Validator accepts list/context of extractions | Validator signature that can never take more than one extraction |
+| Draft replies | **PLANNED** | Communication draft interface; unused in Part 1 | Embedding email-send side effects inside router |
+| Human approval | **PLANNED** | Decision record allows future approval transitions | Overwriting router decision without history |
+| Outbound sending | **PLANNED** | Outbound adapter not required in Part 1; interface reserved | Auto-sending from Part 1 router path |
 
 ## Minimal interfaces (conceptual)
 

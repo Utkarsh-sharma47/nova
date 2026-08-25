@@ -1,6 +1,6 @@
 # Architecture
 
-High-level architecture for Nova.
+High-level architecture for Nova (Part 1 implemented).
 
 ## Purpose
 
@@ -8,22 +8,61 @@ Nova validates trade shipping documents with a multi-agent AI pipeline. Document
 
 ## Current status
 
-**Phase 11 production hardening** on top of Phases 3–10:
+**Phase 12 final Part 1 release** (audit: [`docs/audits/final-part1-audit.md`](docs/audits/final-part1-audit.md)):
 
 - Ingestion → `PipelineOrchestrator` → Extractor → Validator → Router → persistence
-- Grounded `POST /v1/query`
-- React/Vite ops UI (`frontend/`) with **runtime** `window.__NOVA_RUNTIME__` auth in Compose
+- Grounded `POST /v1/query` (allow-listed intents; **no LLM SQL**)
+- React/Vite ops UI with runtime auth config in Compose
 - Compose `api` + `db` + `web` (non-root; Alembic-only schema — **no `create_all` in production**)
 - Observability: `request_id` / `trace_id` / `run_id` / `agent_execution_id`, `/metrics`, `/health`, `/ready`
 - Append-only extraction, validation, and decision history
-- Document lifecycle through `extracted → validated → decided` (or `failed`)
 - Remote deploy: **NOT EXECUTED** (procedure documented)
 
-Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md),
-[`docs/architecture/frontend.md`](docs/architecture/frontend.md),
-[`docs/deployment/`](docs/deployment/),
-[`docs/audits/phase-11-production-readiness.md`](docs/audits/phase-11-production-readiness.md).
+## Architecture diagram
 
+```text
+                    PART 1 IMPLEMENTED
+┌─────────────────────────────────────────────────────────────────┐
+│                         Frontend (React/Vite)                     │
+│         dashboard · upload · document · shipment · query          │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ HTTPS / JSON
+┌───────────────────────────────▼─────────────────────────────────┐
+│                         FastAPI (API)                             │
+│  /v1/documents · validation · decision · query · ops              │
+│  /health · /ready · /metrics                                      │
+└───────┬─────────────────┬─────────────────┬─────────────────────┘
+        │                 │                 │
+        │         ┌───────▼───────┐         │
+        │         │   Pipeline    │         │
+        │         │ Orchestrator  │         │
+        │         └───────┬───────┘         │
+        │                 │                 │
+        │    ┌────────────┼────────────┐    │
+        │    ▼            ▼            ▼    │
+        │ Extractor   Validator     Router  │
+        │ (LLMPort)  (rules+LLM)  (policy)  │
+        │    │            │            │    │
+┌───────▼────▼────────────▼────────────▼────▼─────────────────────┐
+│                     PostgreSQL (system of record)                 │
+│        documents · extractions · validations · decisions          │
+│                    append-only AI history                         │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                    ┌───────────▼───────────┐
+                    │   Grounded Query      │
+                    │  (repository reads)   │
+                    └───────────────────────┘
+
+┌──────────────────┐   ┌──────────────────────────────────────────┐
+│ Document Storage │   │ Observability                             │
+│ local filesystem │   │ structured logs · correlation IDs · metrics│
+└──────────────────┘   └──────────────────────────────────────────┘
+
+              PART 2 EXTENSION POINTS (NOT IMPLEMENTED)
+   email/file ingestion · multi-doc · cross-doc validation
+   human approval UX · amendment/outbound communication
+```
 
 ## Conceptual pipeline
 
@@ -34,7 +73,7 @@ Document → ingestion → extraction → ExtractionResult
         → persistence → query/API → UI
 ```
 
-Detail: [`docs/architecture/system-architecture.md`](docs/architecture/system-architecture.md).
+Detail: [`docs/architecture/end-to-end-pipeline.md`](docs/architecture/end-to-end-pipeline.md).
 
 ## Implemented dependency direction
 
@@ -81,9 +120,9 @@ See [`docs/architecture/principles.md`](docs/architecture/principles.md).
 | HTTP API | [`docs/api/contracts.md`](docs/api/contracts.md) |
 | Persistence | [`docs/database/`](docs/database/) |
 
-Docs index: [`docs/architecture/contracts.md`](docs/architecture/contracts.md).
-
 ## Part 2 readiness
+
+**PLANNED — NOT IMPLEMENTED IN PART 1.**
 
 [`docs/architecture/part2-extension-points.md`](docs/architecture/part2-extension-points.md)
 
@@ -94,4 +133,5 @@ Docs index: [`docs/architecture/contracts.md`](docs/architecture/contracts.md).
 - [docs/database/](docs/database/)
 - [docs/api/](docs/api/)
 - [docs/decisions/](docs/decisions/)
+- [docs/audits/](docs/audits/)
 - [AGENTS.md](AGENTS.md)

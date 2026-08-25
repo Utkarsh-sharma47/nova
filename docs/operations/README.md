@@ -7,6 +7,7 @@ Operational practices and runbooks for Nova.
 | Document | Status |
 |----------|--------|
 | [git-workflow.md](./git-workflow.md) | Done — branch model, conventional commits, PR rules |
+| [demo-runbook.md](./demo-runbook.md) | Done — Phase 12 submission Part 1 demo (synthetic fixtures) |
 | [ui-demo.md](./ui-demo.md) | Done — Phase 9 synthetic UI demo flow |
 | [recovery.md](./recovery.md) | Done — Phase 11 API/DB/web restart, migration failure, DB outage, verify script |
 

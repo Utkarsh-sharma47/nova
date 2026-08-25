@@ -1,4 +1,6 @@
-# Roadmap
+# Roadmap (detail)
+
+Canonical high-level status: [`../../ROADMAP.md`](../../ROADMAP.md).
 
 ## Phase 1 — Engineering foundation
 
@@ -6,48 +8,48 @@
 
 ## Phase 2 — Stack selection & contracts
 
-- Choose language/runtime, API framework, DB, LLM provider (ADRs)
-- Define typed contracts for extraction, validation, routing
-- Skeleton repo layout without full business logic
-- Enable language-appropriate lint/type CI
-- Testing and AI evaluation architecture (pyramid, failure/performance specs, eval framework, regression policy) — docs ahead of harness code
-- ADRs 0002–0010
-- Typed contracts (`src/nova/contracts` + agent/API docs)
-- Domain/DB/API/observability/security/deployment architecture
-- Python CI (Ruff, MyPy, contract pytest)
-
-**Status:** Complete pending merge review. Audit: [`../audits/phase-2-architecture-audit.md`](../audits/phase-2-architecture-audit.md).
+**Status:** Complete. Audit: [`../audits/phase-2-audit.md`](../audits/phase-2-audit.md).
 
 ## Phase 3 — Application foundation + document ingestion
 
-**Status:** Complete pending merge review. Audit: [`../audits/phase-3-audit.md`](../audits/phase-3-audit.md).
+**Status:** Complete. Audit: [`../audits/phase-3-audit.md`](../audits/phase-3-audit.md).
 
-Authenticated FastAPI ingest/retrieval, PostgreSQL/Alembic core entities,
-idempotency, local storage, PDF/text `DocumentProcessorPort`, observability,
-Docker Compose, CI. **Extractor Agent is deferred to Phase 4** (verification
-runs are queued only).
+## Phase 4 — Extractor Agent
 
-## Phase 4 — Extraction, Validation & Router
+**Status:** Complete (`ExtractorService`, MockLLM, append-only extraction persistence).
 
-**Extractor delivered** (`feature/phase-4-extractor`): `LLMPort`/`MockLLM`,
-`ExtractorService`, prompt `extractor.v1`, append-only extraction tables,
-document lifecycle through `extracted`/`failed`.
+## Phase 5 — Validator Agent + evaluation
 
-Still open: Validator, Router, golden fixtures, fail-safe routing defaults.
+**Status:** Complete. Audit: [`../audits/phase-5-audit.md`](../audits/phase-5-audit.md).
 
-## Phase 5 — Persistence expansion, samples, evaluation harness
+## Phase 6 — Router / Decision Agent
 
-Validation/decision/audit persistence, samples, eval harness. Core ingestion
-entities and HTTP idempotency landed in Phase 3.
+**Status:** Complete. Audit: [`../audits/phase-6-audit.md`](../audits/phase-6-audit.md).
 
-## Phase 6 — Query & UI
+## Phase 7 — End-to-end pipeline integration
 
-Query API, grounded NL query, React/TS/Vite UI.
+**Status:** Complete (`PipelineOrchestrator`, validations table, wired HTTP reads).
 
-## Phase 7 — Hardening & Part 1 submission
+## Phase 8 — Grounded Query API
 
-Demo runbook, failure-path demo, deploy, submission package.
+**Status:** Complete (`POST /v1/query`, no LLM SQL).
+
+## Phase 9 — Part 1 operations UI
+
+**Status:** Complete (`frontend/`, Compose `web`).
+
+## Phase 10–11 — Verification & production hardening
+
+**Status:** Complete locally. Remote deploy **NOT EXECUTED**.
+Audit: [`../audits/phase-11-production-readiness.md`](../audits/phase-11-production-readiness.md).
+
+## Phase 12 — Final Part 1 release
+
+**Status:** Complete — **PASS WITH LIMITATIONS**.
+Artifacts: [`../audits/final-part1-audit.md`](../audits/final-part1-audit.md), [`../operations/demo-runbook.md`](../operations/demo-runbook.md).
 
 ## Part 2 — Forward
 
-Email/file triggers, multi-attachment, cross-doc validation, draft replies, human approval, outbound send.
+**PLANNED — NOT IMPLEMENTED IN PART 1.**
+
+Email/file triggers, multi-attachment, cross-document validation, draft replies, human approval actions, outbound sending.

@@ -36,7 +36,7 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 | REQ-DEPLOY-001–004 | Deploy ADR-0008 + CI | Docker Compose skeleton | 1 / 2 / 7 | CI | workflows + ci-cd.md |
 | REQ-DOC-001–004 | Docs system + ADRs | — | 1–2 | Docs script | `docs/**`, ADR-0001…0010 |
 | REQ-SEC-001–005 | Security baseline + arch | API auth assumptions | 1–5 | Secret scan + review | security docs + CI |
-| REQ-SUBMISSION-001–003 | Demo/runbook (future) | — | 8 | Demo | ops runbook |
+| REQ-SUBMISSION-001–003 | Demo/runbook | — | 12 | Demo + eval reports | `docs/operations/demo-runbook.md`, `docs/evaluation/reports/`, final audit |
 | REQ-PART2-001–007 | Extension points | related_extractions, stubs | 1–2 design | Design review | part2-extension-points + schema stubs |
 
 ## Traceability rules

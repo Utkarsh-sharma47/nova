@@ -22,11 +22,17 @@ Quality and accuracy evaluation for Nova’s extraction, validation, and decisio
 |------|--------|
 | Router decision evaluation | Implemented (`nova.evaluation.decision`, `fixtures/evaluation/decision/`) |
 | Validator evaluation | Implemented (`nova.evaluation.validator`, fixtures + reports) |
+| Unified runner | `scripts/run_full_evaluation.py` → `docs/evaluation/reports/` |
 | Phase 7 pipeline regression | E2E suite `tests/pipeline/` (MockLLM); does not replace agent eval gates |
 | Live LLM quality jobs | Not in this suite |
+| Extractor labeled golden harness | Partial — covered by unit/integration/security tests; narrower than validator/router suites |
 
 Primary Router safety gate: **false AUTO_APPROVE rate = 0.0** on regression
 revision `2026-08-25.r1` (evaluation-policy calibration target — not a production SLO claim).
+
+```bash
+PYTHONPATH=src python scripts/run_full_evaluation.py
+```
 
 ## Principles
 

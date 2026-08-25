@@ -10,18 +10,20 @@ Testing strategy for Nova.
 
 ## Current status
 
-**Phase 11** adds production-readiness verification on top of Phase 9 UI and Phases 3–8 backend suites:
+**Phase 12** final Part 1 release verification (on top of Phases 3–11):
 
-- Backend: pytest (unit, contract, API, pipeline, query, failure)
+- Backend: pytest (unit, contract, API, pipeline, query, failure, evaluation)
 - Frontend: Vitest + typecheck + production build
 - Migrations: clean upgrade to `0004_phase7_pipeline` (CI + local)
 - Compose smoke / recovery: `scripts/verify-production-readiness.sh`
+- AI eval: `scripts/run_full_evaluation.py` (false AUTO_APPROVE = 0 gate)
 - CI: docs/secrets, Ruff, MyPy, pytest, pip-audit, frontend checks, Docker builds
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
 cd frontend && npm test && npm run typecheck && npm run build
+PYTHONPATH=src python scripts/run_full_evaluation.py
 ./scripts/verify-production-readiness.sh
 ```
 

@@ -1,6 +1,8 @@
 # Part 1 feature scope
 
-Part 1 delivers an end-to-end **single-document** verification path suitable for demo and evaluation. Implementation occurs in later roadmap phases; this document is the scope contract.
+Part 1 delivers an end-to-end **single-document** verification path suitable for demo and evaluation.
+
+**Status:** Implemented (Phase 12 final audit: **PASS WITH LIMITATIONS**).
 
 ## Must include
 

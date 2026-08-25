@@ -2,6 +2,11 @@
 
 Stable requirement IDs for Nova. Do not renumber casually; deprecate and replace instead.
 
+**Phase 12 note:** Evidence-driven Part 1 status lives in
+[`docs/audits/final-part1-audit.md`](../audits/final-part1-audit.md).
+The Status column below is kept for historical planning; treat the final audit
+matrix as authoritative for submission.
+
 **Legend**
 
 | Field | Values |
