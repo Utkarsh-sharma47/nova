@@ -1,0 +1,18 @@
+{
+  "case_id": "ext_assignment_clean_invoice",
+  "document_type": "INVOICE",
+  "document_text": "Invoice Number: INV-CLEAN-2001\nConsignee: Harbor Goods BV\nHS Code: 8471.30\nPort of Loading: Singapore\nPort of Discharge: Rotterdam\nIncoterms: FOB\nDescription of Goods: Synthetic clean invoice for Nova Part 1 evaluation.\nGross Weight: 10250 KG\n",
+  "expected_fields": {
+    "invoice_number": {"presence": "KNOWN", "value": "INV-CLEAN-2001"},
+    "consignee_name": {"presence": "KNOWN", "value": "Harbor Goods BV"},
+    "hs_code": {"presence": "KNOWN", "value": "8471.30"},
+    "port_of_loading": {"presence": "KNOWN", "value": "Singapore"},
+    "port_of_discharge": {"presence": "KNOWN", "value": "Rotterdam"},
+    "incoterms": {"presence": "KNOWN", "value": "FOB"},
+    "description_of_goods": {
+      "presence": "KNOWN",
+      "value": "Synthetic clean invoice for Nova Part 1 evaluation."
+    },
+    "gross_weight": {"presence": "KNOWN", "value": "10250 KG"}
+  }
+}

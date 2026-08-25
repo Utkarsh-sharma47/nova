@@ -58,6 +58,7 @@ _DECISION_VALUES = {"AUTO_APPROVE", "HUMAN_REVIEW", "AMENDMENT_REQUEST"}
 _SUGGESTIONS = [
     "Ask for a shipment or document by id",
     "Ask which shipments are in HUMAN_REVIEW",
+    "Ask how many shipments were flagged this week",
     "Ask for validation or decision status for a document",
     "Ask which documents belong to a shipment",
 ]
@@ -126,12 +127,19 @@ def _decision_from_text(question: str) -> str | None:
     for value in _DECISION_VALUES:
         if value in upper:
             return value
-    if re.search(r"(?i)human\s+review|waiting\s+on\s+(human\s+)?review", question):
+    if re.search(r"(?i)human\s+review|waiting\s+on\s+(human\s+)?review|flagged", question):
         return "HUMAN_REVIEW"
     if re.search(r"(?i)auto[_\s-]?approv", question):
         return "AUTO_APPROVE"
     if re.search(r"(?i)amendment", question):
         return "AMENDMENT_REQUEST"
+    return None
+
+
+def _time_range_from_text(question: str) -> dict[str, str] | None:
+    week = r"(?i)\b(this\s+week|past\s+week|last\s+7\s+days|last\s+seven\s+days)\b"
+    if re.search(week, question):
+        return {"preset": "this_week"}
     return None
 
 
@@ -180,14 +188,21 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
         )
 
     if re.search(
-        r"(?i)(which|list|show).*(shipment).*(human.?review|auto.?approv|amendment)",
+        r"(?i)(which|list|show|how many).*(shipment).*"
+        r"(human.?review|auto.?approv|amendment|flagged)",
         q,
-    ) or re.search(r"(?i)shipments?\s+(waiting|in)\s+(on\s+)?human", q):
+    ) or re.search(r"(?i)(shipments?\s+(waiting|in|flagged)|flagged\s+(this\s+)?week)", q):
         decision = _decision_from_text(q) or "HUMAN_REVIEW"
+        parameters: dict[str, Any] = {"decision": decision}
+        time_range = _time_range_from_text(q)
+        if time_range is None and isinstance(scoped.time_range, dict):
+            time_range = dict(scoped.time_range)
+        if time_range is not None:
+            parameters["time_range"] = time_range
         return ClassificationOutcome(
             intent=InterpretedIntent(
                 name=QueryIntentName.LIST_SHIPMENTS_BY_DECISION,
-                parameters={"decision": decision},
+                parameters=parameters,
                 confidence=0.9,
             )
         )

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from nova.evaluation.decision import run_decision_evaluation  # noqa: E402
+from nova.evaluation.extractor import run_extractor_evaluation, write_report as write_extractor_report  # noqa: E402
 from nova.evaluation.validator.runner import run_dataset, write_report  # noqa: E402
 
 
@@ -25,6 +26,13 @@ def main() -> int:
     decision = run_decision_evaluation()
     decision_path = out_dir / "decision-eval-latest.json"
     decision_path.write_text(json.dumps(decision.to_dict(), indent=2, default=str) + "\n")
+
+    extractor_metrics, extractor_cases = run_extractor_evaluation()
+    write_extractor_report(
+        extractor_metrics,
+        extractor_cases,
+        out_dir / "extractor-eval-latest.json",
+    )
 
     full = run_dataset(
         ROOT / "fixtures/evaluation/validator/cases",
@@ -47,6 +55,12 @@ def main() -> int:
     print(f"gate_passed={m.false_auto_approve_gate_passed}")
     print(f"wrote {decision_path}")
 
+    print("=== Extractor evaluation ===")
+    print(f"n={extractor_metrics.n} presence_acc={extractor_metrics.field_presence_accuracy:.3f}")
+    print(f"known_value_acc={extractor_metrics.known_value_accuracy:.3f}")
+    print(f"fabrication_count={extractor_metrics.fabrication_count}")
+    print(f"gate_passed={extractor_metrics.gate_passed}")
+
     print("=== Validator evaluation ===")
     print(f"n={full.n} accuracy={full.validation_accuracy:.3f}")
     print(f"unsafe_match_count={full.unsafe_match_count}")
@@ -59,6 +73,9 @@ def main() -> int:
 
     if not m.false_auto_approve_gate_passed or m.false_auto_approve_count != 0:
         print("FAIL: false AUTO_APPROVE gate")
+        return 1
+    if not extractor_metrics.gate_passed or extractor_metrics.fabrication_count != 0:
+        print("FAIL: extractor fabrication gate")
         return 1
     if full.blocking or regression.blocking:
         print("FAIL: validator blocking reasons present")

@@ -298,11 +298,31 @@ def _list_shipments_by_decision(
     repository: QueryRepository,
     max_results: int,
 ) -> tuple[QueryStatus, QueryResultPayload]:
+    from datetime import UTC, datetime, timedelta
+
     disposition = str(parameters.get("decision", "")).upper()
+    decided_after = None
+    decided_before = None
+    time_range = parameters.get("time_range")
+    if isinstance(time_range, dict):
+        start = time_range.get("start") or time_range.get("from")
+        end = time_range.get("end") or time_range.get("to")
+        if isinstance(start, str) and start.strip():
+            decided_after = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        if isinstance(end, str) and end.strip():
+            decided_before = datetime.fromisoformat(end.replace("Z", "+00:00"))
+        preset = str(time_range.get("preset") or "").lower()
+        if preset in {"this_week", "week", "last_7_days", "7d"} and decided_after is None:
+            now = datetime.now(UTC)
+            decided_after = now - timedelta(days=7)
+            decided_before = now + timedelta(seconds=1)
+
     rows = repository.shipments_by_decision(
         customer_id,
         disposition,
         limit=max_results,
+        decided_after=decided_after,
+        decided_before=decided_before,
     )
     # Deduplicate shipments (latest decision already ordered).
     seen: set[UUID] = set()
@@ -333,14 +353,17 @@ def _list_shipments_by_decision(
                 code=decision.disposition,
             )
         )
+    window_note = ""
+    if decided_after is not None or decided_before is not None:
+        window_note = " in the requested time window"
     if not records:
         return QueryStatus.EMPTY, QueryResultPayload(
-            answer_summary=f"No shipments are in {disposition}.",
+            answer_summary=f"No shipments are in {disposition}{window_note}.",
             records=[],
             citations=[],
         )
     return QueryStatus.RESULT, QueryResultPayload(
-        answer_summary=f"{len(records)} shipment(s) are in {disposition}.",
+        answer_summary=f"{len(records)} shipment(s) are in {disposition}{window_note}.",
         records=records,
         citations=citations,
     )

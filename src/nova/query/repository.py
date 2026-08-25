@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -143,16 +144,23 @@ class QueryRepository:
         disposition: str,
         *,
         limit: int,
+        decided_after: datetime | None = None,
+        decided_before: datetime | None = None,
     ) -> list[tuple[Shipment, DecisionRecord]]:
+        filters = [
+            Shipment.customer_id == customer_id,
+            Shipment.deleted_at.is_(None),
+            DecisionRecord.disposition == disposition,
+        ]
+        if decided_after is not None:
+            filters.append(DecisionRecord.decided_at >= decided_after)
+        if decided_before is not None:
+            filters.append(DecisionRecord.decided_at < decided_before)
         rows = self.session.execute(
             select(Shipment, DecisionRecord)
             .join(DecisionRecord, DecisionRecord.shipment_id == Shipment.shipment_id)
             .options(selectinload(Shipment.documents))
-            .where(
-                Shipment.customer_id == customer_id,
-                Shipment.deleted_at.is_(None),
-                DecisionRecord.disposition == disposition,
-            )
+            .where(*filters)
             .order_by(DecisionRecord.decided_at.desc())
             .limit(limit)
         ).all()
