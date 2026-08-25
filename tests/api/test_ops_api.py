@@ -73,6 +73,13 @@ def test_create_customer(client: tuple[TestClient, UUID]) -> None:
     assert body["name"] == "Demo Customer"
     assert UUID(body["customer_id"])
     assert body["trace_id"]
+    with session_scope() as session:
+        customer = session.get(Customer, UUID(body["customer_id"]))
+        assert customer is not None
+        expected = customer.metadata_json.get("expected_fields")
+        assert isinstance(expected, dict)
+        assert expected["consignee_name"] == "Harbor Goods BV"
+        assert expected["hs_code"] == "8471.30"
 
 
 def test_ops_summary_and_list(client: tuple[TestClient, UUID]) -> None:
@@ -88,7 +95,14 @@ def test_ops_summary_and_list(client: tuple[TestClient, UUID]) -> None:
     assert body["totals"]["processing"] == 1
     assert body["totals"]["failed"] == 1
     assert body["validation_outcomes"] == {"MATCH": 0, "MISMATCH": 0, "UNCERTAIN": 0}
+    assert body["agreement_outcomes"] == {
+        "STRONG_AGREEMENT": 0,
+        "PARTIAL_AGREEMENT": 0,
+        "WEAK_AGREEMENT": 2,
+    }
+    assert body["totals"]["weak_agreement"] == 2
     assert len(body["recent_documents"]) == 2
+    assert {item["agreement"] for item in body["recent_documents"]} == {"WEAK_AGREEMENT"}
 
     listed = test_client.get(
         "/v1/documents",

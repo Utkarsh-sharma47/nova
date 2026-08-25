@@ -1,6 +1,8 @@
 COMMERCIAL INVOICE
 Invoice Number: INV-CLEAN-2001
 Invoice Date: 2026-08-18
+Seller: Acme Logistics Pte Ltd
+Buyer: Harbor Goods BV
 Shipper: Acme Logistics Pte Ltd
 Consignee: Harbor Goods BV
 Port of Loading: Singapore

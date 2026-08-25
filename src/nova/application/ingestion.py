@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from nova.agents.validator.agent import ValidatorAgent
+from nova.application.agreement_projection import agreement_for_document
 from nova.application.pipeline import PipelineOrchestrator
 from nova.application.validation_persistence import SqlValidationStore
 from nova.contracts.validation import CustomerRuleSnapshot
@@ -38,6 +39,7 @@ from nova.documents.errors import (
     DOC_UNSUPPORTED_EXTENSION,
     DOC_UNSUPPORTED_MEDIA_TYPE,
 )
+from nova.domain.agreement import agreement_wire
 from nova.domain.errors import (
     CustomerNotFound,
     DecisionNotFound,
@@ -344,6 +346,7 @@ class IngestionService:
         )
         run = self.repository.run_for_shipment(document.shipment_id)
         extraction_summary = self._extraction_summary(run.verification_run_id) if run else None
+        agreement = agreement_for_document(self.session, document)
         return {
             "document_id": str(document.document_id),
             "shipment_id": str(document.shipment_id),
@@ -361,6 +364,7 @@ class IngestionService:
                 "filename": version.original_filename if version else None,
             },
             "extraction": extraction_summary,
+            **agreement_wire(agreement),
             "links": {
                 "validation": f"/v1/documents/{document.document_id}/validation",
                 "decision": f"/v1/documents/{document.document_id}/decision",

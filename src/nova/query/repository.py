@@ -6,9 +6,14 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from nova.application.agreement_projection import (
+    agreement_counts_for_customer,
+    documents_matching_agreement,
+)
+from nova.domain.agreement import AgreementCategory, DocumentAgreement
 from nova.persistence.models import (
     DecisionRecord,
     Document,
@@ -165,6 +170,109 @@ class QueryRepository:
             .limit(limit)
         ).all()
         return [(shipment, decision) for shipment, decision in rows]
+
+    def count_documents_by_agreement(
+        self,
+        customer_id: UUID,
+        agreement: str,
+        *,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> int:
+        counts = agreement_counts_for_customer(
+            self.session,
+            customer_id,
+            updated_after=updated_after,
+            updated_before=updated_before,
+        )
+        return int(counts.get(str(agreement).upper(), 0))
+
+    def documents_by_agreement(
+        self,
+        customer_id: UUID,
+        agreement: str,
+        *,
+        limit: int,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> list[tuple[Document, DocumentAgreement, DecisionRecord | None, str | None]]:
+        return documents_matching_agreement(
+            self.session,
+            customer_id,
+            AgreementCategory(str(agreement).upper()),
+            limit=limit,
+            updated_after=updated_after,
+            updated_before=updated_before,
+        )
+
+    def count_documents_requiring_attention(
+        self,
+        customer_id: UUID,
+        *,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> int:
+        counts = agreement_counts_for_customer(
+            self.session,
+            customer_id,
+            updated_after=updated_after,
+            updated_before=updated_before,
+        )
+        return int(counts.get(AgreementCategory.PARTIAL_AGREEMENT.value, 0)) + int(
+            counts.get(AgreementCategory.WEAK_AGREEMENT.value, 0)
+        )
+
+    def count_documents_by_decision(
+        self,
+        customer_id: UUID,
+        disposition: str,
+        *,
+        decided_after: datetime | None = None,
+        decided_before: datetime | None = None,
+    ) -> int:
+        filters = [
+            Shipment.customer_id == customer_id,
+            Shipment.deleted_at.is_(None),
+            Document.deleted_at.is_(None),
+            DecisionRecord.disposition == disposition,
+        ]
+        if decided_after is not None:
+            filters.append(DecisionRecord.decided_at >= decided_after)
+        if decided_before is not None:
+            filters.append(DecisionRecord.decided_at < decided_before)
+        # Count distinct documents with the disposition (latest decision per doc via join).
+        result = self.session.scalar(
+            select(func.count(func.distinct(DecisionRecord.document_id)))
+            .join(Document, Document.document_id == DecisionRecord.document_id)
+            .join(Shipment, Shipment.shipment_id == Document.shipment_id)
+            .where(*filters)
+        )
+        return int(result or 0)
+
+    def count_documents_with_mismatches(
+        self,
+        customer_id: UUID,
+        *,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> int:
+        filters = [
+            Shipment.customer_id == customer_id,
+            Shipment.deleted_at.is_(None),
+            Document.deleted_at.is_(None),
+            ValidationRecordRow.aggregate_result == "MISMATCH",
+        ]
+        if updated_after is not None:
+            filters.append(Document.updated_at >= updated_after)
+        if updated_before is not None:
+            filters.append(Document.updated_at < updated_before)
+        result = self.session.scalar(
+            select(func.count(func.distinct(ValidationRecordRow.document_id)))
+            .join(Document, Document.document_id == ValidationRecordRow.document_id)
+            .join(Shipment, Shipment.shipment_id == Document.shipment_id)
+            .where(*filters)
+        )
+        return int(result or 0)
 
     def extracted_fields_for_run(self, run_id: UUID) -> list[ExtractedFieldRow]:
         return list(

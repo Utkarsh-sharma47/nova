@@ -12,6 +12,11 @@ export type ValidationOutcome = 'MATCH' | 'MISMATCH' | 'UNCERTAIN'
 
 export type DecisionKind = 'AUTO_APPROVE' | 'HUMAN_REVIEW' | 'AMENDMENT_REQUEST'
 
+export type AgreementCategory =
+  | 'STRONG_AGREEMENT'
+  | 'PARTIAL_AGREEMENT'
+  | 'WEAK_AGREEMENT'
+
 export type QueryStatus = 'RESULT' | 'EMPTY' | 'UNSUPPORTED' | 'FAILURE'
 
 export interface ApiErrorBody {
@@ -46,6 +51,12 @@ export interface DocumentListItem {
   run_id: string | null
   created_at: string
   updated_at: string
+  agreement?: AgreementCategory | null
+  document_confidence?: number | null
+  document_confidence_percent?: number | null
+  decision?: DecisionKind | null
+  validation_result?: ValidationOutcome | null
+  invoice_number?: string | null
 }
 
 export interface DocumentListResponse {
@@ -88,6 +99,9 @@ export interface DocumentDetail {
   run_id: string | null
   created_at: string
   updated_at: string
+  agreement?: AgreementCategory | null
+  document_confidence?: number | null
+  document_confidence_percent?: number | null
   content?: {
     media_type: string
     size_bytes: number
@@ -173,6 +187,14 @@ export interface OpsSummary {
     human_review: number
     amendment_request: number
     auto_approve: number
+    strong_agreement?: number
+    partial_agreement?: number
+    weak_agreement?: number
+  }
+  agreement_outcomes?: {
+    STRONG_AGREEMENT: number
+    PARTIAL_AGREEMENT: number
+    WEAK_AGREEMENT: number
   }
   validation_outcomes?: {
     MATCH: number

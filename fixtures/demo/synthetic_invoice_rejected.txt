@@ -1,0 +1,17 @@
+COMMERCIAL INVOICE
+Invoice Number: INV-REJECT-9001
+Invoice Date: 2026-08-18
+Seller: Wrong Seller AG
+Buyer: Wrong Buyer LLC
+Shipper: Wrong Shipper Ltd
+Consignee: Wrong Harbor Trading GmbH
+Port of Loading: Shanghai
+Port of Discharge: Los Angeles
+Container Number: MSKU9999999
+HS Code: 8517.62
+Incoterms: EXW
+Gross Weight: 25000 KG
+Currency: USD
+Total Amount: 99999.00
+Description of Goods: Synthetic rejected invoice with mismatched control-group fields.
+Note: Synthetic fixture only. Not a real customer document.

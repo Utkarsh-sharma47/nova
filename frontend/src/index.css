@@ -468,6 +468,14 @@ code,
   align-items: center;
 }
 
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  margin: 0 0 var(--space-md);
+}
+
 /* —— Tables —— */
 
 .table-wrap {

@@ -21,8 +21,15 @@ Supported intents (Part 1):
 - list shipments by decision
 - list documents for shipment
 - summarize a verification run (extraction + validation + decision)
+- count / list documents by agreement category (`STRONG_AGREEMENT` / `PARTIAL_AGREEMENT` / `WEAK_AGREEMENT`)
+- count documents requiring attention (partial + weak)
+- count documents by decision disposition
+- count documents with validation mismatches
 
 Unsupported / unsafe questions return structured `UNSUPPORTED` (never fabricated success).
+
+Agreement classification is derived deterministically from persisted extraction confidence
+and validation outcomes. It does **not** replace Router decisions.
 
 ## Architecture
 

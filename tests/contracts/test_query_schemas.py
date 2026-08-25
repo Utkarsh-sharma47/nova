@@ -52,6 +52,11 @@ def test_intent_allow_list_values() -> None:
         "list_shipments_by_decision",
         "list_documents_for_shipment",
         "summarize_run",
+        "count_documents_by_agreement",
+        "list_documents_by_agreement",
+        "count_documents_requiring_attention",
+        "count_documents_by_decision",
+        "count_documents_with_mismatches",
     }
 
 

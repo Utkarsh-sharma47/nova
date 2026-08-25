@@ -42,7 +42,16 @@ Create a demo/ops customer record (`201`). Used by the Part 1 UI.
 
 ## GET `/v1/ops/summary`
 
-Aggregate counts for the dashboard (documents, decisions by disposition). Real DB aggregates — not frontend mocks.
+Aggregate counts for the dashboard (documents, decisions by disposition, agreement outcomes).
+Real DB aggregates — not frontend mocks. Agreement categories are derived at read time from
+persisted extraction confidence + validation results.
+
+## GET `/v1/documents`
+
+Customer-scoped document list. Optional `agreement=` filter
+(`STRONG_AGREEMENT` | `PARTIAL_AGREEMENT` | `WEAK_AGREEMENT`).
+Each item includes `agreement`, `document_confidence`, and `document_confidence_percent`
+when evidence is available.
 
 ## POST `/v1/query`
 

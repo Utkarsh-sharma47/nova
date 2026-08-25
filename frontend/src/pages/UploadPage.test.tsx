@@ -53,9 +53,9 @@ describe('UploadPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/document accepted/i)).toBeInTheDocument()
+      expect(screen.getByText(/upload received/i)).toBeInTheDocument()
       expect(
-        screen.getByText(/accepted and queued for processing/i),
+        screen.getByText(/upload acceptance is not a routing decision/i),
       ).toBeInTheDocument()
     })
   })

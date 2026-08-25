@@ -19,6 +19,11 @@ class QueryIntentName(StrEnum):
     LIST_SHIPMENTS_BY_DECISION = "list_shipments_by_decision"
     LIST_DOCUMENTS_FOR_SHIPMENT = "list_documents_for_shipment"
     SUMMARIZE_RUN = "summarize_run"
+    COUNT_DOCUMENTS_BY_AGREEMENT = "count_documents_by_agreement"
+    LIST_DOCUMENTS_BY_AGREEMENT = "list_documents_by_agreement"
+    COUNT_DOCUMENTS_REQUIRING_ATTENTION = "count_documents_requiring_attention"
+    COUNT_DOCUMENTS_BY_DECISION = "count_documents_by_decision"
+    COUNT_DOCUMENTS_WITH_MISMATCHES = "count_documents_with_mismatches"
 
 
 class QueryStatus(StrEnum):

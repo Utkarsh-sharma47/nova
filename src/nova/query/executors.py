@@ -46,6 +46,11 @@ def execute_intent(
         QueryIntentName.LIST_SHIPMENTS_BY_DECISION: _list_shipments_by_decision,
         QueryIntentName.LIST_DOCUMENTS_FOR_SHIPMENT: _list_documents_for_shipment,
         QueryIntentName.SUMMARIZE_RUN: _summarize_run,
+        QueryIntentName.COUNT_DOCUMENTS_BY_AGREEMENT: _count_documents_by_agreement,
+        QueryIntentName.LIST_DOCUMENTS_BY_AGREEMENT: _list_documents_by_agreement,
+        QueryIntentName.COUNT_DOCUMENTS_REQUIRING_ATTENTION: _count_documents_requiring_attention,
+        QueryIntentName.COUNT_DOCUMENTS_BY_DECISION: _count_documents_by_decision,
+        QueryIntentName.COUNT_DOCUMENTS_WITH_MISMATCHES: _count_documents_with_mismatches,
     }
     handler = handlers[intent.name]
     return handler(
@@ -298,24 +303,8 @@ def _list_shipments_by_decision(
     repository: QueryRepository,
     max_results: int,
 ) -> tuple[QueryStatus, QueryResultPayload]:
-    from datetime import UTC, datetime, timedelta
-
+    decided_after, decided_before, window_note = _parse_time_window(parameters)
     disposition = str(parameters.get("decision", "")).upper()
-    decided_after = None
-    decided_before = None
-    time_range = parameters.get("time_range")
-    if isinstance(time_range, dict):
-        start = time_range.get("start") or time_range.get("from")
-        end = time_range.get("end") or time_range.get("to")
-        if isinstance(start, str) and start.strip():
-            decided_after = datetime.fromisoformat(start.replace("Z", "+00:00"))
-        if isinstance(end, str) and end.strip():
-            decided_before = datetime.fromisoformat(end.replace("Z", "+00:00"))
-        preset = str(time_range.get("preset") or "").lower()
-        if preset in {"this_week", "week", "last_7_days", "7d"} and decided_after is None:
-            now = datetime.now(UTC)
-            decided_after = now - timedelta(days=7)
-            decided_before = now + timedelta(seconds=1)
 
     rows = repository.shipments_by_decision(
         customer_id,
@@ -353,9 +342,6 @@ def _list_shipments_by_decision(
                 code=decision.disposition,
             )
         )
-    window_note = ""
-    if decided_after is not None or decided_before is not None:
-        window_note = " in the requested time window"
     if not records:
         return QueryStatus.EMPTY, QueryResultPayload(
             answer_summary=f"No shipments are in {disposition}{window_note}.",
@@ -366,6 +352,223 @@ def _list_shipments_by_decision(
         answer_summary=f"{len(records)} shipment(s) are in {disposition}{window_note}.",
         records=records,
         citations=citations,
+    )
+
+
+def _parse_time_window(
+    parameters: dict[str, Any],
+) -> tuple[Any, Any, str]:
+    from datetime import UTC, datetime, timedelta
+
+    updated_after = None
+    updated_before = None
+    time_range = parameters.get("time_range")
+    if isinstance(time_range, dict):
+        start = time_range.get("start") or time_range.get("from")
+        end = time_range.get("end") or time_range.get("to")
+        if isinstance(start, str) and start.strip():
+            updated_after = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        if isinstance(end, str) and end.strip():
+            updated_before = datetime.fromisoformat(end.replace("Z", "+00:00"))
+        preset = str(time_range.get("preset") or "").lower()
+        now = datetime.now(UTC)
+        if updated_after is None:
+            if preset in {"this_week", "week", "last_7_days", "7d"}:
+                updated_after = now - timedelta(days=7)
+                updated_before = now + timedelta(seconds=1)
+            elif preset in {"today", "this_day"}:
+                updated_after = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                updated_before = now + timedelta(seconds=1)
+            elif preset in {"this_month", "month", "last_30_days", "30d"}:
+                updated_after = now - timedelta(days=30)
+                updated_before = now + timedelta(seconds=1)
+    window_note = ""
+    if updated_after is not None or updated_before is not None:
+        window_note = " in the requested time window"
+    return updated_after, updated_before, window_note
+
+
+def _count_documents_by_agreement(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    agreement = str(parameters.get("agreement", "")).upper()
+    updated_after, updated_before, window_note = _parse_time_window(parameters)
+    count = repository.count_documents_by_agreement(
+        customer_id,
+        agreement,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    )
+    if count == 0:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"0 documents have {agreement}{window_note}.",
+            records=[],
+            citations=[],
+        )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary=f"{count} documents have {agreement}{window_note}.",
+        records=[
+            {
+                "type": "agreement_count",
+                "agreement": agreement,
+                "count": count,
+            }
+        ],
+        citations=[],
+    )
+
+
+def _list_documents_by_agreement(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    agreement = str(parameters.get("agreement", "")).upper()
+    updated_after, updated_before, window_note = _parse_time_window(parameters)
+    rows = repository.documents_by_agreement(
+        customer_id,
+        agreement,
+        limit=max_results,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    )
+    if not rows:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"No documents have {agreement}{window_note}.",
+            records=[],
+            citations=[],
+        )
+    records: list[dict[str, Any]] = []
+    citations: list[QueryCitation] = []
+    lines: list[str] = []
+    for document, result, decision, invoice_number in rows:
+        label = invoice_number or str(document.document_id)
+        confidence_pct = result.document_confidence_percent
+        confidence_text = f"{confidence_pct}%" if confidence_pct is not None else "n/a"
+        decision_text = decision.disposition if decision else "—"
+        records.append(
+            {
+                "type": "document",
+                "document_id": str(document.document_id),
+                "shipment_id": str(document.shipment_id),
+                "invoice_number": invoice_number,
+                "agreement": result.category.value,
+                "document_confidence": result.document_confidence,
+                "document_confidence_percent": confidence_pct,
+                "decision": decision.disposition if decision else None,
+            }
+        )
+        citations.append(
+            QueryCitation(
+                type="document",
+                id=str(document.document_id),
+                document_id=str(document.document_id),
+                shipment_id=str(document.shipment_id),
+                code=result.category.value,
+            )
+        )
+        lines.append(f"- {label} — {confidence_text} — {decision_text}")
+    summary = f"{agreement.replace('_', ' ').title()} documents{window_note}:\n" + "\n".join(lines)
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary=summary,
+        records=records,
+        citations=citations,
+    )
+
+
+def _count_documents_requiring_attention(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    updated_after, updated_before, window_note = _parse_time_window(parameters)
+    count = repository.count_documents_requiring_attention(
+        customer_id,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    )
+    if count == 0:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"0 documents require attention{window_note}.",
+            records=[],
+            citations=[],
+        )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary=f"{count} documents require attention{window_note}.",
+        records=[{"type": "attention_count", "count": count}],
+        citations=[],
+    )
+
+
+def _count_documents_by_decision(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    disposition = str(parameters.get("decision", "")).upper()
+    updated_after, updated_before, window_note = _parse_time_window(parameters)
+    count = repository.count_documents_by_decision(
+        customer_id,
+        disposition,
+        decided_after=updated_after,
+        decided_before=updated_before,
+    )
+    if count == 0:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"0 documents were {disposition}{window_note}.",
+            records=[],
+            citations=[],
+        )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary=f"{count} documents were {disposition}{window_note}.",
+        records=[
+            {
+                "type": "decision_count",
+                "decision": disposition,
+                "count": count,
+            }
+        ],
+        citations=[],
+    )
+
+
+def _count_documents_with_mismatches(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    updated_after, updated_before, window_note = _parse_time_window(parameters)
+    count = repository.count_documents_with_mismatches(
+        customer_id,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    )
+    if count == 0:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"0 documents have mismatches{window_note}.",
+            records=[],
+            citations=[],
+        )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary=f"{count} documents have mismatches{window_note}.",
+        records=[{"type": "mismatch_count", "count": count}],
+        citations=[],
     )
 
 

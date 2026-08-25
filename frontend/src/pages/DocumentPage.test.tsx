@@ -13,6 +13,9 @@ const documentDetail = {
   run_id: 'run_1',
   created_at: '2026-08-25T00:00:00Z',
   updated_at: '2026-08-25T00:05:00Z',
+  agreement: 'PARTIAL_AGREEMENT',
+  document_confidence: 0.71,
+  document_confidence_percent: 71,
   extraction: {
     status: 'SUCCEEDED',
     fields: [
@@ -136,6 +139,11 @@ describe('DocumentPage', () => {
     expect(screen.getByText('Acme Corp')).toBeInTheDocument()
     expect(screen.getAllByText('consignee_name').length).toBeGreaterThan(0)
     expect(screen.getByText('92%')).toBeInTheDocument()
+    expect(screen.getByText('Document Confidence')).toBeInTheDocument()
+    expect(screen.getByText('71%')).toBeInTheDocument()
+    expect(screen.getByText('PARTIAL AGREEMENT')).toBeInTheDocument()
+    expect(screen.getByText('Agreement')).toBeInTheDocument()
+    expect(screen.getAllByText('Decision').length).toBeGreaterThan(0)
   })
 
   it('renders validation checks including UNCERTAIN', async () => {

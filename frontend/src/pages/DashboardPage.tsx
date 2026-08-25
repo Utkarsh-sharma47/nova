@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiClientError, createCustomer, getOpsSummary } from '../api'
-import type { DecisionKind, DocumentListItem } from '../api/types'
+import type { AgreementCategory, DecisionKind, DocumentListItem } from '../api/types'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorPanel } from '../components/ErrorPanel'
 import { LoadingState } from '../components/LoadingState'
@@ -10,6 +10,8 @@ import { useAsync } from '../hooks/useAsync'
 import { readStoredCustomerId, storeCustomerId } from '../utils/customer'
 import { formatTimestamp, shortId } from '../utils/status'
 import { isUuid } from '../utils/uuid'
+
+type AgreementFilter = 'ALL' | AgreementCategory
 
 interface MetricCardProps {
   label: string
@@ -28,6 +30,13 @@ function MetricCard({ label, value, tone = 'neutral', hint }: MetricCardProps) {
   )
 }
 
+function confidenceLabel(percent: number | null | undefined): string {
+  if (percent == null) {
+    return '—'
+  }
+  return `${percent}%`
+}
+
 export function DashboardPage() {
   const [customerId, setCustomerId] = useState(readStoredCustomerId)
   const [draftCustomerId, setDraftCustomerId] = useState(customerId)
@@ -36,6 +45,7 @@ export function DashboardPage() {
   const [customerFieldError, setCustomerFieldError] = useState<string | null>(
     null,
   )
+  const [agreementFilter, setAgreementFilter] = useState<AgreementFilter>('ALL')
 
   const loadSummary = useCallback(async () => {
     if (!customerId.trim()) {
@@ -58,6 +68,17 @@ export function DashboardPage() {
     }
     return map
   }, [summaryState])
+
+  const filteredDocuments = useMemo(() => {
+    if (summaryState.status !== 'success') {
+      return [] as DocumentListItem[]
+    }
+    const docs = summaryState.data.recent_documents
+    if (agreementFilter === 'ALL') {
+      return docs
+    }
+    return docs.filter((doc) => doc.agreement === agreementFilter)
+  }, [summaryState, agreementFilter])
 
   function applyCustomerId() {
     const next = draftCustomerId.trim()
@@ -89,6 +110,15 @@ export function DashboardPage() {
       setCreating(false)
     }
   }
+
+  const agreementCounts =
+    summaryState.status === 'success'
+      ? summaryState.data.agreement_outcomes ?? {
+          STRONG_AGREEMENT: summaryState.data.totals.strong_agreement ?? 0,
+          PARTIAL_AGREEMENT: summaryState.data.totals.partial_agreement ?? 0,
+          WEAK_AGREEMENT: summaryState.data.totals.weak_agreement ?? 0,
+        }
+      : null
 
   return (
     <>
@@ -239,6 +269,28 @@ export function DashboardPage() {
             />
           </section>
 
+          <p className="section-label">Agreement / confidence</p>
+          <section
+            className="metrics-grid metrics-grid--3"
+            aria-label="Agreement outcomes"
+          >
+            <MetricCard
+              label="Strong Agreement"
+              value={agreementCounts?.STRONG_AGREEMENT ?? 0}
+              tone="success"
+            />
+            <MetricCard
+              label="Partial Agreement"
+              value={agreementCounts?.PARTIAL_AGREEMENT ?? 0}
+              tone="warning"
+            />
+            <MetricCard
+              label="Weak Agreement"
+              value={agreementCounts?.WEAK_AGREEMENT ?? 0}
+              tone="danger"
+            />
+          </section>
+
           <p className="section-label">Routing decisions</p>
           <section className="metrics-grid metrics-grid--3" aria-label="Decision outcomes">
             <MetricCard
@@ -284,7 +336,38 @@ export function DashboardPage() {
                 Up to 10 · customer {shortId(summaryState.data.customer_id)}
               </span>
             </div>
-            {summaryState.data.recent_documents.length === 0 ? (
+            <div
+              className="filter-row"
+              role="group"
+              aria-label="Filter by agreement"
+            >
+              {(
+                [
+                  ['ALL', 'All'],
+                  ['STRONG_AGREEMENT', 'Strong Agreement'],
+                  ['PARTIAL_AGREEMENT', 'Partial Agreement'],
+                  ['WEAK_AGREEMENT', 'Weak Agreement'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={
+                    agreementFilter === value
+                      ? 'btn btn--sm'
+                      : 'btn btn--secondary btn--sm'
+                  }
+                  aria-pressed={agreementFilter === value}
+                  onClick={() => setAgreementFilter(value)}
+                >
+                  {label}
+                  {value !== 'ALL' && agreementCounts
+                    ? ` (${agreementCounts[value]})`
+                    : ''}
+                </button>
+              ))}
+            </div>
+            {filteredDocuments.length === 0 ? (
               <EmptyState
                 title="No documents yet"
                 message="Upload a document for this customer to see pipeline activity here."
@@ -303,17 +386,21 @@ export function DashboardPage() {
                       <th scope="col">Type</th>
                       <th scope="col">Shipment</th>
                       <th scope="col">Status</th>
+                      <th scope="col">Agreement</th>
+                      <th scope="col">Confidence</th>
                       <th scope="col">Decision</th>
                       <th scope="col">Updated</th>
                       <th scope="col">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {summaryState.data.recent_documents.map((doc) => (
+                    {filteredDocuments.map((doc) => (
                       <DocumentRow
                         key={doc.document_id}
                         doc={doc}
-                        decision={decisionByDocument.get(doc.document_id)}
+                        decision={
+                          doc.decision ?? decisionByDocument.get(doc.document_id)
+                        }
                       />
                     ))}
                   </tbody>
@@ -409,6 +496,10 @@ function DocumentRow({
       <td>
         <StatusBadge status={doc.status} showLifecycle />
       </td>
+      <td>
+        {doc.agreement ? <StatusBadge status={doc.agreement} /> : '—'}
+      </td>
+      <td>{confidenceLabel(doc.document_confidence_percent)}</td>
       <td>{decision ? <StatusBadge status={decision} /> : '—'}</td>
       <td>{formatTimestamp(doc.updated_at)}</td>
       <td className="cell-actions">

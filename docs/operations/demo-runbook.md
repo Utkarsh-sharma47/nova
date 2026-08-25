@@ -93,13 +93,14 @@ Then try an unsupported or injection-like question and confirm a safe refusal (`
 
 ## 8. Demonstrate a failure-safe / HUMAN_REVIEW case
 
-Upload `fixtures/demo/synthetic_invoice_messy.txt` with a new `Idempotency-Key`.
+Upload `fixtures/demo/synthetic_invoice_rejected.txt` with a new `Idempotency-Key`.
 
 Expected reviewer observation:
 
-- extraction may mark ambiguity / low confidence / missing fields
-- validation may be `UNCERTAIN` or `MISMATCH`
-- decision should **not** silently become unsafe `AUTO_APPROVE`
+- validation checks for consignee / POL / POD / HS code / incoterms / gross weight are `MISMATCH` (expected control-group values vs found)
+- decision is **not** `AUTO_APPROVE` (`AMENDMENT_REQUEST` or `HUMAN_REVIEW`)
+
+Also upload `fixtures/demo/synthetic_invoice_messy.txt` for ambiguity / partial extraction paths.
 
 Optional Bill of Lading sample: `fixtures/demo/synthetic_bol_clean.txt` with document type `BILL_OF_LADING` (or the enum value accepted by the API).
 

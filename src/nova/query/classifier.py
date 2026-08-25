@@ -54,6 +54,11 @@ _UUID_RE = re.compile(
 )
 
 _DECISION_VALUES = {"AUTO_APPROVE", "HUMAN_REVIEW", "AMENDMENT_REQUEST"}
+_AGREEMENT_VALUES = {
+    "STRONG_AGREEMENT",
+    "PARTIAL_AGREEMENT",
+    "WEAK_AGREEMENT",
+}
 
 _SUGGESTIONS = [
     "Ask for a shipment or document by id",
@@ -61,6 +66,8 @@ _SUGGESTIONS = [
     "Ask how many shipments were flagged this week",
     "Ask for validation or decision status for a document",
     "Ask which documents belong to a shipment",
+    "Ask how many strong agreement documents there are",
+    "Ask to show weak agreement documents",
 ]
 
 
@@ -140,7 +147,44 @@ def _time_range_from_text(question: str) -> dict[str, str] | None:
     week = r"(?i)\b(this\s+week|past\s+week|last\s+7\s+days|last\s+seven\s+days)\b"
     if re.search(week, question):
         return {"preset": "this_week"}
+    today = r"(?i)\b(today|this\s+day)\b"
+    if re.search(today, question):
+        return {"preset": "today"}
+    month = r"(?i)\b(this\s+month|past\s+month|last\s+30\s+days)\b"
+    if re.search(month, question):
+        return {"preset": "this_month"}
     return None
+
+
+def _agreement_from_text(question: str) -> str | None:
+    lower = question.lower()
+    if re.search(
+        r"(?i)\b(strong(\s+|-)?agreement|strongly\s+agree|high\s+agreement)\b",
+        question,
+    ) or "strong agreement" in lower:
+        return "STRONG_AGREEMENT"
+    if re.search(
+        r"(?i)\b(partial(\s+|-)?agreement|partially\s+agree)\b",
+        question,
+    ):
+        return "PARTIAL_AGREEMENT"
+    if re.search(
+        r"(?i)\b(weak(\s+|-)?agreement|weakly\s+agree|low\s+agreement)\b",
+        question,
+    ):
+        return "WEAK_AGREEMENT"
+    upper = question.upper()
+    for value in _AGREEMENT_VALUES:
+        if value in upper:
+            return value
+    return None
+
+
+def _resolve_time_range(question: str, scope: QueryScope) -> dict[str, Any] | None:
+    time_range = _time_range_from_text(question)
+    if time_range is None and isinstance(scope.time_range, dict):
+        time_range = dict(scope.time_range)
+    return time_range
 
 
 def _merge_scope(
@@ -170,6 +214,93 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
     scoped = request.scope
     text_id = _uuid_from_text(q)
 
+    # Agreement / attention / decision / mismatch counts (document-level analytics).
+    if re.search(
+        r"(?i)\b(require[s]?\s+attention|needs?\s+attention|requiring\s+attention)\b",
+        q,
+    ):
+        parameters: dict[str, Any] = {}
+        time_range = _resolve_time_range(q, scoped)
+        if time_range is not None:
+            parameters["time_range"] = time_range
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COUNT_DOCUMENTS_REQUIRING_ATTENTION,
+                parameters=parameters,
+                confidence=0.92,
+            )
+        )
+
+    if re.search(
+        r"(?i)\b(how many|count).*(mismatch|mismatches)\b",
+        q,
+    ) or re.search(r"(?i)\bdocuments?\s+have\s+mismatches?\b", q):
+        parameters = {}
+        time_range = _resolve_time_range(q, scoped)
+        if time_range is not None:
+            parameters["time_range"] = time_range
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COUNT_DOCUMENTS_WITH_MISMATCHES,
+                parameters=parameters,
+                confidence=0.9,
+            )
+        )
+
+    agreement = _agreement_from_text(q)
+    if agreement is not None and re.search(
+        r"(?i)\b(show|list|which|display)\b",
+        q,
+    ):
+        parameters = {"agreement": agreement}
+        time_range = _resolve_time_range(q, scoped)
+        if time_range is not None:
+            parameters["time_range"] = time_range
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.LIST_DOCUMENTS_BY_AGREEMENT,
+                parameters=parameters,
+                confidence=0.92,
+            )
+        )
+
+    if agreement is not None and re.search(
+        r"(?i)\b(how many|count|number of)\b",
+        q,
+    ):
+        parameters = {"agreement": agreement}
+        time_range = _resolve_time_range(q, scoped)
+        if time_range is not None:
+            parameters["time_range"] = time_range
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COUNT_DOCUMENTS_BY_AGREEMENT,
+                parameters=parameters,
+                confidence=0.92,
+            )
+        )
+
+    if re.search(
+        r"(?i)\b(how many|count).*(auto[_\s-]?approv\w*|human\s+review|amendment)\b",
+        q,
+    ) or re.search(
+        r"(?i)\b(documents?\s+(were\s+)?(auto[_\s-]?approv\w*|went\s+to\s+human\s+review))\b",
+        q,
+    ):
+        decision = _decision_from_text(q)
+        if decision is not None:
+            parameters = {"decision": decision}
+            time_range = _resolve_time_range(q, scoped)
+            if time_range is not None:
+                parameters["time_range"] = time_range
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.COUNT_DOCUMENTS_BY_DECISION,
+                    parameters=parameters,
+                    confidence=0.9,
+                )
+            )
+
     if re.search(r"(?i)\b(summarize|summary)\b.*\b(run|verification)\b", q) or (
         "summarize_run" in lower
     ):
@@ -193,10 +324,8 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
         q,
     ) or re.search(r"(?i)(shipments?\s+(waiting|in|flagged)|flagged\s+(this\s+)?week)", q):
         decision = _decision_from_text(q) or "HUMAN_REVIEW"
-        parameters: dict[str, Any] = {"decision": decision}
-        time_range = _time_range_from_text(q)
-        if time_range is None and isinstance(scoped.time_range, dict):
-            time_range = dict(scoped.time_range)
+        parameters = {"decision": decision}
+        time_range = _resolve_time_range(q, scoped)
         if time_range is not None:
             parameters["time_range"] = time_range
         return ClassificationOutcome(
@@ -310,9 +439,14 @@ _SYSTEM_PROMPT = """You classify Nova operator questions into exactly one allow-
 Return JSON only: {"name": "<intent>", "parameters": {...}, "confidence": 0.0-1.0}
 Allowed name values:
 get_shipment, get_document, get_document_validation, get_document_decision,
-list_shipments_by_decision, list_documents_for_shipment, summarize_run
+list_shipments_by_decision, list_documents_for_shipment, summarize_run,
+count_documents_by_agreement, list_documents_by_agreement,
+count_documents_requiring_attention, count_documents_by_decision,
+count_documents_with_mismatches
 If none apply, return {"name":"unsupported","parameters":{},"confidence":0.0}
-Never invent SQL. Never invent entity IDs. Use only IDs present in the user message or scope."""
+Never invent SQL. Never invent entity IDs. Use only IDs present in the user message or scope.
+Agreement values: STRONG_AGREEMENT, PARTIAL_AGREEMENT, WEAK_AGREEMENT.
+Decision values: AUTO_APPROVE, HUMAN_REVIEW, AMENDMENT_REQUEST."""
 
 
 def classify_with_llm(
@@ -396,6 +530,8 @@ def classify_with_llm(
             "decision",
             "validation_id",
             "decision_id",
+            "agreement",
+            "time_range",
         }:
             continue
         if isinstance(value, str) and _SQL_INJECTION.search(value):
@@ -407,7 +543,12 @@ def classify_with_llm(
 
     # Prefer explicit request scope over model-invented IDs when scope is set.
     merged = _merge_scope(request.scope)
-    merged.update({k: str(v) for k, v in cleaned.items() if v is not None})
+    merged.update({k: str(v) for k, v in cleaned.items() if v is not None and k != "time_range"})
+    if "time_range" in cleaned and isinstance(cleaned["time_range"], dict):
+        merged["time_range"] = cleaned["time_range"]
+    elif _resolve_time_range(request.question, request.scope) is not None:
+        merged["time_range"] = _resolve_time_range(request.question, request.scope)
+
     if intent_name == QueryIntentName.LIST_SHIPMENTS_BY_DECISION:
         decision = cleaned.get("decision") or _decision_from_text(request.question)
         if decision not in _DECISION_VALUES:
@@ -416,6 +557,33 @@ def classify_with_llm(
                 "list_shipments_by_decision requires a known decision disposition.",
             )
         merged = {"decision": decision}
+        if "time_range" in cleaned and isinstance(cleaned["time_range"], dict):
+            merged["time_range"] = cleaned["time_range"]
+
+    if intent_name in {
+        QueryIntentName.COUNT_DOCUMENTS_BY_AGREEMENT,
+        QueryIntentName.LIST_DOCUMENTS_BY_AGREEMENT,
+    }:
+        agreement = cleaned.get("agreement") or _agreement_from_text(request.question)
+        if agreement not in _AGREEMENT_VALUES:
+            return _unsupported(
+                UnsupportedReasonCode.AMBIGUOUS_INTENT,
+                "agreement intents require STRONG_AGREEMENT, PARTIAL_AGREEMENT, or WEAK_AGREEMENT.",
+            )
+        merged = {"agreement": agreement}
+        if "time_range" in cleaned and isinstance(cleaned["time_range"], dict):
+            merged["time_range"] = cleaned["time_range"]
+
+    if intent_name == QueryIntentName.COUNT_DOCUMENTS_BY_DECISION:
+        decision = cleaned.get("decision") or _decision_from_text(request.question)
+        if decision not in _DECISION_VALUES:
+            return _unsupported(
+                UnsupportedReasonCode.AMBIGUOUS_INTENT,
+                "count_documents_by_decision requires a known decision disposition.",
+            )
+        merged = {"decision": decision}
+        if "time_range" in cleaned and isinstance(cleaned["time_range"], dict):
+            merged["time_range"] = cleaned["time_range"]
 
     return ClassificationOutcome(
         intent=InterpretedIntent(

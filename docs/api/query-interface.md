@@ -141,6 +141,11 @@ Every response must make these concepts separately visible (not collapsed into a
 | `list_shipments_by_decision` | Filter by `AUTO_APPROVE` \| `HUMAN_REVIEW` \| `AMENDMENT_REQUEST` |
 | `list_documents_for_shipment` | 1:N documents listing |
 | `summarize_run` | Summarize extraction/validation/decision for a `run_id` using stored fields only |
+| `count_documents_by_agreement` | Count documents by `STRONG_AGREEMENT` / `PARTIAL_AGREEMENT` / `WEAK_AGREEMENT` |
+| `list_documents_by_agreement` | List documents for an agreement category |
+| `count_documents_requiring_attention` | Count partial + weak agreement documents |
+| `count_documents_by_decision` | Count documents by router disposition |
+| `count_documents_with_mismatches` | Count documents whose validation aggregate is `MISMATCH` |
 
 Adding intents requires documentation + tests; the LLM may **classify** among this set, not invent new executable intents at runtime.
 

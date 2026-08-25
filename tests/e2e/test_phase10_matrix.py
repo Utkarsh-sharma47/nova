@@ -20,6 +20,7 @@ from nova.agents.validator.agent import ValidatorAgent
 from nova.api.app import create_app
 from nova.application.extraction import ExtractionApplicationService, build_default_llm
 from nova.application.pipeline import PipelineOrchestrator
+from nova.application.rules import customer_metadata_with_expected_fields
 from nova.application.validation_persistence import SqlValidationStore
 from nova.config import Settings
 from nova.contracts.common import FieldPresence, UncertaintyFlag
@@ -49,6 +50,7 @@ from nova.validation_store import FailingValidationStore
 from tests.documents.fixtures import make_corrupt_pdf
 from tests.e2e.conftest import (
     AUTH,
+    PHASE10_BOL_EXPECTED,
     bol_body,
     ingest,
     invoice_body,
@@ -159,6 +161,12 @@ def test_m01_valid_invoice(client: tuple[TestClient, UUID, Path]) -> None:
 def test_m02_valid_bol(client: tuple[TestClient, UUID, Path]) -> None:
     """2. Valid Bill of Lading → AUTO_APPROVE."""
     test_client, customer_id, _ = client
+    with session_scope() as session:
+        customer = session.get(Customer, customer_id)
+        assert customer is not None
+        customer.metadata_json = customer_metadata_with_expected_fields(PHASE10_BOL_EXPECTED)
+        session.add(customer)
+
     body = ingest(
         test_client,
         customer_id,

@@ -39,11 +39,15 @@ export function uploadDocument(
 export function listDocuments(params: {
   customerId: string
   limit?: number
+  agreement?: string
 }): Promise<DocumentListResponse> {
   const search = new URLSearchParams({
     customer_id: params.customerId,
     limit: String(params.limit ?? 20),
   })
+  if (params.agreement) {
+    search.set('agreement', params.agreement)
+  }
   return apiRequest<DocumentListResponse>(`/v1/documents?${search.toString()}`)
 }
 
