@@ -8,10 +8,10 @@ Maps requirements to architecture, contracts, planned implementation phase, test
 |--------|--------------|----------|--------------------|------|----------|
 | REQ-PROD-001–004 | `docs/product/*`, principles, system-architecture | — | 1 (docs) / 3–6 (runtime) | Doc review | Product + architecture docs |
 | REQ-EXT-001 | Ingestion port, API ingest | `POST /v1/documents`, ExtractionRequest | 3 | Integration + failure | `docs/api/contracts.md`, samples |
-| REQ-EXT-002 | Extractor agent | ExtractionResult / ExtractedField | 3 | Unit + golden | `docs/agents/extractor.md`, `src/nova/contracts/extraction.py` |
+| REQ-EXT-002 | Extractor agent | ExtractionResult / ExtractedField | 3 | Unit + golden | `docs/agents/extractor.md`, `src/nova/contracts/extraction.py`, assignment fields in `fields.py` |
 | REQ-EXT-003 | Confidence model | `confidence` on ExtractedField | 3 | Unit + eval | contracts + eval metrics |
-| REQ-EXT-004 | Evidence model | `Evidence[]` | 3 | Unit + review UX | contracts + UI checklist (Ph6) |
-| REQ-EXT-005 | Evaluation datasets | — | 5 | Eval harness | `docs/evaluation/datasets.md`, fixtures |
+| REQ-EXT-004 | Evidence model | `Evidence[]` | 3 | Unit + review UX | contracts + Document UI |
+| REQ-EXT-005 | Evaluation datasets | — | 5 | Eval harness | `fixtures/evaluation/extractor/`, `docs/evaluation/reports/extractor-eval-latest.json` |
 | REQ-EXT-006 | Failure isolation | StageError / ErrorResponse | 3–4 | Failure tests | `docs/testing/failure-testing.md` |
 | REQ-VAL-001 | Validator + CustomerRule | ValidationRequest/Result | 5 | Unit + fixtures | `src/nova/agents/validator/`, `fixtures/evaluation/validator/` |
 | REQ-VAL-002–004 | Validation outcomes | MATCH/MISMATCH/UNCERTAIN | 5 | Golden + eval | fixtures + `docs/evaluation/reports/` / `results/` |

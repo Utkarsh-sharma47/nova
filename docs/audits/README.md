@@ -3,6 +3,9 @@
 | Doc | Purpose |
 |-----|---------|
 | [AUDIT_TEMPLATE.md](./AUDIT_TEMPLATE.md) | Template |
+| [gocomet-final-rubric-audit.md](./gocomet-final-rubric-audit.md) | **GoComet assignment rubric** vs actual code (pre-fix FAIL audit) |
+| [gocomet-file-location-map.md](./gocomet-file-location-map.md) | Requirement → path → test → verify map |
+| [gocomet-compliance-delta.md](./gocomet-compliance-delta.md) | P0/P1 gap closure after `feature/final-gocomet-compliance` |
 | [final-part1-audit.md](./final-part1-audit.md) | **Phase 12** final Part 1 requirements + evidence matrix |
 | [final-release-checklist.md](./final-release-checklist.md) | Phase 12 release gate checklist |
 | [known-limitations.md](./known-limitations.md) | Honest Part 1 limitations / Part 2 boundary |

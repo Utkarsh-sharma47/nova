@@ -21,9 +21,11 @@ Honest inventory of what is complete, partial, engineering-limited, deferred, or
 | Item | Notes |
 |------|-------|
 | `REQ-SEC-004` malware scanning | MIME/size/path controls exist; antivirus/malware scanning is **not** implemented |
-| Live vendor LLM | `LLMPort` exists; default/runtime path is **MockLLM**. Non-mock providers fall back unless a real adapter is configured — optional for Part 1 demo |
-| Dedicated extractor golden eval harness | Extractor covered by unit/integration/security tests; validator/decision have full labeled harnesses. Extractor suite is narrower than validator/router eval packages |
-| `audit_events` table | Audit/event **contracts** exist; dedicated `audit_events` persistence table is not migrated (stage history uses agent/validation/decision tables) |
+| Live vendor LLM | `LLMPort` + optional OpenAI-compatible adapter; default is **MockLLM**. Without `LLM_API_KEY`, falls back to mock |
+| Images / vision | PNG/JPEG accepted; vision extraction requires live provider. Mock path returns MISSING (no fabrication) |
+| Scanned PDF OCR | Digital PDF text only; dedicated OCR adapter deferred |
+| Customer rule authoring UI | Default presence rules + request rules; no rich ruleset editor |
+| `audit_events` table | Audit/event **contracts** exist; dedicated `audit_events` persistence table is not migrated |
 
 ## 3. Engineering limitations
 
