@@ -36,8 +36,12 @@ Compose services for Part 1 now: **`api` + `db`**. No Kubernetes. No microservic
 
 See `.env.example`. Important variables:
 
+Compose builds the API `DATABASE_URL` from `POSTGRES_*` and always targets hostname `db` (avoids leaking a host `localhost` URL into the container). Host-run API should set `DATABASE_URL` to `localhost` explicitly.
+
 ```bash
-DATABASE_URL=postgresql+psycopg://nova:nova@db:5432/nova
+POSTGRES_USER=nova
+POSTGRES_PASSWORD=nova
+POSTGRES_DB=nova
 ENVIRONMENT=local
 LOG_LEVEL=INFO
 LLM_PROVIDER=mock

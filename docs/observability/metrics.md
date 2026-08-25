@@ -11,11 +11,11 @@
 | `nova_http_requests_total` | Counter | method, path, status | Request volume |
 | `nova_http_request_latency_seconds` | Histogram | method, path | Latency |
 | `nova_http_errors_total` | Counter | method, path, status | 5xx responses |
-| `nova_document_ingestion_total` | Counter | status | Ingestion count (wired when ingestion lands) |
-| `nova_document_processing_total` | Counter | stage, status | Processing attempts |
+| `nova_document_ingestion_total` | Counter | status | Ingestion count (helper ready; HTTP ingest later) |
+| `nova_document_processing_total` | Counter | stage, status | Processing attempts (wired in `DocumentProcessingService`) |
 | `nova_document_processing_failures_total` | Counter | stage, error_code | Processing failures |
 
-Path labels are normalized (`/health`, `/ready`, `/metrics`, `/api/*`) to avoid cardinality blow-ups.
+Path labels are normalized (`/health`, `/ready`, `/metrics`, `/v1/*`, `/api/*`) to avoid cardinality blow-ups.
 
 ## Non-goals (Part 1)
 

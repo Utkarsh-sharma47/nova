@@ -6,7 +6,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-nova_verify}"
-API_URL="${API_URL:-http://127.0.0.1:8000}"
+API_PORT="${API_PORT:-8000}"
+API_URL="${API_URL:-http://127.0.0.1:${API_PORT}}"
+export API_PORT
 
 cleanup() {
   docker compose down -v --remove-orphans >/dev/null 2>&1 || true

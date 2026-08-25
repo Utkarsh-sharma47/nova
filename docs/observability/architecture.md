@@ -20,7 +20,7 @@ Detail: [logging.md](./logging.md), [metrics.md](./metrics.md).
 
 Library: **`prometheus_client`** → `GET /metrics`.
 
-`nova_http_requests_total`, `nova_http_request_latency_seconds`, `nova_http_errors_total`, plus document ingestion/processing counters (ready for later wiring).
+`nova_http_requests_total`, `nova_http_request_latency_seconds`, `nova_http_errors_total`, plus document processing counters (wired through `nova.documents.observability`) and an ingestion counter helper for the future HTTP ingest path.
 
 ## Health
 

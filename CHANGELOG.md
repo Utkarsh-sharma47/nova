@@ -21,6 +21,8 @@ Format follows a simple Keep a Changelog style. Versions will be introduced when
   - Docker Compose (API + PostgreSQL), non-root Dockerfile, entrypoint migrations
   - Alembic bootstrap (`schema_meta`)
   - Structured JSON logging with request/trace IDs; Prometheus baseline metrics (`prometheus_client`)
+  - Document processing counters wired through `nova.documents.observability`
+  - Compose API `DATABASE_URL` forced to service host `db` (from `POSTGRES_*`)
   - CI: Ruff, MyPy, pytest, pip-audit, Docker build, migration validation, Dockerfile/secret checks
   - Ops tests + `scripts/verify-compose.sh`
 - Phase 2 technology architecture and domain contracts:

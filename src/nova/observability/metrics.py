@@ -40,21 +40,21 @@ HTTP_LATENCY = Histogram(
 
 DOCUMENT_INGESTION = Counter(
     "nova_document_ingestion_total",
-    "Documents accepted for ingestion (stub until ingestion is implemented)",
+    "Documents accepted for ingestion (wired when HTTP ingestion lands)",
     labelnames=("status",),
     registry=REGISTRY,
 )
 
 DOCUMENT_PROCESSING = Counter(
     "nova_document_processing_total",
-    "Document processing attempts (stub until pipeline is implemented)",
+    "Document processing attempts",
     labelnames=("stage", "status"),
     registry=REGISTRY,
 )
 
 DOCUMENT_PROCESSING_FAILURES = Counter(
     "nova_document_processing_failures_total",
-    "Document processing failures (stub until pipeline is implemented)",
+    "Document processing failures",
     labelnames=("stage", "error_code"),
     registry=REGISTRY,
 )
@@ -69,6 +69,16 @@ def observe_http_request(*, method: str, path: str, status: int, duration_second
         HTTP_ERRORS.labels(method=method, path=route, status=status_label).inc()
 
 
+def observe_document_ingestion(*, status: str) -> None:
+    DOCUMENT_INGESTION.labels(status=status).inc()
+
+
+def observe_document_processing(*, stage: str, status: str, error_code: str | None = None) -> None:
+    DOCUMENT_PROCESSING.labels(stage=stage, status=status).inc()
+    if error_code is not None:
+        DOCUMENT_PROCESSING_FAILURES.labels(stage=stage, error_code=error_code).inc()
+
+
 def render_metrics() -> tuple[bytes, str]:
     return generate_latest(REGISTRY), CONTENT_TYPE_LATEST
 
@@ -81,6 +91,8 @@ def _normalize_path(path: str) -> str:
         return "/health"
     if path.startswith("/ready"):
         return "/ready"
+    if path.startswith("/v1/"):
+        return "/v1/*"
     if path.startswith("/api/"):
         return "/api/*"
     return path.split("?")[0] or "/"

@@ -60,11 +60,11 @@ This builds, waits for `/health` and `/ready`, scrapes `/metrics`, restarts `api
 
 ## Invalid configuration
 
-Missing or empty `DATABASE_URL` prevents API startup (Settings validation / entrypoint). Example:
+Missing or empty `DATABASE_URL` prevents API startup (Settings validation / entrypoint). Compose always injects a `db`-hosted URL from `POSTGRES_*`; invalid host Settings are covered by `tests/ops/test_config.py`.
 
 ```bash
-DATABASE_URL= docker compose run --rm --no-deps api true
-# entrypoint exits non-zero when DATABASE_URL is empty
+# Entrypoint fails closed when DATABASE_URL is empty (no Compose injection)
+docker compose run --rm --no-deps -e DATABASE_URL= api true
 ```
 
 ## Related
