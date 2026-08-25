@@ -12,9 +12,9 @@
 | [error-model.md](./error-model.md) | Phase 2 |
 | [confidence-and-evidence.md](./confidence-and-evidence.md) | Phase 2 |
 | [lifecycle-and-idempotency.md](./lifecycle-and-idempotency.md) | Phase 2 |
+| [document-processing.md](./document-processing.md) | Phase 3 |
 | [part2-extension-points.md](./part2-extension-points.md) | Phase 1 |
 | [engineering-standards.md](./engineering-standards.md) | Phase 1 |
 
-Related: [ARCHITECTURE.md](../../ARCHITECTURE.md), [ADRs](../decisions/), [Agents](../agents/), [API](../api/), [Database](../database/).
-| [document-processing.md](./document-processing.md) | Phase 3 |
+Related: [ARCHITECTURE.md](../../ARCHITECTURE.md), [ADRs](../decisions/), [Agents](../agents/), [API](../api/), [Database](../database/), [Documents](../documents/).
 

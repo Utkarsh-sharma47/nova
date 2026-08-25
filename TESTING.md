@@ -6,60 +6,39 @@ Testing strategy for Nova.
 
 - Protect extraction, validation, and decision contracts.
 - Catch regressions in rule evaluation and agent behavior.
-- Verify operational foundation (config, health, migrations, Compose).
+- Protect document intake validation and processor adapters.
 - Support honest reporting of quality (see also [docs/evaluation/](docs/evaluation/)).
 
 ## Current status
 
-| Suite | Location | Default CI |
-|-------|----------|------------|
-| Contract/schema | `tests/contracts/` | Yes |
-| Ops unit/API | `tests/ops/` (`not ops` marker) | Yes |
-| Compose integration | `tests/ops/test_compose.py` (`ops` marker) | No (manual / `RUN_OPS_TESTS=1`) |
+| Suite | Location | Status |
+|-------|----------|--------|
+| Contract/schema | `tests/contracts/` | Phase 2 |
+| Document processing | `tests/documents/` | **Phase 3** |
 
 ```bash
 pip install -e ".[dev]"
-pytest -q -m "not ops"
+pytest -q
+pytest -q tests/documents
+python scripts/benchmark_document_processing.py
 ```
 
-Optional Compose tests:
+Tooling: **pytest** (+ pytest-asyncio reserved), **Ruff**, **MyPy** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
 
-```bash
-cp .env.example .env
-RUN_OPS_TESTS=1 pytest -q -m ops
-# or
-./scripts/verify-compose.sh
-```
-
-Tooling: **pytest**, **Ruff**, **MyPy**, **pip-audit** ([ADR-0002](docs/decisions/0002-backend-stack.md)).
-
-## What Compose verification covers
-
-| Behavior | Covered by |
-|----------|------------|
-| Container startup | `verify-compose.sh` / `test_compose.py` |
-| Database readiness | `/ready` after `db` healthy |
-| API health | `GET /health` |
-| API readiness | `GET /ready` (requires `schema_meta`) |
-| Migration execution | API entrypoint `alembic upgrade head` + CI migration job |
-| Restart behavior | `docker compose restart api` then re-check |
-| Invalid configuration | `tests/ops/test_config.py` (unit) |
-
-## What was / wasn't tested in default CI
-
-**Tested in CI:** Ruff, MyPy, unit/API ops tests, contract tests, secret scan, Dockerfile structure, `pip-audit`, Docker **image build**, Alembic upgrade against service Postgres.
-
-**Not run in default CI (impractical as always-on):** full `docker compose up` stack test (use `./scripts/verify-compose.sh` or `RUN_OPS_TESTS=1`). Documented and scripted, not gated on every PR unless enabled.
+Document processing coverage: [`docs/testing/document-processing.md`](docs/testing/document-processing.md).  
+Required future suites: [`docs/testing/contract-requirements.md`](docs/testing/contract-requirements.md).  
+Philosophy: [`docs/testing/philosophy.md`](docs/testing/philosophy.md).
 
 ## Test layers
 
 | Layer | Intent | Status |
 |-------|--------|--------|
-| Unit | Config, logging, pure helpers | **Phase 3 ops** |
-| API | Health/ready/metrics via TestClient | **Phase 3 ops** |
-| Contract | Agent/API schemas | **Phase 2** |
-| Compose/ops | Startup, ready, restart | Script + optional pytest |
-| Agent / E2E / Eval | Pipeline quality | Later phases |
+| Unit | Intake validation, adapters, security helpers | **Phase 3 documents** |
+| Contract | Stable schemas for agent I/O and processor results | **Phase 2 + Phase 3** |
+| Integration | Blob store ↔ processor | **Phase 3 documents** |
+| End-to-end | Document in → decision out | Later phases |
+| Evaluation | Accuracy on curated sets | Later phases |
+| Failure | Timeouts, provider errors | Later phases |
 
 ## Expectations for contributors
 
@@ -68,8 +47,12 @@ Tooling: **pytest**, **Ruff**, **MyPy**, **pip-audit** ([ADR-0002](docs/decision
 - Run relevant tests before claiming success.
 - Do not fabricate test results. If tests cannot run, say so.
 
+## Fixtures and data
+
+- Prefer synthetic or anonymized documents (`tests/documents/fixtures.py`).
+- Never commit real customer PII or production documents.
+
 ## Related documents
 
 - [docs/testing/](docs/testing/)
-- [docs/deployment/local.md](docs/deployment/local.md)
-- [DEVELOPMENT.md](DEVELOPMENT.md)
+- [docs/testing/document-processing.md](docs/testing/document-processing.md)
