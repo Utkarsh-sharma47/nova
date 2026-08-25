@@ -7,104 +7,107 @@
 | Diagram | [architecture-diagram.md](./architecture-diagram.md) |
 | PRD | [prd.md](./prd.md) |
 
+Quantitative claims are tagged **MEASURED**, **ESTIMATED**, or **PLANNED**. Live provider $ costs were **not measured** in this repository without a keyed production-like run.
+
 ---
 
-## Architecture & data flow
+## 1. Architecture
 
 ```text
-User → React UI → FastAPI → Ingestion → Document Storage
+User → React UI → FastAPI → Ingestion → Document Storage (FS)
                               ↓
                      DocumentProcessorPort (PDF / text / PNG / JPEG)
                               ↓
-                     Extractor (LLMPort: MockLLM | OpenAI-compatible vision/text)
-                              ↓
-                     Validator (deterministic rules + optional LLM)
-                              ↓
+                     Extractor ← LLMPort (MockLLM | OpenAI-compatible vision/text)
+                              ↓ ExtractionResult
+                     Validator ← Rule Engine (deterministic-first)
+                              ↓ ValidationResult
                      Router (policy + hard AUTO_APPROVE constraints)
-                              ↓
+                              ↓ DecisionResult
                      PostgreSQL (system of record + append-only AI history)
                               ↓
-                     Query Service (allow-listed intents) → UI / ops
+                     Query Service (allow-listed intents) → UI
 ```
 
-Observability: structured JSON logs with `request_id` / `trace_id` / `run_id` / `agent_execution_id`, plus `/health`, `/ready`, `/metrics`.
+Ports keep domain logic vendor-agnostic. Detail: [architecture-diagram.md](./architecture-diagram.md).
 
-State persistence: document lifecycle + verification run + append-only extractions, validations, decisions. Ingest is idempotent via `Idempotency-Key`.
+## 2. Agent boundaries
 
-Part 2 extension points (not implemented): email ingestion, multi-doc validation, approval actions, outbound communication — see `docs/architecture/part2-extension-points.md`.
+| Boundary | Rule |
+|----------|------|
+| Extractor | May call LLM/vision; may not decide disposition |
+| Validator | Deterministic MISMATCH cannot be upgraded by LLM to MATCH |
+| Router | Policy authoritative; advisory LLM cannot force `AUTO_APPROVE` |
+| Query | No SQL generation; security reject for injection |
+
+## 3. State and crash recovery
+
+- Lifecycle: document + verification run statuses in PostgreSQL
+- Append-only: extracted fields, validations, decisions
+- Idempotent ingest: `Idempotency-Key` fingerprint replay
+- Restart: durable IDs; no invented prior agent results
+- Failures: structured `FAILED` / fail-closed `HUMAN_REVIEW`, not silent approve
+
+## 4. Failure mode #1 — hallucinated KNOWN fields
+
+**Risk:** invent HS code / ports.
+**Mitigation:** Pydantic invariants (`KNOWN` ⇒ value + evidence); MockLLM heuristic never invents; fabricated snippets downgraded; extractor eval `fabrication_count = 0` (**MEASURED** offline).
+
+## 5. Failure mode #2 — silent AUTO_APPROVE under uncertainty
+
+**Risk:** missing/uncertain still approves.
+**Mitigation:** router safety constraints + contract forbids; decision eval `false_auto_approve_count = 0` (**MEASURED** offline, n=22).
+
+## 6. Failure mode #3 — image/vision without readable text
+
+**Risk:** empty OCR → fake values.
+**Mitigation:** `RasterImageAdapter` accepts PNG/JPEG; without live credentials MockLLM returns `MISSING` (not invented) (**MEASURED** in unit tests); live vision optional via OpenAI-compatible adapter (**ESTIMATED** quality when enabled).
+
+## 7. Observability
+
+Structured JSON logs with `request_id` / `trace_id` / `run_id` / `agent_execution_id`. Endpoints: `/health`, `/ready`, `/metrics`. UI ops summary uses live API counts. Shipment↔document links provide end-to-end traceability in the UI.
+
+**Dashboard metrics available now:** pipeline status counts, decision mix via ops/query, Prometheus HTTP metrics. **PLANNED:** dedicated SRE cost/latency SLO dashboard with live $ burn.
+
+## 8. Cost
+
+| Item | Classification | Notes |
+|------|----------------|-------|
+| MockLLM CI/demo | **MEASURED** | ~$0 API spend; synthetic tokens only |
+| Live OpenAI-compatible | **NOT MEASURED** here | Requires `LLM_API_KEY`; do not invent $ figures |
+| Live cost drivers (**ESTIMATED** if enabled) | Input tokens (text + image tiles), output tokens, retries, vision pages |
+| Cost controls | Mock default; truncate prompt text; max 2 extractor retries; fail closed; deterministic validator first |
+
+## 9. Latency
+
+| Item | Classification | Notes |
+|------|----------------|-------|
+| Bottleneck under MockLLM | **ESTIMATED** local | CPU + Postgres I/O dominate |
+| Bottleneck under live LLM | **ESTIMATED** | Extractor LLM round-trips dominate |
+| Optimization | Bound retries/timeouts; keep MockLLM in CI; vision only when needed; prefer deterministic validation |
+
+Helper: `scripts/benchmark_pipeline.py` (MockLLM local). Treat outputs as **MEASURED local/test**, not production SLOs.
+
+## 10. One-week vs one-day tradeoff
+
+**One day:** fail-closed pipeline, assignment fields, image accept + MockLLM safety, document preview, submission docs, eval gates FA=0 / fabrication=0.
+**One week:** richer customer-rule authoring UX, broader extractor goldens (scanned PDF/OCR), live cost dashboards, time-bounded ops SLOs, remote deploy evidence, CG shadow-mode vs human decisions (**PLANNED**).
 
 ---
 
-## Three nastiest failure modes (and how Nova handles them)
-
-1. **Hallucinated “KNOWN” fields**  
-   Risk: model invents HS code / ports.  
-   Mitigation: schema invariants (KNOWN ⇒ evidence); heuristic MockLLM never invents; normalization downgrades fabricated snippets; extractor eval fabrication gate = 0.
-
-2. **Silent AUTO_APPROVE under uncertainty**  
-   Risk: missing/uncertain validation still approves.  
-   Mitigation: router safety constraints + contract-level forbids; decision eval `false_auto_approve_count = 0`.
-
-3. **Vision/image documents without readable text**  
-   Risk: empty OCR → fake values.  
-   Mitigation: images accepted via `RasterImageAdapter`; without live vision credentials MockLLM returns MISSING (not invented); live OpenAI adapter may read images when configured.
-
----
-
-## Testing evidence (run locally)
+## Testing evidence (**MEASURED** this audit run)
 
 ```bash
-ruff check src tests && mypy && pytest -q
-cd frontend && npm ci && npm test && npm run typecheck && npm run build
+ruff check src tests && mypy src && pytest -q
+cd frontend && npm test && npm run typecheck && npm run build
 PYTHONPATH=src python scripts/run_full_evaluation.py
-docker compose up --build
+docker compose build
 ```
 
-Authoritative gates in `scripts/run_full_evaluation.py`:
+Gates from `scripts/run_full_evaluation.py`:
 
 - Decision: `false_auto_approve_count = 0`
 - Extractor: `fabrication_count = 0`
 - Validator: `unsafe_match_count = 0`
 
 Reports: `docs/evaluation/reports/*-latest.json`.
-
----
-
-## Observability & shipment traceability
-
-Every stage carries shipment/document/run/trace IDs. UI links document ↔ shipment. Ops summary shows pipeline counts from the API (no fake demo state). Prometheus metrics at `/metrics`.
-
----
-
-## Cost / document & latency bottleneck
-
-| Mode | Cost / document | Latency bottleneck |
-|------|-----------------|--------------------|
-| MockLLM (default CI/demo) | ~$0 (synthetic tokens) | Local CPU + Postgres I/O |
-| Live OpenAI-compatible | Provider tokens × pages/images | **LLM round-trips** (extractor dominant) |
-
-Optimization strategy: keep MockLLM for CI; use live vision only when needed; truncate document text in prompts; bounded retries (max 2); fail closed instead of long retry storms; prefer deterministic validator over LLM judgment.
-
-Benchmark helper: `scripts/benchmark_pipeline.py` (MockLLM). Live $ numbers require `LLM_PROVIDER=openai` + `LLM_API_KEY` and should be recorded during pilot week — not fabricated here.
-
----
-
-## What would change with one week instead of one day
-
-With **one day**: ship fail-closed pipeline, assignment fields, image accept + MockLLM safety, document preview UI, submission PRD/write-up, eval gates.
-
-With **one week**: customer-specific rules authoring UX, richer extractor golden set (scanned PDFs/OCR), live cost dashboards, time-bounded ops SLOs, production remote deploy evidence, deeper CG shadow-mode comparison vs human decisions.
-
----
-
-## Assignment coverage snapshot
-
-| Deliverable | Status |
-|-------------|--------|
-| D1 PRD (this folder) | Present |
-| D2A Extractor fields + images/vision path | Implemented (live vision optional) |
-| D2B Validator | Implemented |
-| D2C Router | Implemented |
-| D2D Storage + grounded query (+ week window) | Implemented |
-| D2E UI with real document + backend state | Implemented |
-| D3 Technical write-up + diagram | Present |

@@ -2,13 +2,16 @@
 
 High-level architecture for Nova (Part 1 implemented).
 
+**GoComet submission Mermaid diagram (authoritative):** [`docs/submission/architecture-diagram.md`](docs/submission/architecture-diagram.md).
+**Final GoComet audit:** [`docs/audits/final-gocomet-submission-audit.md`](docs/audits/final-gocomet-submission-audit.md).
+
 ## Purpose
 
 Nova validates trade shipping documents with a multi-agent AI pipeline. Documents (for example Bill of Lading, invoice) are ingested, key fields are extracted, customer rules are applied, and the system produces a decision: auto-approve, human review, or request corrections.
 
 ## Current status
 
-**Phase 12 final Part 1 release** (audit: [`docs/audits/final-part1-audit.md`](docs/audits/final-part1-audit.md)):
+**GoComet Part 1 submission readiness** (audit: [`docs/audits/final-gocomet-submission-audit.md`](docs/audits/final-gocomet-submission-audit.md); internal Phase 12: [`docs/audits/final-part1-audit.md`](docs/audits/final-part1-audit.md)):
 
 - Ingestion → `PipelineOrchestrator` → Extractor → Validator → Router → persistence
 - Grounded `POST /v1/query` (allow-listed intents; **no LLM SQL**)

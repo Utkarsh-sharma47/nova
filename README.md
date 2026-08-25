@@ -4,11 +4,11 @@ Operational multi-agent AI for **trade/shipping document verification**.
 
 ## Problem
 
-Manual shipper ↔ control-group email loops are slow and error-prone. Blind automation is unsafe when documents are incomplete, ambiguous, or adversarial.
+Manual shipper ↔ control-group loops are slow and error-prone. Blind automation is unsafe when documents are incomplete, ambiguous, or adversarial.
 
 ## Solution
 
-A fail-closed Part 1 pipeline that extracts fields with evidence, validates customer rules, and routes each case to **AUTO_APPROVE**, **HUMAN_REVIEW**, or **AMENDMENT_REQUEST** — never inventing missing values and never silently approving uncertainty.
+Fail-closed Part 1 pipeline: extract fields with evidence → validate customer rules → route to **AUTO_APPROVE** / **HUMAN_REVIEW** / **AMENDMENT_REQUEST**. Never invent missing values; never silently approve uncertainty.
 
 ## Core workflow
 
@@ -27,63 +27,47 @@ flowchart LR
   Q --> DB
 ```
 
-Detailed diagram: [docs/submission/architecture-diagram.md](./docs/submission/architecture-diagram.md).
+Detailed diagram: [docs/submission/architecture-diagram.md](./docs/submission/architecture-diagram.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ## Three agents
 
 | Agent | Responsibility |
 |-------|----------------|
 | Extractor | Assignment fields + confidence + presence + evidence |
-| Validator | MATCH / MISMATCH / UNCERTAIN with expected vs found |
-| Router | Exactly one disposition under hard safety constraints |
+| Validator | MATCH / MISMATCH / UNCERTAIN (expected vs found) |
+| Router | One disposition under hard safety constraints |
 
 ## Technology stack
 
 Python 3.12 · FastAPI · Pydantic · SQLAlchemy/Alembic · PostgreSQL 16 · React/Vite · Docker Compose · `LLMPort` (MockLLM default; optional OpenAI-compatible vision/text)
 
-## POC capabilities
+## Run with Docker
 
-- PDF, plain text, PNG, JPEG ingest
-- Eight GoComet assignment fields on invoice/BoL extractions
-- Real document preview in UI from stored blobs
-- Grounded NL query (including “flagged this week”)
-- Offline evals with false AUTO_APPROVE = 0 and fabrication = 0
+```bash
+cp .env.example .env   # set API_AUTH_TOKEN + POSTGRES_PASSWORD
+docker compose up --build
+# API http://localhost:8000  UI http://localhost:8080
+curl http://localhost:8000/health && curl http://localhost:8000/ready
+```
 
-## Security / trust
+Optional live LLM: `LLM_PROVIDER=openai`, `LLM_API_KEY`, vision-capable `LLM_MODEL` (e.g. `gpt-4o-mini`). Without credentials, MockLLM keeps CI/demo deterministic.
 
-API key auth · MIME sniffing · path/size limits · no arbitrary SQL · anti-fabrication extraction · fail-closed routing · secrets via `.env` only
+## Run tests
 
-## Evaluation
+```bash
+ruff check src tests && mypy src && pytest -q
+cd frontend && npm ci && npm test && npm run typecheck && npm run build
+```
+
+## Run evaluation
 
 ```bash
 PYTHONPATH=src python scripts/run_full_evaluation.py
 ```
 
-## UI
+## Demo / UI
 
-Minimal ops UI: dashboard, upload, document (preview + fields + validation + decision), shipment, query. Data from live API — no hardcoded business results.
-
-## Run locally
-
-```bash
-cp .env.example .env   # set API_AUTH_TOKEN + DB password
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-# requires local Postgres + alembic upgrade head for non-Docker API
-```
-
-## Run with Docker
-
-```bash
-docker compose up --build
-# API http://localhost:8000  UI http://localhost:8080
-```
-
-Optional live LLM: set `LLM_PROVIDER=openai`, `LLM_API_KEY`, and a vision-capable `LLM_MODEL` (e.g. `gpt-4o-mini`). Without credentials, MockLLM keeps CI/demo deterministic.
-
-## Demo
-
-[docs/operations/demo-runbook.md](./docs/operations/demo-runbook.md)
+[docs/operations/demo-runbook.md](./docs/operations/demo-runbook.md) — upload `fixtures/demo/synthetic_invoice_clean.txt`, open document page for preview + fields + validation + decision.
 
 ## Assignment deliverables
 
@@ -92,17 +76,20 @@ Optional live LLM: set `LLM_PROVIDER=openai`, `LLM_API_KEY`, and a vision-capabl
 | PRD | [docs/submission/prd.md](./docs/submission/prd.md) |
 | Technical write-up | [docs/submission/technical-writeup.md](./docs/submission/technical-writeup.md) |
 | Architecture diagram | [docs/submission/architecture-diagram.md](./docs/submission/architecture-diagram.md) |
+| Traceability / audit map | [docs/audits/final-gocomet-file-location-map.md](./docs/audits/final-gocomet-file-location-map.md) |
+| Final compliance audit | [docs/audits/final-gocomet-submission-audit.md](./docs/audits/final-gocomet-submission-audit.md) |
 
 ## Known limitations
 
-- Live vision quality depends on provider credentials (absent → MISSING fields, not invented values)
-- Scanned-PDF OCR not a separate adapter (image/vision path covers PNG/JPEG; digital PDF text only)
-- Remote production deploy evidence not executed
-- See [docs/audits/known-limitations.md](./docs/audits/known-limitations.md)
+- Live vision cost/latency **not measured** without API keys (absent → MISSING fields, not invented)
+- Scanned-PDF OCR adapter deferred (PNG/JPEG vision path covers image MUST)
+- Customer rule authoring UI thin (defaults + request rules)
+- Remote production deploy **NOT EXECUTED**
+- Detail: [docs/audits/known-limitations.md](./docs/audits/known-limitations.md)
 
-## Part 2 roadmap
+## Part 2 (intentionally not implemented)
 
-Email/file triggers, multi-doc + cross-doc validation, human approval actions, draft replies, outbound send — **PLANNED, NOT IMPLEMENTED**. Extension points: [docs/architecture/part2-extension-points.md](./docs/architecture/part2-extension-points.md).
+Email/file triggers, multi-doc + cross-doc validation, human approval actions, draft replies, outbound send — [docs/architecture/part2-extension-points.md](./docs/architecture/part2-extension-points.md).
 
 ## License
 
