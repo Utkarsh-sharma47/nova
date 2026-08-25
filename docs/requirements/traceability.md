@@ -65,7 +65,7 @@ All 68 inventory requirements retain a design/contract/test pointer above. Runti
 | REQ-TEST-001,003–004 | Unit/API/integration plus retained contract suite | `tests/` | `ruff check src tests`, `mypy`, `pytest -q` |
 | REQ-DEPLOY-003–004 | Non-root image, bounded DB wait, Compose, CI PostgreSQL | clean/repeated migration validation and Docker build | `Dockerfile`, `scripts/entrypoint.sh`, `docker-compose.yml`, CI workflow |
 | REQ-DOC-001–003 | Phase 3 feature, API, architecture, ops docs | docs structure check | Repository documentation listed in this row |
-| REQ-SEC-001–004 | Env-only auth, safe logs, upload controls/storage confinement | unit/API security assertions | No committed secret; path traversal/type/size/auth tests |
+| REQ-SEC-001–004 | Env-only auth, safe logs, upload controls/storage confinement, Dockerfile structural CI | unit/API security assertions + `scripts/check-dockerfile.sh` | No committed secret; path traversal/type/size/auth tests; non-root image checks |
 
 Not claimed in Phase 3: REQ-EXT-002–005 and REQ-AI-001–006 runtime agent
 behavior. Frozen Phase 2 contracts remain available, but no Extractor,

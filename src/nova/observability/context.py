@@ -23,3 +23,8 @@ def get_request_id() -> str | None:
 
 def get_trace_id() -> str | None:
     return _trace_id.get()
+
+
+def clear_ids() -> None:
+    _request_id.set(None)
+    _trace_id.set(None)

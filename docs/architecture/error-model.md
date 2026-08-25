@@ -1,13 +1,18 @@
 # Error model
 
-Consistent application errors. Runtime shape: `nova.contracts.errors.ErrorResponse`. API mapping also in [`docs/api/error-model.md`](../api/error-model.md).
+Consistent application errors.
+
+- **Typed contract:** `nova.contracts.errors.ErrorResponse` (`error_type`, `error_code`, `message`, `details`, `trace_id`, `request_id`, `retryable`).
+- **HTTP envelope:** nested `{ "error": { "code", "message", … } }` per [`docs/api/error-model.md`](../api/error-model.md). The API edge maps `error_code` → `code` and always includes correlation IDs.
+
+These two shapes are intentional: agents and internal stages speak `ErrorResponse`; public HTTP clients consume the stable envelope.
 
 ## Principles
 
-- Machine-readable `error_code`
+- Machine-readable `error_code` / HTTP `code`
 - Safe human `message` (no secrets, no raw provider payloads)
 - Optional redacted `details`
-- `trace_id` when available
+- `trace_id` and `request_id` when available
 - Explicit `retryable`
 - HTTP mapping at API edge only
 

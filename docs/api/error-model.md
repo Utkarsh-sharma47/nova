@@ -15,6 +15,7 @@ Every non-2xx JSON error response uses:
       "document_id": "doc_01HZX…"
     },
     "trace_id": "01J9TRACEEXAMPLE0000000000",
+    "request_id": "01J9REQUESTEXAMPLE00000000",
     "retryable": false
   }
 }
@@ -22,11 +23,17 @@ Every non-2xx JSON error response uses:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `code` | string | yes | Stable machine-readable code (`SCREAMING_SNAKE_CASE`) |
+| `code` | string | yes | Stable machine-readable code (`SCREAMING_SNAKE_CASE`); maps from `ErrorResponse.error_code` |
 | `message` | string | yes | Safe, human-readable summary (no secrets, no stack traces) |
 | `details` | object | no | Structured context (IDs, field names, constraint hints). Never include raw document bodies, credentials, or provider keys |
 | `trace_id` | string | yes | Correlation ID for logs/traces (`REQ-OBS-001`, `REQ-OBS-002`) |
+| `request_id` | string | yes | Per-request correlation ID (`REQ-OBS-001`) |
 | `retryable` | boolean | yes | Whether a well-behaved client may retry the **same** request |
+
+HTTP uses a nested `{ "error": … }` envelope. Typed application errors use
+`nova.contracts.errors.ErrorResponse` (`error_type`, `error_code`, …). The API
+edge maps contract fields into this envelope (`error_code` → `code`) and never
+returns stack traces or internal exception types.
 
 `Content-Type: application/json` for error bodies unless the client requested an unsupported media type before negotiation failed.
 

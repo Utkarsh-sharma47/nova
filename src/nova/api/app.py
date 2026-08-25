@@ -28,10 +28,14 @@ def _error_body(
     retryable: bool,
     details: object | None = None,
 ) -> dict[str, object]:
+    # HTTP envelope shape is defined by docs/api/error-model.md.
+    # Field semantics map to nova.contracts.errors.ErrorResponse
+    # (error_code→code; trace_id/request_id/retryable/details preserved).
     error: dict[str, object] = {
         "code": code,
         "message": message,
         "trace_id": str(getattr(request.state, "trace_id", "unavailable")),
+        "request_id": str(getattr(request.state, "request_id", "unavailable")),
         "retryable": retryable,
     }
     if details:

@@ -11,12 +11,15 @@ Testing strategy for Nova.
 ## Current status
 
 Phase 3 includes contract, lifecycle, processor/storage, API, security/failure,
-and PostgreSQL migration tests. No LLM or agent behavior is tested because those
-agents are outside this phase.
+ops observability, and PostgreSQL migration tests. No LLM or agent behavior is
+tested because those agents are outside this phase.
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
+./scripts/check-dockerfile.sh
+./scripts/check-docs-structure.sh
+./scripts/check-secret-patterns.sh
 ```
 
 The default suite skips PostgreSQL migration verification unless
@@ -26,6 +29,12 @@ The default suite skips PostgreSQL migration verification unless
 export TEST_DATABASE_URL=postgresql+psycopg://nova:nova@localhost:5432/nova_test
 export DATABASE_URL="$TEST_DATABASE_URL"
 pytest -q
+```
+
+Optional end-to-end Compose verification (requires Docker; tears down the project on exit):
+
+```bash
+./scripts/verify-compose.sh
 ```
 
 The migration test downgrades that database to base and upgrades it twice.

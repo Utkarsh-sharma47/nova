@@ -39,7 +39,6 @@ def ready(request: Request) -> JSONResponse:
     }
     if database and storage:
         return JSONResponse({"status": "ready", "checks": checks})
-    trace_id = str(request.state.trace_id)
     return JSONResponse(
         status_code=503,
         content={
@@ -49,7 +48,8 @@ def ready(request: Request) -> JSONResponse:
                 "code": "DEPENDENCY_UNAVAILABLE",
                 "message": "One or more required dependencies are unavailable.",
                 "details": {"checks": [name for name, value in checks.items() if value == "fail"]},
-                "trace_id": trace_id,
+                "trace_id": str(getattr(request.state, "trace_id", "unavailable")),
+                "request_id": str(getattr(request.state, "request_id", "unavailable")),
                 "retryable": True,
             },
         },

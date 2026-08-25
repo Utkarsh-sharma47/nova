@@ -1,4 +1,11 @@
-"""Structured JSON logs with secret redaction."""
+"""Structured JSON logs with secret redaction.
+
+Stable log schema fields:
+  timestamp, level, service, environment, trace_id, request_id,
+  event, message, duration_ms, status, path, method, http_status, error_type
+
+Never log secrets, API keys, Authorization headers, or document contents.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +17,24 @@ from typing import Any
 
 from nova.observability.context import get_request_id, get_trace_id
 
-_SECRET_FRAGMENTS = ("authorization", "api_key", "password", "secret", "token", "cookie")
+_SECRET_KEYS = frozenset(
+    {
+        "authorization",
+        "api_key",
+        "apikey",
+        "password",
+        "secret",
+        "token",
+        "llm_api_key",
+        "database_url",
+        "cookie",
+        "set-cookie",
+        "content",
+        "blob",
+        "document_bytes",
+        "body",
+    }
+)
 _STANDARD_FIELDS = (
     "duration_ms",
     "status",
@@ -18,12 +42,18 @@ _STANDARD_FIELDS = (
     "method",
     "http_status",
     "error_code",
+    "error_type",
 )
 
 
 def _redact(key: str, value: Any) -> Any:
     normalized = key.lower().replace("-", "_")
-    if any(fragment in normalized for fragment in _SECRET_FRAGMENTS):
+    if (
+        normalized in _SECRET_KEYS
+        or normalized.endswith("_key")
+        or normalized.endswith("_token")
+        or any(fragment in normalized for fragment in ("password", "secret", "authorization"))
+    ):
         return "[REDACTED]"
     return value
 
@@ -48,9 +78,9 @@ class JsonFormatter(logging.Formatter):
         for field in _STANDARD_FIELDS:
             if hasattr(record, field):
                 payload[field] = getattr(record, field)
-        extras = getattr(record, "extra_fields", {})
+        extras = getattr(record, "extra_fields", None)
         if isinstance(extras, dict):
-            payload.update({_key: _redact(_key, value) for _key, value in extras.items()})
+            payload.update({str(key): _redact(str(key), value) for key, value in extras.items()})
         if record.exc_info and record.exc_info[0]:
             payload["error_type"] = record.exc_info[0].__name__
             payload["exception_present"] = True
@@ -64,3 +94,7 @@ def configure_logging(service: str, environment: str, level: str) -> None:
     root.handlers.clear()
     root.addHandler(handler)
     root.setLevel(level)
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        logger = logging.getLogger(name)
+        logger.handlers.clear()
+        logger.propagate = True

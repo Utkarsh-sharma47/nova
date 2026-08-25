@@ -15,3 +15,9 @@ The API image runs as UID/GID 10001. Its entrypoint waits for PostgreSQL, runs
 `alembic upgrade head`, then starts uvicorn. PostgreSQL and document files use
 separate named volumes. Changing a migration already applied to a persistent
 volume is unsupported; create a forward migration instead.
+
+Automated smoke (build, health, ready, metrics, ingest, restart recovery):
+
+```bash
+./scripts/verify-compose.sh
+```
