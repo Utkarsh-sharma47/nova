@@ -93,6 +93,7 @@ export interface DocumentDetail {
     size_bytes: number
     content_sha256?: string
     download_url?: string | null
+    filename?: string | null
   }
   extraction?: ExtractionSummary | null
   failures?: Array<{ code?: string; message?: string; stage?: string }>

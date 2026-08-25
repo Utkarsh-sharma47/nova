@@ -147,6 +147,9 @@ class IngestionService:
             ".pdf": "application/pdf",
             ".txt": "text/plain",
             ".text": "text/plain",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
         }.get(Path(filename).suffix.lower(), "application/octet-stream")
         return blob, filename, media_type
 
@@ -354,7 +357,8 @@ class IngestionService:
                 "media_type": version.media_type if version else None,
                 "size_bytes": version.byte_size if version else None,
                 "content_sha256": version.content_sha256 if version else None,
-                "download_url": None,
+                "download_url": f"/v1/documents/{document.document_id}/content",
+                "filename": version.original_filename if version else None,
             },
             "extraction": extraction_summary,
             "links": {
@@ -364,6 +368,24 @@ class IngestionService:
             },
             "trace_id": trace_id,
         }
+
+    def get_document_content(self, document_id: UUID) -> tuple[bytes, str, str | None]:
+        """Return (blob, media_type, filename) for authenticated document preview/download."""
+        document = self.repository.document(document_id)
+        if document is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        version = next(
+            (
+                item
+                for item in document.versions
+                if item.document_version_id == document.current_version_id
+            ),
+            None,
+        )
+        if version is None:
+            raise DocumentNotFound(details={"document_id": str(document_id)})
+        blob = self._read_blob(version.storage_uri)
+        return blob, version.media_type, version.original_filename
 
     def get_shipment(self, shipment_id: UUID, trace_id: str) -> dict[str, Any]:
         shipment = self.repository.shipment(shipment_id)
@@ -636,6 +658,12 @@ class IngestionService:
                 response_json=response,
             )
         )
+
+    def _read_blob(self, storage_uri: str) -> bytes:
+        if storage_uri.startswith("file://"):
+            path = Path(storage_uri.removeprefix("file://"))
+            return path.read_bytes()
+        raise ValueError("unsupported storage URI scheme")
 
     def _cleanup_storage(self, storage_uri: str | None, document_id: UUID) -> None:
         if storage_uri is None:

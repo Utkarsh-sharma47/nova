@@ -8,6 +8,7 @@ import {
 } from '../api'
 import type { DecisionResult, ValidationResult } from '../api/types'
 import { DecisionPanel } from '../components/DecisionPanel'
+import { DocumentPreview } from '../components/DocumentPreview'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorPanel } from '../components/ErrorPanel'
 import { FieldTable } from '../components/FieldTable'
@@ -158,6 +159,13 @@ export function DocumentPage() {
           ) : null}
         </dl>
       </section>
+
+      <DocumentPreview
+        documentId={doc.document_id}
+        mediaType={doc.content?.media_type}
+        filename={doc.content?.filename}
+        sizeBytes={doc.content?.size_bytes}
+      />
 
       {doc.status === 'FAILED' && doc.failures?.length ? (
         <section className="panel panel--danger">

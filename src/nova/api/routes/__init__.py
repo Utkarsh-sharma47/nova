@@ -155,6 +155,23 @@ def get_document(
     return service.get_document(document_id, str(request.state.trace_id))
 
 
+@router.get("/v1/documents/{document_id}/content", tags=["documents"])
+def get_document_content(
+    document_id: UUID,
+    _principal: Annotated[str, Depends(authenticate)],
+    service: Annotated[IngestionService, Depends(ingestion_service)],
+) -> Response:
+    blob, media_type, filename = service.get_document_content(document_id)
+    headers: dict[str, str] = {
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+    }
+    if filename:
+        safe_name = filename.replace('"', "")
+        headers["Content-Disposition"] = f'inline; filename="{safe_name}"'
+    return Response(content=blob, media_type=media_type, headers=headers)
+
+
 @router.get("/v1/documents/{document_id}/validation", tags=["documents"])
 def get_document_validation(
     document_id: UUID,

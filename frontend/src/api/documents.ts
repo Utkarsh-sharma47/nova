@@ -1,4 +1,5 @@
-import { apiRequest } from './client'
+import { apiRequest, getApiBaseUrl } from './client'
+import { getRuntimeAuthToken } from '../runtime-config'
 import type {
   DocumentDetail,
   DocumentListResponse,
@@ -64,4 +65,26 @@ export function getDocumentDecision(
   documentId: string,
 ): Promise<DecisionResult> {
   return apiRequest<DecisionResult>(`/v1/documents/${documentId}/decision`)
+}
+
+export async function fetchDocumentContentBlob(
+  documentId: string,
+): Promise<{ blob: Blob; mediaType: string }> {
+  const base = getApiBaseUrl()
+  const url = `${base}/v1/documents/${documentId}/content`
+  const token = getRuntimeAuthToken()
+  const headers: Record<string, string> = { Accept: '*/*' }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+    headers['X-API-Key'] = token
+  }
+  const response = await fetch(url, { headers })
+  if (!response.ok) {
+    throw new Error(`Failed to load document content (${response.status})`)
+  }
+  const mediaType =
+    response.headers.get('content-type')?.split(';')[0]?.trim() ||
+    'application/octet-stream'
+  const blob = await response.blob()
+  return { blob, mediaType }
 }

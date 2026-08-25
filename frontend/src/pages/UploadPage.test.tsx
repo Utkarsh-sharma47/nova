@@ -109,7 +109,7 @@ describe('UploadPage', () => {
     fireEvent.change(fileInput, { target: { files: [file] } })
     await user.click(screen.getByRole('button', { name: /upload/i }))
 
-    expect(screen.getByText(/only application\/pdf and text\/plain/i)).toBeInTheDocument()
+    expect(screen.getByText(/only pdf, plain text, png, and jpeg/i)).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
   })
 

@@ -91,8 +91,22 @@ describe('DocumentPage', () => {
         if (url.includes('/decision')) {
           return jsonResponse(humanReviewDecision)
         }
+        if (url.includes('/content')) {
+          return new Response('Invoice Number: INV-1\nConsignee: Acme Corp\n', {
+            status: 200,
+            headers: { 'content-type': 'text/plain' },
+          })
+        }
         if (url.includes('/v1/documents/doc_1')) {
-          return jsonResponse(documentDetail)
+          return jsonResponse({
+            ...documentDetail,
+            content: {
+              media_type: 'text/plain',
+              size_bytes: 42,
+              download_url: '/v1/documents/doc_1/content',
+              filename: 'invoice.txt',
+            },
+          })
         }
         return jsonResponse({}, { status: 404 })
       }),
@@ -109,15 +123,18 @@ describe('DocumentPage', () => {
     expect(screen.getByText(/loading document/i)).toBeInTheDocument()
   })
 
-  it('renders document metadata and extraction fields', async () => {
+  it('renders document metadata, preview, and extraction fields', async () => {
     renderDocument()
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /document doc_1/i })).toBeInTheDocument()
     })
 
+    await waitFor(() => {
+      expect(screen.getByText(/Invoice Number: INV-1/i)).toBeInTheDocument()
+    })
     expect(screen.getByText('Acme Corp')).toBeInTheDocument()
-    expect(screen.getByText('consignee_name')).toBeInTheDocument()
+    expect(screen.getAllByText('consignee_name').length).toBeGreaterThan(0)
     expect(screen.getByText('92%')).toBeInTheDocument()
   })
 
@@ -163,7 +180,21 @@ describe('DocumentPage', () => {
         if (url.includes('/decision')) {
           return jsonResponse(amendmentDecision)
         }
-        return jsonResponse(documentDetail)
+        if (url.includes('/content')) {
+          return new Response('body', {
+            status: 200,
+            headers: { 'content-type': 'text/plain' },
+          })
+        }
+        return jsonResponse({
+          ...documentDetail,
+          content: {
+            media_type: 'text/plain',
+            size_bytes: 4,
+            download_url: '/v1/documents/doc_1/content',
+            filename: 'invoice.txt',
+          },
+        })
       }),
     )
 
@@ -185,8 +216,20 @@ describe('DocumentPage', () => {
         if (url.includes('/decision')) {
           return jsonResponse(humanReviewDecision)
         }
+        if (url.includes('/content')) {
+          return new Response('safe', {
+            status: 200,
+            headers: { 'content-type': 'text/plain' },
+          })
+        }
         return jsonResponse({
           ...documentDetail,
+          content: {
+            media_type: 'text/plain',
+            size_bytes: 4,
+            download_url: '/v1/documents/doc_1/content',
+            filename: 'invoice.txt',
+          },
           extraction: {
             status: 'SUCCEEDED',
             fields: [

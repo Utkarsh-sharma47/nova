@@ -11,7 +11,13 @@ import { ErrorPanel } from '../components/ErrorPanel'
 import { StatusBadge } from '../components/StatusBadge'
 import { generateIdempotencyKey } from '../utils/uuid'
 
-const ACCEPTED_TYPES = ['application/pdf', 'text/plain']
+const ACCEPTED_TYPES = [
+  'application/pdf',
+  'text/plain',
+  'image/png',
+  'image/jpeg',
+]
+const ACCEPTED_EXTENSIONS = ['.pdf', '.txt', '.png', '.jpg', '.jpeg']
 const STORAGE_KEY = 'nova.customer_id'
 
 function readStoredCustomerId(): string {
@@ -20,6 +26,11 @@ function readStoredCustomerId(): string {
   } catch {
     return ''
   }
+}
+
+function hasAcceptedExtension(name: string): boolean {
+  const lower = name.toLowerCase()
+  return ACCEPTED_EXTENSIONS.some((ext) => lower.endsWith(ext))
 }
 
 export function UploadPage() {
@@ -35,10 +46,15 @@ export function UploadPage() {
 
   function validateFile(selected: File | null): string | null {
     if (!selected) {
-      return 'Select a PDF or plain-text file.'
+      return 'Select a PDF, plain-text, PNG, or JPEG file.'
     }
-    if (!ACCEPTED_TYPES.includes(selected.type)) {
-      return 'Only application/pdf and text/plain files are supported.'
+    const typeOk =
+      !selected.type ||
+      ACCEPTED_TYPES.includes(selected.type) ||
+      selected.type === 'image/jpg'
+    const extOk = hasAcceptedExtension(selected.name)
+    if (!typeOk && !extOk) {
+      return 'Only PDF, plain text, PNG, and JPEG files are supported.'
     }
     return null
   }
@@ -129,11 +145,11 @@ export function UploadPage() {
           </p>
         </div>
         <div className="form-row">
-          <label htmlFor="upload-file">File (PDF or plain text)</label>
+          <label htmlFor="upload-file">File (PDF, text, PNG, or JPEG)</label>
           <input
             id="upload-file"
             type="file"
-            accept=".pdf,.txt,application/pdf,text/plain"
+            accept=".pdf,.txt,.png,.jpg,.jpeg,application/pdf,text/plain,image/png,image/jpeg"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
           {file ? (
