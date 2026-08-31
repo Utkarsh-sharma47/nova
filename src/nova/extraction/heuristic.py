@@ -63,6 +63,32 @@ _WEAK_ALIASES = frozenset(
     }
 )
 
+# Expected value shape per field. A value that parses as its declared type is
+# stronger evidence than free text; a value that fails its own type is weaker.
+_FIELD_PATTERNS: dict[str, re.Pattern[str]] = {
+    "invoice_number": re.compile(r"(?i)^[a-z0-9][a-z0-9\-_]{2,}$"),
+    "invoice_date": re.compile(r"^\d{4}-\d{2}-\d{2}$"),
+    "currency": re.compile(r"(?i)^[a-z]{3}$"),
+    "total_amount": re.compile(r"^\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?$|^\d+(?:\.\d{1,2})?$"),
+    "hs_code": re.compile(r"^\d{4}(?:\.\d{2}){1,2}$"),
+    "incoterms": re.compile(r"(?i)^(?:fob|cif|cfr|exw|dap|ddp|fca|cpt|cip|fas)$"),
+    "container_number": re.compile(r"(?i)^[a-z]{4}\d{7}$"),
+    "gross_weight": re.compile(r"(?i)^\d+(?:\.\d+)?\s*(?:kg|kgs|t|mt|lb|lbs)$"),
+    "bl_number": re.compile(r"(?i)^[a-z0-9][a-z0-9\-/]{3,}$"),
+}
+
+# Alternation between candidate values, e.g. "USD 15,200.00 OR 15200".
+# Requires surrounding whitespace so that "18/08/2026" is not split.
+_ALTERNATION = re.compile(r"(?i)\s+(?:or|/|\|)\s+")
+
+_AMBIGUITY_MARKERS = ("?", "~", "maybe", "approx", "illegible", "unclear")
+_NOISE_MARKERS = ("#####", "!!", "###")
+_INJECTION_MARKERS = ("ignore previous", "ignore all", "auto approve", "ignore")
+
+_BASE_EXACT_LABEL = 0.90
+_CONFLICT_CEILING = 0.35
+_HIGH_BAND = 0.85
+
 
 def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
     user = next((msg.content for msg in request.messages if msg.role == "user"), "")
@@ -72,8 +98,8 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
     for name in required:
         if not is_supported_field(name):
             continue
-        match = _find_value(name, document_text)
-        if match is None:
+        matches = _find_values(name, document_text)
+        if not matches:
             fields.append(
                 {
                     "field_name": name,
@@ -87,8 +113,37 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
                 }
             )
             continue
-        value, snippet, alias = match
+
+        value, _snippet, alias = matches[0]
+        evidence = [
+            {
+                "evidence_id": f"h-{name}-{index}",
+                "source_type": "DOCUMENT_SPAN",
+                "snippet": item[1],
+                "page": 1,
+            }
+            for index, item in enumerate(matches)
+        ]
+        candidates = _candidate_values(matches)
         confidence = _confidence_from_evidence(field_name=name, alias=alias, value=value)
+
+        if len(candidates) > 1:
+            # Conflicting candidates are ambiguous evidence, never a confident value.
+            fields.append(
+                {
+                    "field_name": name,
+                    "value": None,
+                    "value_type": "string",
+                    "presence": "AMBIGUOUS",
+                    "confidence": round(min(confidence, _CONFLICT_CEILING), 4),
+                    "uncertainty": "CONFLICTING_EVIDENCE",
+                    "evidence": evidence,
+                    "warnings": [f"conflicting_candidates:{len(candidates)}"],
+                    "candidates": [{"value": candidate} for candidate in candidates],
+                }
+            )
+            continue
+
         fields.append(
             {
                 "field_name": name,
@@ -96,23 +151,38 @@ def heuristic_extractor_response(request: LLMRequest) -> dict[str, Any]:
                 "value_type": "string",
                 "presence": "KNOWN",
                 "confidence": confidence,
-                "uncertainty": "NONE" if confidence >= 0.85 else "LOW_CONFIDENCE",
-                "evidence": [
-                    {
-                        "evidence_id": f"h-{name}",
-                        "source_type": "DOCUMENT_SPAN",
-                        "snippet": snippet,
-                        "page": 1,
-                    }
-                ],
+                "uncertainty": "NONE" if confidence >= _HIGH_BAND else "LOW_CONFIDENCE",
+                "evidence": evidence,
                 "warnings": [],
             }
         )
     return {"fields": fields}
 
 
+def _candidate_values(matches: list[tuple[str, str, str]]) -> list[str]:
+    """Distinct candidate values from repeated labels and inline alternations."""
+    candidates: list[str] = []
+    for value, _snippet, _alias in matches:
+        for part in _ALTERNATION.split(value):
+            cleaned = part.strip().strip('"').strip()
+            if not cleaned:
+                continue
+            key = re.sub(r"[^a-z0-9]", "", cleaned.lower())
+            if not key:
+                continue
+            if all(key != re.sub(r"[^a-z0-9]", "", c.lower()) for c in candidates):
+                candidates.append(cleaned)
+    return candidates
+
+
 def _confidence_from_evidence(*, field_name: str, alias: str, value: str) -> float:
-    """Score extraction confidence from label specificity and value clarity."""
+    """Score extraction confidence from the quality of the matched evidence.
+
+    Signals, all read from the document itself: how specific the matched label
+    was, whether the value parses as the field's declared type, and whether the
+    value carries ambiguity/OCR-noise/instruction text. There is no floor that
+    forces a canonical label into the high band.
+    """
     aliases = _FIELD_ALIASES.get(field_name, (field_name.replace("_", " "),))
     alias_key = alias.strip().lower()
     try:
@@ -120,30 +190,31 @@ def _confidence_from_evidence(*, field_name: str, alias: str, value: str) -> flo
     except StopIteration:
         rank = len(aliases)
 
-    # Preferred canonical labels score higher than trailing short aliases.
-    span = max(len(aliases) - 1, 1)
-    specificity = 1.0 - (rank / (span + 1.0))
-    score = 0.82 + (0.16 * specificity)
-
+    score = _BASE_EXACT_LABEL
+    # A trailing abbreviation is weaker evidence than the canonical label.
+    score -= 0.04 * min(rank, 3)
     if alias_key in _WEAK_ALIASES or len(alias_key) <= 3:
-        score -= 0.10
+        score -= 0.06
 
     value_text = value.strip()
     lower = value_text.lower()
-    if any(marker in value_text for marker in ("?", "~", "???")):
-        score -= 0.12
-    if " or " in lower or ("/" in value_text and any(ch in value_text for ch in "?~")):
-        score -= 0.08
-    if "ignore" in lower or "#####" in value_text:
+
+    pattern = _FIELD_PATTERNS.get(field_name)
+    if pattern is not None:
+        score += 0.06 if pattern.match(value_text) else -0.12
+
+    if any(marker in lower for marker in _AMBIGUITY_MARKERS):
+        score -= 0.22
+    if any(marker in value_text for marker in _NOISE_MARKERS):
+        score -= 0.18
+    if any(marker in lower for marker in _INJECTION_MARKERS):
         score -= 0.15
     if len(value_text) < 2:
         score -= 0.05
+    if len(value_text) > 140:
+        score -= 0.03
 
-    # Exact preferred label + clean value stays in the high band.
-    if rank == 0 and alias_key not in _WEAK_ALIASES:
-        score = max(score, 0.93)
-
-    return round(min(0.99, max(0.55, score)), 4)
+    return round(min(0.99, max(0.05, score)), 4)
 
 
 def _extract_required_fields(user: str) -> list[str]:
@@ -182,16 +253,24 @@ def _extract_user_payload(user: str) -> dict[str, Any] | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _find_value(field_name: str, text: str) -> tuple[str, str, str] | None:
+def _find_values(field_name: str, text: str) -> list[tuple[str, str, str]]:
+    """All ``label: value`` occurrences for a field, most specific label first.
+
+    Returns every occurrence so that repeated labels carrying different values
+    can be reported as conflicting evidence instead of silently taking the first.
+    """
     aliases = _FIELD_ALIASES.get(field_name, (field_name.replace("_", " "),))
+    matches: list[tuple[str, str, str]] = []
     for alias in aliases:
         pattern = re.compile(
             rf"(?im)^\s*{re.escape(alias)}\s*[:\-]\s*(.+?)\s*$",
         )
-        found = pattern.search(text)
-        if found:
+        for found in pattern.finditer(text):
             value = found.group(1).strip()
             if value:
-                snippet = found.group(0).strip()
-                return value, snippet, alias
-    return None
+                matches.append((value, found.group(0).strip(), alias))
+        if matches:
+            # Do not mix a specific label with looser aliases that may re-match
+            # the same line under a different name.
+            break
+    return matches

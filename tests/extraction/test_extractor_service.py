@@ -227,6 +227,39 @@ def test_fabricated_evidence_rejected() -> None:
     assert invoice.value is None
 
 
+def test_downgraded_field_does_not_keep_model_confidence() -> None:
+    """A field with no value must not carry the model's confident score forward."""
+    text = "Invoice Number: INV-1"
+    llm = MockLLM(
+        response={
+            "fields": [
+                _field(
+                    "invoice_number",
+                    presence="KNOWN",
+                    value="FAKE-999",
+                    confidence=0.99,
+                    snippet="completely fabricated snippet not in document",
+                ),
+                _field("invoice_date", presence="MISSING", value=None, confidence=0.97),
+                _field("seller_name", presence="MISSING", value=None, confidence=None),
+                _field("buyer_name", presence="MISSING", value=None, confidence=None),
+                _field("currency", presence="MISSING", value=None, confidence=None),
+                _field("total_amount", presence="MISSING", value=None, confidence=None),
+            ]
+        }
+    )
+    result = ExtractorService(llm).extract(_request(text))
+    by_name = {field.field_name: field for field in result.fields}
+
+    invoice = by_name["invoice_number"]
+    assert invoice.presence is FieldPresence.UNKNOWN
+    assert invoice.confidence is None
+
+    # A MISSING field reported with a confidence must also be stripped.
+    assert by_name["invoice_date"].presence is FieldPresence.MISSING
+    assert by_name["invoice_date"].confidence is None
+
+
 def test_malformed_llm_response_retries_then_fails() -> None:
     llm = MockLLM(scripted=["not-json", "{bad", '{"fields": "nope"}'])
     result = ExtractorService(llm, max_retries=2).extract(_request("Invoice Number: X"))

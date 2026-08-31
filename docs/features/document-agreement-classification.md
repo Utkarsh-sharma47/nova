@@ -14,8 +14,14 @@ authority for business disposition.
 
 Document confidence = average of **available** required-field extraction confidence
 scores (never invents values). Missing required fields are omitted from the average
-and block `STRONG_AGREEMENT`. Heuristic MockLLM scores come from label specificity +
-value clarity — not a constant `0.9`.
+and block `STRONG_AGREEMENT`.
+
+Field-level confidence is produced by the extractor from the quality of the matched
+evidence, never from a constant or a floor. For the heuristic MockLLM the signals are:
+how specific the matched label was, whether the value parses as the field's declared
+type, and whether the value carries ambiguity markers (`?`, `~`, "maybe"), OCR noise,
+or embedded instruction text. Fields with conflicting candidates become `AMBIGUOUS`
+with `CONFLICTING_EVIDENCE`; `MISSING`/`UNKNOWN` fields carry `confidence = null`.
 
 | Category | Conditions |
 |----------|------------|
