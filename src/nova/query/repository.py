@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -44,6 +45,30 @@ _TYPE_TO_WIRE = {
     "packing_list": "OTHER",
     "other": "OTHER",
 }
+
+
+_REF_TOKEN_MIN = 4
+
+
+def reference_matches(invoice_number: str, needle: str) -> bool:
+    """True when a human reference plausibly names this invoice number.
+
+    Handles the direct substring case ("INV-REJECT-9001" for "inv-reject") and
+    the inflected case: "the rejected invoice" must resolve the ``REJECT`` token.
+    Tokens shorter than 4 characters (e.g. "INV") are ignored so a generic prefix
+    cannot match everything.
+    """
+    haystack = invoice_number.strip().lower()
+    if not haystack or not needle:
+        return False
+    if needle in haystack:
+        return True
+    for token in re.split(r"[^a-z0-9]+", haystack):
+        if len(token) < _REF_TOKEN_MIN:
+            continue
+        if needle.startswith(token) or token.startswith(needle):
+            return True
+    return False
 
 
 class QueryRepository:
@@ -477,13 +502,14 @@ class QueryRepository:
         customer_id: UUID,
         reference: str,
         *,
-        limit: int = 5,
+        limit: int = 10,
     ) -> list[DocumentAgreementRow]:
         """Resolve a human reference (invoice number fragment) to documents.
 
         Matches against the persisted ``invoice_number`` extracted value using an
         in-Python comparison over customer-scoped rows, so no user text ever
-        reaches SQL.
+        reaches SQL. Returns every match so callers can report ambiguity rather
+        than silently picking one.
         """
         needle = reference.strip().lower()
         if not needle:
@@ -493,7 +519,7 @@ class QueryRepository:
             invoice_number = row[3]
             if not invoice_number:
                 continue
-            if needle in invoice_number.lower():
+            if reference_matches(invoice_number, needle):
                 matched.append(row)
                 if len(matched) >= limit:
                     break

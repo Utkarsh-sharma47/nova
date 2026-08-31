@@ -50,6 +50,23 @@ Document-scoped intents accept a `document_id` (from scope or the question) or a
 invoice" resolves against `INV-MESSY-...`. The reference is matched in Python over
 customer-scoped rows, so user text never reaches SQL.
 
+Matching tolerates inflected words: "the rejected invoice" resolves
+`INV-REJECT-9001` by comparing invoice-number tokens of at least four characters,
+so a generic prefix such as `INV` cannot match everything.
+
+If a reference matches more than one document the response is `UNSUPPORTED` with
+reason `AMBIGUOUS_INTENT` and the candidate invoice numbers as suggestions. One
+document is never chosen arbitrarily.
+
+### Phrasing coverage
+
+Disposition, agreement, and failure questions do not require a canonical noun.
+"how many were flagged?", "how many need review?", "show weak documents", "show me
+the strongest agreement documents", "how many shipments were approved?", and "what
+went wrong with INV-REJECT-9001?" all map to distinct intents. A question that
+names no document ("which fields failed?") returns `MISSING_SCOPE_ID` rather than
+guessing a document.
+
 ### Time filters
 
 `this week`, `today`, and `this month` are converted into concrete UTC boundaries
@@ -97,6 +114,10 @@ See [../security/query-api.md](../security/query-api.md). Tests cover SQL inject
 `tests/query/seed.py` provides a deterministic seven-document dataset covering
 strong / partial / weak agreement, mismatch, uncertain, low confidence, missing
 evidence, and all three dispositions.
+
+`tests/query/test_query_phrasing.py` covers the natural-language phrasing
+regressions above, invoice-reference resolution including inflected forms, and the
+ambiguous-reference response.
 
 `tests/query/test_query_evaluation.py` is the query evaluation suite. Each case
 asserts question → intent → parameters → grounded answer, with expected counts

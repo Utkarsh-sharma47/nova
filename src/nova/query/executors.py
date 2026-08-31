@@ -24,6 +24,15 @@ class MissingEntityError(Exception):
         self.entity_id = entity_id
 
 
+class AmbiguousReferenceError(Exception):
+    """Raised when a human document reference matches more than one document."""
+
+    def __init__(self, reference: str, candidates: list[str]) -> None:
+        super().__init__(f"{reference} matches {len(candidates)} documents")
+        self.reference = reference
+        self.candidates = candidates
+
+
 def _parse_uuid(parameters: dict[str, Any], key: str) -> UUID:
     raw = parameters.get(key)
     if raw is None:
@@ -197,10 +206,12 @@ def _get_document_validation(
     max_results: int,
 ) -> tuple[QueryStatus, QueryResultPayload]:
     del max_results
-    document_id = _parse_uuid(parameters, "document_id")
-    document = repository.document_for_customer(customer_id, document_id)
-    if document is None:
-        raise MissingEntityError("document", str(document_id))
+    document = _resolve_document_row(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+    )[0]
+    document_id = document.document_id
     validation = repository.validation_for_document(customer_id, document_id)
     if validation is None:
         return QueryStatus.EMPTY, QueryResultPayload(
@@ -269,10 +280,12 @@ def _get_document_decision(
     max_results: int,
 ) -> tuple[QueryStatus, QueryResultPayload]:
     del max_results
-    document_id = _parse_uuid(parameters, "document_id")
-    document = repository.document_for_customer(customer_id, document_id)
-    if document is None:
-        raise MissingEntityError("document", str(document_id))
+    document = _resolve_document_row(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+    )[0]
+    document_id = document.document_id
     decision = repository.decision_for_document(customer_id, document_id)
     if decision is None:
         return QueryStatus.EMPTY, QueryResultPayload(
@@ -1075,6 +1088,12 @@ def _resolve_document_row(
     matches = repository.resolve_document_reference(customer_id, str(reference))
     if not matches:
         raise MissingEntityError("document", str(reference))
+    if len(matches) > 1:
+        # Never silently pick one; make the operator disambiguate.
+        raise AmbiguousReferenceError(
+            str(reference),
+            [row[3] or str(row[0].document_id) for row in matches],
+        )
     return matches[0]
 
 

@@ -222,11 +222,15 @@ def _decision_from_text(question: str) -> str | None:
     for value in _DECISION_VALUES:
         if value in upper:
             return value
-    if re.search(r"(?i)human\s+review|waiting\s+on\s+(human\s+)?review|flagged", question):
+    if re.search(
+        r"(?i)human\s+review|waiting\s+on\s+(human\s+)?review|flagged|"
+        r"need(s|ing|ed)?\s+(a\s+)?review|sent\s+(to|for)\s+review|for\s+review",
+        question,
+    ):
         return "HUMAN_REVIEW"
-    if re.search(r"(?i)auto[_\s-]?approv", question):
+    if re.search(r"(?i)auto[_\s-]?approv|\bapprov(ed|al)\b", question):
         return "AUTO_APPROVE"
-    if re.search(r"(?i)amendment", question):
+    if re.search(r"(?i)amendment|\bamend\w*\b|\brejected\b", question):
         return "AMENDMENT_REQUEST"
     return None
 
@@ -245,20 +249,29 @@ def _time_range_from_text(question: str) -> dict[str, str] | None:
 
 
 def _agreement_from_text(question: str) -> str | None:
-    lower = question.lower()
-    if re.search(
-        r"(?i)\b(strong(\s+|-)?agreement|strongly\s+agree|high\s+agreement)\b",
-        question,
-    ) or "strong agreement" in lower:
+    """Detect an agreement category, including superlatives and bare adjectives.
+
+    Accepts "strong agreement", "strongest agreement documents", and plain
+    "weak documents". Confidence phrasings are handled separately and must not
+    reach here.
+    """
+    # "<adjective> agreement|documents|docs"
+    qualified = r"[\s-]+(agreement|documents?|docs?)\b"
+    if (
+        re.search(rf"(?i)\b(strong(est)?|highest){qualified}", question)
+        or re.search(r"(?i)\bstrongly\s+agree", question)
+        or re.search(r"(?i)\bhigh\s+agreement\b", question)
+    ):
         return "STRONG_AGREEMENT"
-    if re.search(
-        r"(?i)\b(partial(\s+|-)?agreement|partially\s+agree)\b",
+    if re.search(rf"(?i)\bpartial(ly)?{qualified}", question) or re.search(
+        r"(?i)\bpartially\s+agree",
         question,
     ):
         return "PARTIAL_AGREEMENT"
-    if re.search(
-        r"(?i)\b(weak(\s+|-)?agreement|weakly\s+agree|low\s+agreement)\b",
-        question,
+    if (
+        re.search(rf"(?i)\b(weak(est)?|lowest){qualified}", question)
+        or re.search(r"(?i)\bweakly\s+agree", question)
+        or re.search(r"(?i)\blow\s+agreement\b", question)
     ):
         return "WEAK_AGREEMENT"
     upper = question.upper()
@@ -328,11 +341,11 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
     counting = re.search(r"(?i)\b(how many|count|number of)\b", q) is not None
     listing = re.search(r"(?i)\b(which|show|list|display|give me)\b", q) is not None
 
-    # "Why was X sent for review?" -> validation + decision reasoning for one document.
+    # "Why was X sent for review?" / "What went wrong with X?" -> decision reasoning.
     if re.search(
         r"(?i)\bwhy\b.*\b(review|routed|rejected|flagged|amendment|approved|sent)\b",
         q,
-    ):
+    ) or re.search(r"(?i)\b(went\s+wrong|what\s+happened|what'?s\s+wrong)\b", q):
         target = _document_scope_params(q, scoped, text_id)
         if target is None:
             return _unsupported(
@@ -347,22 +360,27 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
             )
         )
 
-    # Validation questions: field-level, count, or list — kept distinct.
-    if re.search(r"(?i)\bmismatch(es|ed)?\b", q):
-        if re.search(r"(?i)\b(what|which)\s+fields?\b", q):
-            target = _document_scope_params(q, scoped, text_id)
-            if target is None:
-                return _unsupported(
-                    UnsupportedReasonCode.MISSING_SCOPE_ID,
-                    "Listing mismatched fields requires a document id or invoice reference.",
-                )
-            return ClassificationOutcome(
-                intent=InterpretedIntent(
-                    name=QueryIntentName.GET_DOCUMENT_MISMATCHED_FIELDS,
-                    parameters=target,
-                    confidence=0.92,
-                )
+    # "Which fields mismatched / failed?" -> field-level validation for one document.
+    if re.search(r"(?i)\b(what|which)\s+fields?\b", q) and re.search(
+        r"(?i)\b(mismatch\w*|fail\w*|wrong|invalid|error\w*|disagree\w*)\b",
+        q,
+    ):
+        target = _document_scope_params(q, scoped, text_id)
+        if target is None:
+            return _unsupported(
+                UnsupportedReasonCode.MISSING_SCOPE_ID,
+                "Listing mismatched fields requires a document id or invoice reference.",
             )
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.GET_DOCUMENT_MISMATCHED_FIELDS,
+                parameters=target,
+                confidence=0.92,
+            )
+        )
+
+    # Validation questions: count or list — kept distinct.
+    if re.search(r"(?i)\bmismatch(es|ed)?\b", q):
         if counting:
             return ClassificationOutcome(
                 intent=InterpretedIntent(
@@ -471,13 +489,9 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
             )
         )
 
-    if re.search(
-        r"(?i)\b(how many|count).*(auto[_\s-]?approv\w*|human\s+review|amendment)\b",
-        q,
-    ) or re.search(
-        r"(?i)\b(documents?\s+(were\s+)?(auto[_\s-]?approv\w*|went\s+to\s+human\s+review))\b",
-        q,
-    ):
+    # Any counting question that names a disposition, with or without a noun
+    # ("how many were flagged?", "how many need review?").
+    if counting and not re.search(r"(?i)\bshipments?\b", q):
         decision = _decision_from_text(q)
         if decision is not None:
             parameters = {"decision": decision}
@@ -571,10 +585,9 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
             )
         )
 
-    if re.search(
-        r"(?i)(which|list|show|how many).*(shipment).*"
-        r"(human.?review|auto.?approv|amendment|flagged)",
-        q,
+    # Shipment questions that name a disposition (count or list).
+    if (
+        re.search(r"(?i)\bshipments?\b", q) and _decision_from_text(q) is not None
     ) or re.search(r"(?i)(shipments?\s+(waiting|in|flagged)|flagged\s+(this\s+)?week)", q):
         decision = _decision_from_text(q) or "HUMAN_REVIEW"
         parameters = {"decision": decision}
@@ -608,18 +621,19 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
         )
 
     if re.search(r"(?i)(validation|mismatch|uncertain).*(status|result|failure|check)", q) or (
-        re.search(r"(?i)\bvalidation\b", q) and (scoped.document_id or text_id)
+        re.search(r"(?i)\bvalidation\b", q)
+        and (scoped.document_id or text_id or _document_ref_from_text(q))
     ):
-        document_id = scoped.document_id or text_id
-        if document_id is None:
+        target = _document_scope_params(q, scoped, text_id)
+        if target is None:
             return _unsupported(
                 UnsupportedReasonCode.MISSING_SCOPE_ID,
-                "get_document_validation requires a document_id.",
+                "get_document_validation requires a document id or invoice reference.",
             )
         return ClassificationOutcome(
             intent=InterpretedIntent(
                 name=QueryIntentName.GET_DOCUMENT_VALIDATION,
-                parameters=_merge_scope(scoped, document_id=document_id),
+                parameters=target,
                 confidence=0.88,
             )
         )
