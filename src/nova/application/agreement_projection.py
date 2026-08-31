@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -210,17 +211,30 @@ def agreement_counts_for_customer(
     return counts
 
 
-def documents_matching_agreement(
+DocumentAgreementRow = tuple[Document, DocumentAgreement, DecisionRecord | None, str | None]
+
+
+def latest_decision_for_document(session: Session, document_id: UUID) -> DecisionRecord | None:
+    return session.scalar(
+        select(DecisionRecord)
+        .where(DecisionRecord.document_id == document_id)
+        .order_by(DecisionRecord.decided_at.desc())
+        .limit(1)
+    )
+
+
+def iter_document_agreements(
     session: Session,
     customer_id: UUID,
-    agreement: AgreementCategory | str,
     *,
-    limit: int,
     updated_after: datetime | None = None,
     updated_before: datetime | None = None,
-) -> list[tuple[Document, DocumentAgreement, DecisionRecord | None, str | None]]:
-    target = AgreementCategory(str(agreement))
-    matched: list[tuple[Document, DocumentAgreement, DecisionRecord | None, str | None]] = []
+) -> Iterator[DocumentAgreementRow]:
+    """Yield (document, agreement, latest decision, invoice number) for a customer.
+
+    Single place that assembles the persisted extraction + validation evidence,
+    so every agreement/confidence query reads the same derivation.
+    """
     for document in iter_customer_documents(
         session,
         customer_id,
@@ -235,15 +249,77 @@ def documents_matching_agreement(
             extracted_rows=rows,
             validation=validation,
         )
-        if result.category != target:
+        decision = latest_decision_for_document(session, document.document_id)
+        yield document, result, decision, invoice_number_from_rows(rows)
+
+
+def documents_matching_agreement(
+    session: Session,
+    customer_id: UUID,
+    agreement: AgreementCategory | str,
+    *,
+    limit: int,
+    updated_after: datetime | None = None,
+    updated_before: datetime | None = None,
+) -> list[DocumentAgreementRow]:
+    target = AgreementCategory(str(agreement))
+    matched: list[DocumentAgreementRow] = []
+    for row in iter_document_agreements(
+        session,
+        customer_id,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    ):
+        if row[1].category != target:
             continue
-        decision = session.scalar(
-            select(DecisionRecord)
-            .where(DecisionRecord.document_id == document.document_id)
-            .order_by(DecisionRecord.decided_at.desc())
-            .limit(1)
-        )
-        matched.append((document, result, decision, invoice_number_from_rows(rows)))
+        matched.append(row)
         if len(matched) >= limit:
             break
     return matched
+
+
+def documents_below_confidence(
+    session: Session,
+    customer_id: UUID,
+    threshold: float,
+    *,
+    limit: int,
+    updated_after: datetime | None = None,
+    updated_before: datetime | None = None,
+) -> list[DocumentAgreementRow]:
+    """Documents whose agreement score is strictly below ``threshold``.
+
+    Documents with no computable score are included: absent evidence is a
+    low-reliability signal, not a pass.
+    """
+    matched: list[DocumentAgreementRow] = []
+    for row in iter_document_agreements(
+        session,
+        customer_id,
+        updated_after=updated_after,
+        updated_before=updated_before,
+    ):
+        score = row[1].document_confidence
+        if score is not None and score >= threshold:
+            continue
+        matched.append(row)
+        if len(matched) >= limit:
+            break
+    return matched
+
+
+def documents_by_lowest_confidence(
+    session: Session,
+    customer_id: UUID,
+    *,
+    limit: int,
+) -> list[DocumentAgreementRow]:
+    rows = list(iter_document_agreements(session, customer_id))
+    # No computable score sorts lowest: absent evidence is the weakest signal.
+    rows.sort(key=lambda row: _score_or_floor(row[1]))
+    return rows[:limit]
+
+
+def _score_or_floor(agreement: DocumentAgreement) -> float:
+    score = agreement.document_confidence
+    return score if score is not None else -1.0

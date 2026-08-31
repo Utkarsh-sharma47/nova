@@ -93,8 +93,11 @@ def test_missing_required_extraction_not_strong() -> None:
     )
     assert result.category != AgreementCategory.STRONG_AGREEMENT
     assert result.category == AgreementCategory.WEAK_AGREEMENT
-    # Score reflects available fields only; never fabricates the missing one.
-    assert result.document_confidence == 0.95
+    # Extraction confidence reflects available fields only; never fabricated.
+    assert result.extraction_confidence == 0.95
+    # ...but a required field with no evidence must reduce document agreement.
+    assert result.document_confidence is not None
+    assert result.document_confidence < 0.95
 
 
 def test_document_confidence_differs_for_different_field_scores() -> None:
@@ -148,6 +151,104 @@ def test_medium_confidence_is_partial_when_all_match() -> None:
         checks=_all_match(),
     )
     assert result.category == AgreementCategory.PARTIAL_AGREEMENT
+
+
+def test_confident_extraction_with_mismatches_is_not_high_agreement() -> None:
+    """The core bug: confident reads of wrong values must not score ~93%."""
+    all_match = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields(0.96),
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    mostly_mismatch = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields(0.96),
+        validation_status="completed",
+        checks=_checks(
+            (_REQUIRED[0], "MATCH"),
+            (_REQUIRED[1], "MATCH"),
+            *[(name, "MISMATCH") for name in _REQUIRED[2:]],
+        ),
+    )
+
+    # Extraction read the text equally well in both documents.
+    assert all_match.extraction_confidence == mostly_mismatch.extraction_confidence == 0.96
+
+    # Agreement must diverge sharply.
+    assert all_match.category == AgreementCategory.STRONG_AGREEMENT
+    assert mostly_mismatch.category == AgreementCategory.WEAK_AGREEMENT
+    assert all_match.document_confidence is not None
+    assert mostly_mismatch.document_confidence is not None
+    assert mostly_mismatch.document_confidence < 0.40
+    assert all_match.document_confidence > mostly_mismatch.document_confidence + 0.50
+
+
+def test_each_additional_mismatch_reduces_agreement() -> None:
+    def score_with(mismatches: int) -> float:
+        checks = _checks(
+            *[
+                (name, "MISMATCH" if index < mismatches else "MATCH")
+                for index, name in enumerate(_REQUIRED)
+            ]
+        )
+        result = classify_document_agreement(
+            required_fields=_REQUIRED,
+            fields=_fields(0.95),
+            validation_status="completed",
+            checks=checks,
+        )
+        assert result.document_confidence is not None
+        return result.document_confidence
+
+    scores = [score_with(n) for n in range(len(_REQUIRED) + 1)]
+    assert scores == sorted(scores, reverse=True)
+    assert scores[0] > scores[-1]
+    assert scores[-1] == 0.0
+
+
+def test_uncertain_is_not_treated_as_match() -> None:
+    match = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields(0.95),
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    uncertain = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields(0.95),
+        validation_status="completed",
+        checks=_checks(*[(name, "UNCERTAIN") for name in _REQUIRED]),
+    )
+    assert uncertain.document_confidence is not None
+    assert match.document_confidence is not None
+    assert uncertain.document_confidence < match.document_confidence
+    assert uncertain.category != AgreementCategory.STRONG_AGREEMENT
+
+
+def test_ambiguous_field_reduces_agreement() -> None:
+    fields = _fields(0.95)
+    fields[0] = FieldConfidenceInput(
+        field_name=_REQUIRED[0],
+        confidence=0.95,
+        presence="AMBIGUOUS",
+    )
+    ambiguous = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=fields,
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    clean = classify_document_agreement(
+        required_fields=_REQUIRED,
+        fields=_fields(0.95),
+        validation_status="completed",
+        checks=_all_match(),
+    )
+    assert ambiguous.document_confidence is not None
+    assert clean.document_confidence is not None
+    assert ambiguous.document_confidence < clean.document_confidence
+    assert ambiguous.category != AgreementCategory.STRONG_AGREEMENT
 
 
 def test_failed_validation_is_weak() -> None:

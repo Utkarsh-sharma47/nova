@@ -28,6 +28,30 @@ const EXAMPLE_QUERIES = [
     question: 'Show weak agreement documents.',
   },
   {
+    label: 'How many documents are there?',
+    question: 'How many documents are there?',
+  },
+  {
+    label: 'Show documents with confidence below 70%.',
+    question: 'Show documents with confidence below 70%.',
+  },
+  {
+    label: 'Which documents have mismatches?',
+    question: 'Which documents have mismatches?',
+  },
+  {
+    label: 'How many documents need human review?',
+    question: 'How many documents need human review?',
+  },
+  {
+    label: 'How many documents were auto-approved?',
+    question: 'How many documents were auto-approved?',
+  },
+  {
+    label: 'How many documents were processed this week?',
+    question: 'How many documents were processed this week?',
+  },
+  {
     label: 'How many documents require attention?',
     question: 'How many documents require attention?',
   },
@@ -60,6 +84,17 @@ const SUPPORTED_INTENTS = [
   'count_documents_requiring_attention — partial + weak agreement count',
   'count_documents_by_decision — count by AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST',
   'count_documents_with_mismatches — count documents with validation MISMATCH',
+  'count_documents — total documents (optionally within a time window)',
+  'count_shipments — total shipments (optionally within a time window)',
+  'list_shipments — shipments for the current customer',
+  'list_recent_documents — most recently updated documents',
+  'list_documents_by_decision — documents routed to a given disposition',
+  'list_documents_by_confidence — documents below a confidence threshold, or lowest first',
+  'list_documents_with_mismatches — documents whose validation result is MISMATCH',
+  'list_documents_with_uncertain_validation — documents with UNCERTAIN validation',
+  'get_document_mismatched_fields — which fields mismatched for one document',
+  'explain_document_review — validation + decision reasoning for one document',
+  'compare_agreement — STRONG / PARTIAL / WEAK breakdown',
 ]
 
 function recordHasStatus(value: unknown): value is string {
@@ -335,6 +370,17 @@ export function QueryPage() {
                 </>
               ) : (
                 '—'
+              )}
+            </dd>
+            <dt>Filters applied</dt>
+            <dd>
+              {response.interpreted_intent &&
+              Object.keys(response.interpreted_intent.parameters ?? {}).length > 0 ? (
+                <code className="mono">
+                  {JSON.stringify(response.interpreted_intent.parameters)}
+                </code>
+              ) : (
+                'None'
               )}
             </dd>
             <dt>Trace ID</dt>

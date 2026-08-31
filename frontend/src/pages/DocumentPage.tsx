@@ -142,10 +142,16 @@ export function DocumentPage() {
           <dd>
             <StatusBadge status={doc.status} showLifecycle />
           </dd>
-          <dt>Document Confidence</dt>
+          <dt>Document Agreement Confidence</dt>
           <dd>
             {doc.document_confidence_percent != null
               ? `${doc.document_confidence_percent}%`
+              : 'Confidence unavailable'}
+          </dd>
+          <dt>Extraction Confidence</dt>
+          <dd>
+            {doc.extraction_confidence_percent != null
+              ? `${doc.extraction_confidence_percent}%`
               : 'Confidence unavailable'}
           </dd>
           <dt>Agreement</dt>

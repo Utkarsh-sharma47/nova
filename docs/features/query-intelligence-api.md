@@ -13,20 +13,59 @@ Phase 8 implements grounded natural-language query over Nova’s system of recor
 
 ## Behavior
 
-Supported intents (Part 1):
+Supported intents (Part 1 allow-list). The classifier keeps **confidence**,
+**agreement**, **validation**, and **decision** as separate concepts; questions
+about them do not collapse into one intent.
 
-- shipment / document status
-- validation status and failing checks
-- decision disposition and reasons
-- list shipments by decision
-- list documents for shipment
-- summarize a verification run (extraction + validation + decision)
-- count / list documents by agreement category (`STRONG_AGREEMENT` / `PARTIAL_AGREEMENT` / `WEAK_AGREEMENT`)
-- count documents requiring attention (partial + weak)
-- count documents by decision disposition
-- count documents with validation mismatches
+| Category | Intent | Example question |
+|----------|--------|------------------|
+| Documents | `count_documents` | How many documents are there? |
+| Documents | `list_recent_documents` | Show recent documents. |
+| Documents | `get_document` | What is the status of document `<uuid>`? |
+| Documents | `list_documents_for_shipment` | Which documents belong to this shipment? |
+| Shipments | `count_shipments` | How many shipments are there? |
+| Shipments | `list_shipments` | Show shipments for this customer. |
+| Shipments | `list_shipments_by_decision` | Which shipments were flagged this week? |
+| Shipments | `get_shipment` | What is the status of shipment `<uuid>`? |
+| Validation | `count_documents_with_mismatches` | How many documents have mismatches? |
+| Validation | `list_documents_with_mismatches` | Which documents have mismatches? |
+| Validation | `get_document_mismatched_fields` | What fields mismatched in the messy invoice? |
+| Validation | `list_documents_with_uncertain_validation` | Which documents have uncertain validation? |
+| Validation | `get_document_validation` | Show validation results for document `<uuid>`. |
+| Decisions | `count_documents_by_decision` | How many documents need human review? |
+| Decisions | `list_documents_by_decision` | Show documents routed to HUMAN_REVIEW. |
+| Decisions | `get_document_decision` | What is the decision for document `<uuid>`? |
+| Decisions | `explain_document_review` | Why was the messy invoice sent for review? |
+| Confidence | `list_documents_by_confidence` | Show documents with confidence below 70% / lowest confidence. |
+| Agreement | `count_documents_by_agreement` | How many strong agreement documents are there? |
+| Agreement | `list_documents_by_agreement` | Show weak agreement documents. |
+| Agreement | `count_documents_requiring_attention` | How many documents require attention? |
+| Agreement | `compare_agreement` | Compare strong vs weak documents. |
+| Runs | `summarize_run` | Summarize verification run `<uuid>`. |
 
-Unsupported / unsafe questions return structured `UNSUPPORTED` (never fabricated success).
+### Document references
+
+Document-scoped intents accept a `document_id` (from scope or the question) or a
+`document_ref` — a fragment of the persisted invoice number, e.g. "the messy
+invoice" resolves against `INV-MESSY-...`. The reference is matched in Python over
+customer-scoped rows, so user text never reaches SQL.
+
+### Time filters
+
+`this week`, `today`, and `this month` are converted into concrete UTC boundaries
+and applied as parameterized filters on the relevant timestamp column
+(`documents.updated_at`, `shipments.updated_at`, or `decisions.decided_at`), not
+merely detected in the text.
+
+### Response grounding
+
+Every `RESULT` payload carries the intent name, the parameters actually applied,
+the records read from the database, citations to the underlying rows, and the note
+`Source: persisted Nova document/validation/decision records.` Zero matches return
+`EMPTY` with an explicit "0" answer rather than an invented example.
+
+Unsupported / unsafe questions return structured `UNSUPPORTED`, and database
+errors return `FAILURE` — never a fabricated success.
 
 Agreement classification is derived deterministically from persisted extraction confidence
 and validation outcomes. It does **not** replace Router decisions.
@@ -54,6 +93,18 @@ See [../security/query-api.md](../security/query-api.md). Tests cover SQL inject
 ## Testing
 
 `tests/query/` — supported intents, security, API validation, LLM/DB failure modes. Fixtures seed deterministic SoR rows and assert returned IDs exist in the seed.
+
+`tests/query/seed.py` provides a deterministic seven-document dataset covering
+strong / partial / weak agreement, mismatch, uncertain, low confidence, missing
+evidence, and all three dispositions.
+
+`tests/query/test_query_evaluation.py` is the query evaluation suite. Each case
+asserts question → intent → parameters → grounded answer, with expected counts
+computed by independent SQL against the same database, so a hardcoded answer
+cannot pass. It covers document/shipment counts, agreement, low confidence,
+mismatches, uncertain validation, all dispositions, time ranges,
+document-specific reasoning, unsupported questions, SQL injection, prompt
+injection, malformed/low-confidence LLM intents, and database failure.
 
 ## Part 2
 

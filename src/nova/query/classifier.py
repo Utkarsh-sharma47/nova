@@ -61,14 +61,102 @@ _AGREEMENT_VALUES = {
 }
 
 _SUGGESTIONS = [
-    "Ask for a shipment or document by id",
-    "Ask which shipments are in HUMAN_REVIEW",
-    "Ask how many shipments were flagged this week",
-    "Ask for validation or decision status for a document",
-    "Ask which documents belong to a shipment",
-    "Ask how many strong agreement documents there are",
-    "Ask to show weak agreement documents",
+    "Ask how many documents or shipments there are",
+    "Ask to show recent documents",
+    "Ask how many strong or weak agreement documents there are",
+    "Ask to show documents with confidence below 70%",
+    "Ask which documents have mismatches or uncertain validation",
+    "Ask what fields mismatched in a named invoice",
+    "Ask how many documents need human review or were auto-approved",
+    "Ask why a named invoice was sent for review",
+    "Ask which shipments are flagged this week",
 ]
+
+# Words that precede "invoice"/"document" without naming one.
+_REF_STOPWORDS = frozenset(
+    {
+        "a",
+        "all",
+        "an",
+        "agreement",
+        "any",
+        "each",
+        "every",
+        "first",
+        "high",
+        "how",
+        "last",
+        "latest",
+        "list",
+        "low",
+        "many",
+        "more",
+        "most",
+        "new",
+        "partial",
+        "recent",
+        "show",
+        "some",
+        "strong",
+        "that",
+        "the",
+        "these",
+        "this",
+        "those",
+        "total",
+        "weak",
+        "what",
+        "which",
+    }
+)
+
+_INVOICE_TOKEN = re.compile(r"(?i)\b(INV[-_][A-Z0-9?_\-]+)\b")
+_NAMED_DOCUMENT = re.compile(r"(?i)\b(?:the\s+)?([a-z][a-z0-9]{2,})\s+(?:invoice|document|doc)\b")
+_PERCENT_BELOW = re.compile(
+    r"(?i)\b(?:below|under|less\s+than|lower\s+than|beneath)\s+(\d{1,3})\s*%"
+)
+
+
+def _document_ref_from_text(question: str) -> str | None:
+    """Extract a human document reference (invoice number or qualifier word).
+
+    Returns a token to be matched against persisted invoice numbers; it is never
+    interpolated into SQL.
+    """
+    token = _INVOICE_TOKEN.search(question)
+    if token:
+        return token.group(1)
+    named = _NAMED_DOCUMENT.search(question)
+    if named:
+        word = named.group(1).lower()
+        if word not in _REF_STOPWORDS:
+            return word
+    return None
+
+
+def _confidence_threshold_from_text(question: str) -> float | None:
+    match = _PERCENT_BELOW.search(question)
+    if not match:
+        return None
+    value = int(match.group(1))
+    if value <= 0 or value > 100:
+        return None
+    return value / 100.0
+
+
+def _document_scope_params(
+    question: str,
+    scope: QueryScope,
+    text_id: UUID | None,
+) -> dict[str, Any] | None:
+    """Resolve a document target from scope, an explicit UUID, or a name."""
+    document_id = scope.document_id or text_id
+    if document_id is not None:
+        return {"document_id": str(document_id)}
+    reference = _document_ref_from_text(question)
+    if reference is not None:
+        return {"document_ref": reference}
+    return None
 
 
 @dataclass(frozen=True)
@@ -231,18 +319,105 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
             )
         )
 
-    if re.search(
-        r"(?i)\b(how many|count).*(mismatch|mismatches)\b",
-        q,
-    ) or re.search(r"(?i)\bdocuments?\s+have\s+mismatches?\b", q):
-        parameters = {}
+    def with_window(base: dict[str, Any]) -> dict[str, Any]:
         time_range = _resolve_time_range(q, scoped)
         if time_range is not None:
-            parameters["time_range"] = time_range
+            base["time_range"] = time_range
+        return base
+
+    counting = re.search(r"(?i)\b(how many|count|number of)\b", q) is not None
+    listing = re.search(r"(?i)\b(which|show|list|display|give me)\b", q) is not None
+
+    # "Why was X sent for review?" -> validation + decision reasoning for one document.
+    if re.search(
+        r"(?i)\bwhy\b.*\b(review|routed|rejected|flagged|amendment|approved|sent)\b",
+        q,
+    ):
+        target = _document_scope_params(q, scoped, text_id)
+        if target is None:
+            return _unsupported(
+                UnsupportedReasonCode.MISSING_SCOPE_ID,
+                "Explaining a routing decision requires a document id or invoice reference.",
+            )
         return ClassificationOutcome(
             intent=InterpretedIntent(
-                name=QueryIntentName.COUNT_DOCUMENTS_WITH_MISMATCHES,
-                parameters=parameters,
+                name=QueryIntentName.EXPLAIN_DOCUMENT_REVIEW,
+                parameters=target,
+                confidence=0.92,
+            )
+        )
+
+    # Validation questions: field-level, count, or list — kept distinct.
+    if re.search(r"(?i)\bmismatch(es|ed)?\b", q):
+        if re.search(r"(?i)\b(what|which)\s+fields?\b", q):
+            target = _document_scope_params(q, scoped, text_id)
+            if target is None:
+                return _unsupported(
+                    UnsupportedReasonCode.MISSING_SCOPE_ID,
+                    "Listing mismatched fields requires a document id or invoice reference.",
+                )
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.GET_DOCUMENT_MISMATCHED_FIELDS,
+                    parameters=target,
+                    confidence=0.92,
+                )
+            )
+        if counting:
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.COUNT_DOCUMENTS_WITH_MISMATCHES,
+                    parameters=with_window({}),
+                    confidence=0.9,
+                )
+            )
+        if listing or re.search(r"(?i)\bdocuments?\s+have\s+mismatches?\b", q):
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.LIST_DOCUMENTS_WITH_MISMATCHES,
+                    parameters=with_window({}),
+                    confidence=0.9,
+                )
+            )
+
+    if re.search(r"(?i)\buncertain\b", q) and (counting or listing):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.LIST_DOCUMENTS_WITH_UNCERTAIN_VALIDATION,
+                parameters=with_window({}),
+                confidence=0.9,
+            )
+        )
+
+    # Confidence questions are distinct from agreement classification.
+    if re.search(r"(?i)\bconfidence\b", q) and not re.search(r"(?i)\bagreement\b", q):
+        if re.search(r"(?i)\b(lowest|worst|least)\b", q):
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.LIST_DOCUMENTS_BY_CONFIDENCE,
+                    parameters={"order": "lowest"},
+                    confidence=0.92,
+                )
+            )
+        threshold = _confidence_threshold_from_text(q)
+        if threshold is not None or re.search(r"(?i)\blow([\s-]|\b)", q):
+            parameters = {"max_confidence": threshold if threshold is not None else 0.70}
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.LIST_DOCUMENTS_BY_CONFIDENCE,
+                    parameters=with_window(parameters),
+                    confidence=0.9,
+                )
+            )
+
+    if re.search(r"(?i)\b(compare|breakdown|distribution|versus|vs\.?)\b", q) and re.search(
+        r"(?i)\b(agreement|strong|weak|confidence)\b",
+        q,
+    ):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COMPARE_AGREEMENT,
+                parameters=with_window({}),
                 confidence=0.9,
             )
         )
@@ -316,6 +491,68 @@ def classify_deterministic(request: QueryRequest) -> ClassificationOutcome | Non
                     confidence=0.9,
                 )
             )
+
+    # Documents routed to a disposition (distinct from shipment-level listing).
+    if listing and re.search(r"(?i)\bdocuments?\b", q):
+        decision = _decision_from_text(q)
+        if decision is not None and re.search(
+            r"(?i)\b(human\s+review|auto[_\s-]?approv\w*|amendment|routed|need[s]?\s+review)\b",
+            q,
+        ):
+            return ClassificationOutcome(
+                intent=InterpretedIntent(
+                    name=QueryIntentName.LIST_DOCUMENTS_BY_DECISION,
+                    parameters=with_window({"decision": decision}),
+                    confidence=0.9,
+                )
+            )
+
+    if listing and re.search(r"(?i)\b(recent|latest|newest)\b.*\bdocuments?\b", q):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.LIST_RECENT_DOCUMENTS,
+                parameters=with_window({}),
+                confidence=0.9,
+            )
+        )
+
+    # Plain totals. These run after the specific analytics rules above so that
+    # "how many documents have mismatches" is never answered as a bare total.
+    # A disposition word means the caller wants the decision-scoped intents below.
+    plain_total = _decision_from_text(q) is None
+
+    if counting and plain_total and re.search(r"(?i)\bshipments?\b", q):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COUNT_SHIPMENTS,
+                parameters=with_window({}),
+                confidence=0.9,
+            )
+        )
+
+    if counting and re.search(r"(?i)\bdocuments?\b", q):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.COUNT_DOCUMENTS,
+                parameters=with_window({}),
+                confidence=0.9,
+            )
+        )
+
+    if (
+        listing
+        and plain_total
+        and re.search(r"(?i)\bshipments?\b", q)
+        and scoped.shipment_id is None
+        and text_id is None
+    ):
+        return ClassificationOutcome(
+            intent=InterpretedIntent(
+                name=QueryIntentName.LIST_SHIPMENTS,
+                parameters=with_window({}),
+                confidence=0.88,
+            )
+        )
 
     if re.search(r"(?i)\b(summarize|summary)\b.*\b(run|verification)\b", q) or (
         "summarize_run" in lower
@@ -458,11 +695,23 @@ get_shipment, get_document, get_document_validation, get_document_decision,
 list_shipments_by_decision, list_documents_for_shipment, summarize_run,
 count_documents_by_agreement, list_documents_by_agreement,
 count_documents_requiring_attention, count_documents_by_decision,
-count_documents_with_mismatches
+count_documents_with_mismatches, count_documents, count_shipments,
+list_shipments, list_recent_documents, list_documents_by_decision,
+list_documents_by_confidence, list_documents_with_mismatches,
+list_documents_with_uncertain_validation, get_document_mismatched_fields,
+explain_document_review, compare_agreement
 If none apply, return {"name":"unsupported","parameters":{},"confidence":0.0}
 Never invent SQL. Never invent entity IDs. Use only IDs present in the user message or scope.
+Distinguish the concepts: "confidence" is a numeric score
+(list_documents_by_confidence), "agreement" is a classification
+(count/list_documents_by_agreement), "mismatch"/"uncertain" are validation
+outcomes (list_documents_with_mismatches / _with_uncertain_validation), and
+"human review"/"auto approve"/"amendment" are router decisions
+(count/list_documents_by_decision). Do not collapse them into one intent.
 Agreement values: STRONG_AGREEMENT, PARTIAL_AGREEMENT, WEAK_AGREEMENT.
-Decision values: AUTO_APPROVE, HUMAN_REVIEW, AMENDMENT_REQUEST."""
+Decision values: AUTO_APPROVE, HUMAN_REVIEW, AMENDMENT_REQUEST.
+Parameters may include: shipment_id, document_id, run_id, document_ref,
+decision, agreement, max_confidence (0-1), order ("lowest"), time_range."""
 
 
 def classify_with_llm(
@@ -548,6 +797,9 @@ def classify_with_llm(
             "decision_id",
             "agreement",
             "time_range",
+            "document_ref",
+            "max_confidence",
+            "order",
         }:
             continue
         if isinstance(value, str) and _SQL_INJECTION.search(value):

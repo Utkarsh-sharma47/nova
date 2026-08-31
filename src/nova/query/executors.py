@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID
 
 from nova.contracts.query import (
@@ -31,14 +31,20 @@ def _parse_uuid(parameters: dict[str, Any], key: str) -> UUID:
     return UUID(str(raw))
 
 
-def execute_intent(
-    intent: InterpretedIntent,
-    *,
-    customer_id: UUID,
-    repository: QueryRepository,
-    max_results: int,
-) -> tuple[QueryStatus, QueryResultPayload]:
-    handlers = {
+class IntentHandler(Protocol):
+    def __call__(
+        self,
+        parameters: dict[str, Any],
+        *,
+        customer_id: UUID,
+        repository: QueryRepository,
+        max_results: int,
+    ) -> tuple[QueryStatus, QueryResultPayload]: ...
+
+
+def intent_handlers() -> dict[QueryIntentName, IntentHandler]:
+    """Allow-listed intent -> executor. Every intent must appear here."""
+    return {
         QueryIntentName.GET_SHIPMENT: _get_shipment,
         QueryIntentName.GET_DOCUMENT: _get_document,
         QueryIntentName.GET_DOCUMENT_VALIDATION: _get_document_validation,
@@ -51,8 +57,30 @@ def execute_intent(
         QueryIntentName.COUNT_DOCUMENTS_REQUIRING_ATTENTION: _count_documents_requiring_attention,
         QueryIntentName.COUNT_DOCUMENTS_BY_DECISION: _count_documents_by_decision,
         QueryIntentName.COUNT_DOCUMENTS_WITH_MISMATCHES: _count_documents_with_mismatches,
+        QueryIntentName.COUNT_DOCUMENTS: _count_documents,
+        QueryIntentName.COUNT_SHIPMENTS: _count_shipments,
+        QueryIntentName.LIST_SHIPMENTS: _list_shipments,
+        QueryIntentName.LIST_RECENT_DOCUMENTS: _list_recent_documents,
+        QueryIntentName.LIST_DOCUMENTS_BY_DECISION: _list_documents_by_decision,
+        QueryIntentName.LIST_DOCUMENTS_BY_CONFIDENCE: _list_documents_by_confidence,
+        QueryIntentName.LIST_DOCUMENTS_WITH_MISMATCHES: _list_documents_with_mismatches,
+        QueryIntentName.LIST_DOCUMENTS_WITH_UNCERTAIN_VALIDATION: (
+            _list_documents_with_uncertain_validation
+        ),
+        QueryIntentName.GET_DOCUMENT_MISMATCHED_FIELDS: _get_document_mismatched_fields,
+        QueryIntentName.EXPLAIN_DOCUMENT_REVIEW: _explain_document_review,
+        QueryIntentName.COMPARE_AGREEMENT: _compare_agreement,
     }
-    handler = handlers[intent.name]
+
+
+def execute_intent(
+    intent: InterpretedIntent,
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    handler = intent_handlers()[intent.name]
     return handler(
         intent.parameters,
         customer_id=customer_id,
@@ -445,45 +473,15 @@ def _list_documents_by_agreement(
             records=[],
             citations=[],
         )
-    records: list[dict[str, Any]] = []
-    citations: list[QueryCitation] = []
-    lines: list[str] = [f"{agreement.replace('_', ' ').title()} documents{window_note}:"]
-    for document, result, decision, invoice_number in rows:
-        label = invoice_number or str(document.document_id)
-        confidence_pct = result.document_confidence_percent
-        confidence_text = (
-            f"{confidence_pct}%" if confidence_pct is not None else "Confidence unavailable"
-        )
-        decision_text = decision.disposition if decision else "—"
-        validation = repository.validation_for_document(customer_id, document.document_id)
-        validation_text = validation.aggregate_result if validation else "—"
-        records.append(
-            {
-                "type": "document",
-                "document_id": str(document.document_id),
-                "shipment_id": str(document.shipment_id),
-                "invoice_number": invoice_number,
-                "agreement": result.category.value,
-                "document_confidence": result.document_confidence,
-                "document_confidence_percent": confidence_pct,
-                "decision": decision.disposition if decision else None,
-                "validation_result": validation.aggregate_result if validation else None,
-            }
-        )
-        citations.append(
-            QueryCitation(
-                type="document",
-                id=str(document.document_id),
-                document_id=str(document.document_id),
-                shipment_id=str(document.shipment_id),
-                code=result.category.value,
-            )
-        )
-        lines.append(f"- {label}")
-        lines.append(f"  Confidence: {confidence_text}")
-        lines.append(f"  Agreement: {result.category.value}")
-        lines.append(f"  Decision: {decision_text}")
-        lines.append(f"  Validation: {validation_text}")
+    records, citations, lines = _agreement_row_payload(
+        rows,
+        header=(
+            f"{len(rows)} document(s) with "
+            f"{agreement.replace('_', ' ').lower()}{window_note}:"
+        ),
+        customer_id=customer_id,
+        repository=repository,
+    )
     return QueryStatus.RESULT, QueryResultPayload(
         answer_summary="\n".join(lines),
         records=records,
@@ -627,6 +625,656 @@ def _list_documents_for_shipment(
         answer_summary=f"Shipment {shipment_id} has {len(records)} document(s).",
         records=records,
         citations=citations,
+    )
+
+
+_SOURCE_NOTE = "Source: persisted Nova document/validation/decision records."
+
+
+def _confidence_text(percent: int | None) -> str:
+    return f"{percent}%" if percent is not None else "Confidence unavailable"
+
+
+def _agreement_row_payload(
+    rows: list[Any],
+    *,
+    header: str,
+    customer_id: UUID,
+    repository: QueryRepository,
+) -> tuple[list[dict[str, Any]], list[QueryCitation], list[str]]:
+    """Shared grounded projection for document lists carrying agreement data."""
+    records: list[dict[str, Any]] = []
+    citations: list[QueryCitation] = []
+    lines: list[str] = [header]
+    for document, agreement, decision, invoice_number in rows:
+        validation = repository.validation_for_document(customer_id, document.document_id)
+        validation_text = validation.aggregate_result if validation else "—"
+        percent = agreement.document_confidence_percent
+        records.append(
+            {
+                "type": "document",
+                "document_id": str(document.document_id),
+                "shipment_id": str(document.shipment_id),
+                "invoice_number": invoice_number,
+                "agreement": agreement.category.value,
+                "document_confidence": agreement.document_confidence,
+                "document_confidence_percent": percent,
+                "extraction_confidence": agreement.extraction_confidence,
+                "extraction_confidence_percent": agreement.extraction_confidence_percent,
+                "decision": decision.disposition if decision else None,
+                "validation_result": validation.aggregate_result if validation else None,
+                "status": repository.document_status_wire(document.status),
+                "updated_at": document.updated_at.isoformat(),
+            }
+        )
+        citations.append(
+            QueryCitation(
+                type="document",
+                id=str(document.document_id),
+                document_id=str(document.document_id),
+                shipment_id=str(document.shipment_id),
+                code=agreement.category.value,
+            )
+        )
+        label = invoice_number or str(document.document_id)
+        decision_text = decision.disposition if decision else "—"
+        lines.append(f"- {label} — {_confidence_text(percent)} — {decision_text}")
+        lines.append(
+            f"  Agreement: {agreement.category.value}; Validation: {validation_text}; "
+            f"Confidence: {_confidence_text(percent)} "
+            f"(extraction {_confidence_text(agreement.extraction_confidence_percent)})"
+        )
+    lines.append(_SOURCE_NOTE)
+    return records, citations, lines
+
+
+def _count_documents(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    after, before, window_note = _parse_time_window(parameters)
+    count = repository.count_documents(
+        customer_id,
+        updated_after=after,
+        updated_before=before,
+    )
+    summary = f"There are {count} document(s){window_note}. {_SOURCE_NOTE}"
+    status = QueryStatus.EMPTY if count == 0 else QueryStatus.RESULT
+    return status, QueryResultPayload(
+        answer_summary=summary,
+        records=[{"type": "document_count", "count": count}],
+        citations=[],
+    )
+
+
+def _count_shipments(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    after, before, window_note = _parse_time_window(parameters)
+    count = repository.count_shipments(
+        customer_id,
+        updated_after=after,
+        updated_before=before,
+    )
+    summary = f"There are {count} shipment(s){window_note}. {_SOURCE_NOTE}"
+    status = QueryStatus.EMPTY if count == 0 else QueryStatus.RESULT
+    return status, QueryResultPayload(
+        answer_summary=summary,
+        records=[{"type": "shipment_count", "count": count}],
+        citations=[],
+    )
+
+
+def _list_shipments(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    after, before, window_note = _parse_time_window(parameters)
+    shipments = repository.shipments_for_customer(
+        customer_id,
+        limit=max_results,
+        updated_after=after,
+        updated_before=before,
+    )
+    if not shipments:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"There are currently 0 shipments{window_note}.",
+            records=[],
+            citations=[],
+        )
+    records = [
+        {
+            "type": "shipment",
+            "shipment_id": str(shipment.shipment_id),
+            "status": shipment.status,
+            "document_count": len(shipment.documents),
+            "updated_at": shipment.updated_at.isoformat(),
+        }
+        for shipment in shipments
+    ]
+    citations = [
+        QueryCitation(
+            type="shipment",
+            id=str(shipment.shipment_id),
+            shipment_id=str(shipment.shipment_id),
+        )
+        for shipment in shipments
+    ]
+    lines = [f"{len(records)} shipment(s){window_note}:"]
+    for shipment in shipments:
+        lines.append(
+            f"- {shipment.shipment_id} — {shipment.status} — "
+            f"{len(shipment.documents)} document(s)"
+        )
+    lines.append(_SOURCE_NOTE)
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=records,
+        citations=citations,
+    )
+
+
+def _list_recent_documents(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    after, before, window_note = _parse_time_window(parameters)
+    rows = repository.recent_documents(
+        customer_id,
+        limit=max_results,
+        updated_after=after,
+        updated_before=before,
+    )
+    if not rows:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"There are currently 0 documents{window_note}.",
+            records=[],
+            citations=[],
+        )
+    records, citations, lines = _agreement_row_payload(
+        rows,
+        header=f"{len(rows)} most recent document(s){window_note}:",
+        customer_id=customer_id,
+        repository=repository,
+    )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=records,
+        citations=citations,
+    )
+
+
+def _list_documents_by_confidence(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    after, before, _window_note = _parse_time_window(parameters)
+    order = str(parameters.get("order") or "").lower()
+
+    if order == "lowest":
+        rows = repository.documents_by_lowest_confidence(customer_id, limit=max_results)
+        header = f"{len(rows)} document(s) with the lowest agreement confidence:"
+        if not rows:
+            return QueryStatus.EMPTY, QueryResultPayload(
+                answer_summary="There are currently 0 documents to rank by confidence.",
+                records=[],
+                citations=[],
+            )
+    else:
+        threshold = _confidence_threshold(parameters)
+        rows = repository.documents_below_confidence(
+            customer_id,
+            threshold,
+            limit=max_results,
+            updated_after=after,
+            updated_before=before,
+        )
+        percent = int(round(threshold * 100))
+        if not rows:
+            return QueryStatus.EMPTY, QueryResultPayload(
+                answer_summary=(
+                    f"There are currently 0 documents with confidence below {percent}%."
+                ),
+                records=[],
+                citations=[],
+            )
+        header = f"{len(rows)} document(s) with confidence below {percent}%:"
+
+    records, citations, lines = _agreement_row_payload(
+        rows,
+        header=header,
+        customer_id=customer_id,
+        repository=repository,
+    )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=records,
+        citations=citations,
+    )
+
+
+def _confidence_threshold(parameters: dict[str, Any]) -> float:
+    raw = parameters.get("max_confidence")
+    if raw is None:
+        return 0.70
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 0.70
+    if value > 1.0:
+        value = value / 100.0
+    return min(max(value, 0.0), 1.0)
+
+
+def _list_documents_by_decision(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    disposition = str(parameters.get("decision", "")).upper()
+    after, before, window_note = _parse_time_window(parameters)
+    rows = repository.documents_by_decision(
+        customer_id,
+        disposition,
+        limit=max_results,
+        decided_after=after,
+        decided_before=before,
+    )
+    if not rows:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"There are currently 0 documents in {disposition}{window_note}.",
+            records=[],
+            citations=[],
+        )
+    records: list[dict[str, Any]] = []
+    citations: list[QueryCitation] = []
+    lines = [f"{len(rows)} document(s) in {disposition}{window_note}:"]
+    for document, decision in rows:
+        agreement_row = repository.agreement_for_document_id(customer_id, document.document_id)
+        percent = agreement_row[1].document_confidence_percent if agreement_row else None
+        invoice_number = agreement_row[3] if agreement_row else None
+        label = invoice_number or str(document.document_id)
+        reason_codes = list(decision.reason_codes or [])
+        records.append(
+            {
+                "type": "document",
+                "document_id": str(document.document_id),
+                "shipment_id": str(document.shipment_id),
+                "invoice_number": invoice_number,
+                "decision": decision.disposition,
+                "decision_id": str(decision.decision_id),
+                "reason_codes": reason_codes,
+                "document_confidence_percent": percent,
+                "agreement": agreement_row[1].category.value if agreement_row else None,
+                "decided_at": decision.decided_at.isoformat(),
+            }
+        )
+        citations.append(
+            QueryCitation(
+                type="decision",
+                id=str(decision.decision_id),
+                decision_id=str(decision.decision_id),
+                document_id=str(document.document_id),
+                shipment_id=str(document.shipment_id),
+                code=decision.disposition,
+            )
+        )
+        primary = reason_codes[0] if reason_codes else "—"
+        lines.append(
+            f"- {label} — {_confidence_text(percent)} — {decision.disposition} ({primary})"
+        )
+    lines.append(_SOURCE_NOTE)
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=records,
+        citations=citations,
+    )
+
+
+def _list_documents_by_validation(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+    aggregate_result: str,
+    label: str,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    after, before, window_note = _parse_time_window(parameters)
+    rows = repository.documents_by_validation_result(
+        customer_id,
+        aggregate_result,
+        limit=max_results,
+        updated_after=after,
+        updated_before=before,
+    )
+    if not rows:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"There are currently 0 documents with {label}{window_note}.",
+            records=[],
+            citations=[],
+        )
+    records: list[dict[str, Any]] = []
+    citations: list[QueryCitation] = []
+    lines = [f"{len(rows)} document(s) with {label}{window_note}:"]
+    for document, validation in rows:
+        agreement_row = repository.agreement_for_document_id(customer_id, document.document_id)
+        invoice_number = agreement_row[3] if agreement_row else None
+        percent = agreement_row[1].document_confidence_percent if agreement_row else None
+        failing = repository.failing_checks(validation)
+        mismatched = [item["field"] for item in failing if item["result"] == "MISMATCH"]
+        uncertain = [item["field"] for item in failing if item["result"] == "UNCERTAIN"]
+        records.append(
+            {
+                "type": "document",
+                "document_id": str(document.document_id),
+                "shipment_id": str(document.shipment_id),
+                "invoice_number": invoice_number,
+                "validation_id": str(validation.validation_id),
+                "validation_result": validation.aggregate_result,
+                "mismatched_fields": mismatched,
+                "uncertain_fields": uncertain,
+                "document_confidence_percent": percent,
+                "agreement": agreement_row[1].category.value if agreement_row else None,
+            }
+        )
+        citations.append(
+            QueryCitation(
+                type="validation",
+                id=str(validation.validation_id),
+                validation_id=str(validation.validation_id),
+                document_id=str(document.document_id),
+                shipment_id=str(document.shipment_id),
+                code=validation.aggregate_result,
+            )
+        )
+        name = invoice_number or str(document.document_id)
+        detail = mismatched if aggregate_result == "MISMATCH" else uncertain
+        shown = ", ".join(str(field) for field in detail[:5]) if detail else "—"
+        lines.append(f"- {name} — {_confidence_text(percent)} — {len(detail)} field(s): {shown}")
+    lines.append(_SOURCE_NOTE)
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=records,
+        citations=citations,
+    )
+
+
+def _list_documents_with_mismatches(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    return _list_documents_by_validation(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+        max_results=max_results,
+        aggregate_result="MISMATCH",
+        label="validation mismatches",
+    )
+
+
+def _list_documents_with_uncertain_validation(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    return _list_documents_by_validation(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+        max_results=max_results,
+        aggregate_result="UNCERTAIN",
+        label="uncertain validation",
+    )
+
+
+def _resolve_document_row(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+) -> Any:
+    """Resolve a document from an explicit id or a human reference."""
+    raw_id = parameters.get("document_id")
+    if raw_id is not None:
+        document_id = UUID(str(raw_id))
+        row = repository.agreement_for_document_id(customer_id, document_id)
+        if row is None:
+            raise MissingEntityError("document", str(document_id))
+        return row
+
+    reference = parameters.get("document_ref")
+    if reference is None:
+        raise ValueError("missing parameter document_id")
+    matches = repository.resolve_document_reference(customer_id, str(reference))
+    if not matches:
+        raise MissingEntityError("document", str(reference))
+    return matches[0]
+
+
+def _get_document_mismatched_fields(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    document, agreement, _decision, invoice_number = _resolve_document_row(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+    )
+    label = invoice_number or str(document.document_id)
+    validation = repository.validation_for_document(customer_id, document.document_id)
+    if validation is None:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"No validation record exists for {label}.",
+            records=[],
+            citations=[],
+        )
+    mismatched = repository.mismatched_checks(validation)
+    if not mismatched:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=(
+                f"{label} has 0 mismatched fields "
+                f"(validation result {validation.aggregate_result}). {_SOURCE_NOTE}"
+            ),
+            records=[],
+            citations=[],
+        )
+    lines = [f"{label} has {len(mismatched)} mismatched field(s):"]
+    citations: list[QueryCitation] = []
+    for item in mismatched:
+        detail = item.get("reason_detail") or item.get("reason_code") or "—"
+        lines.append(f"- {item['field']} — {item['rule_key'] or item['reason_code']} — {detail}")
+        citations.append(
+            QueryCitation(
+                type="validation_check",
+                id=item["check_id"],
+                validation_id=str(validation.validation_id),
+                document_id=str(document.document_id),
+                field=item["field"],
+                code=item["reason_code"],
+            )
+        )
+    lines.append(_SOURCE_NOTE)
+    record = {
+        "type": "mismatched_fields",
+        "document_id": str(document.document_id),
+        "invoice_number": invoice_number,
+        "validation_id": str(validation.validation_id),
+        "validation_result": validation.aggregate_result,
+        "mismatch_count": len(mismatched),
+        "mismatches": mismatched,
+        "agreement": agreement.category.value,
+        "document_confidence_percent": agreement.document_confidence_percent,
+    }
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=[record],
+        citations=citations,
+    )
+
+
+def _explain_document_review(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    document, agreement, decision, invoice_number = _resolve_document_row(
+        parameters,
+        customer_id=customer_id,
+        repository=repository,
+    )
+    label = invoice_number or str(document.document_id)
+    validation = repository.validation_for_document(customer_id, document.document_id)
+    if decision is None:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"No decision record exists for {label}.",
+            records=[],
+            citations=[],
+        )
+
+    reason_codes = list(decision.reason_codes or [])
+    constraints = list(decision.safety_constraints_applied or [])
+    failing = repository.failing_checks(validation) if validation is not None else []
+    mismatched = [item for item in failing if item["result"] == "MISMATCH"]
+    uncertain = [item for item in failing if item["result"] == "UNCERTAIN"]
+
+    lines = [f"{label} was routed to {decision.disposition}."]
+    lines.append(
+        f"Agreement: {agreement.category.value} "
+        f"({_confidence_text(agreement.document_confidence_percent)}); "
+        f"extraction confidence {_confidence_text(agreement.extraction_confidence_percent)}."
+    )
+    if validation is not None:
+        lines.append(
+            f"Validation result: {validation.aggregate_result} — "
+            f"{len(mismatched)} mismatch(es), {len(uncertain)} uncertain."
+        )
+    if reason_codes:
+        lines.append(f"Router reason codes: {', '.join(reason_codes)}.")
+    if constraints:
+        lines.append(f"Safety constraints applied: {', '.join(constraints)}.")
+    if mismatched:
+        lines.append("Mismatched fields:")
+        for item in mismatched[:10]:
+            lines.append(f"- {item['field']} — {item.get('reason_detail') or item['reason_code']}")
+    if uncertain:
+        lines.append("Uncertain fields:")
+        for item in uncertain[:10]:
+            lines.append(f"- {item['field']} — {item.get('reason_detail') or item['reason_code']}")
+    lines.append(_SOURCE_NOTE)
+
+    record = {
+        "type": "review_explanation",
+        "document_id": str(document.document_id),
+        "invoice_number": invoice_number,
+        "decision": decision.disposition,
+        "decision_id": str(decision.decision_id),
+        "reason_codes": reason_codes,
+        "safety_constraints_applied": constraints,
+        "rationale": decision.llm_rationale,
+        "agreement": agreement.category.value,
+        "document_confidence_percent": agreement.document_confidence_percent,
+        "extraction_confidence_percent": agreement.extraction_confidence_percent,
+        "validation_result": validation.aggregate_result if validation else None,
+        "mismatched_fields": [item["field"] for item in mismatched],
+        "uncertain_fields": [item["field"] for item in uncertain],
+    }
+    citations = [
+        QueryCitation(
+            type="decision",
+            id=str(decision.decision_id),
+            decision_id=str(decision.decision_id),
+            document_id=str(document.document_id),
+            shipment_id=str(document.shipment_id),
+            code=decision.disposition,
+        )
+    ]
+    if validation is not None:
+        citations.append(
+            QueryCitation(
+                type="validation",
+                id=str(validation.validation_id),
+                validation_id=str(validation.validation_id),
+                document_id=str(document.document_id),
+                code=validation.aggregate_result,
+            )
+        )
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=[record],
+        citations=citations,
+    )
+
+
+def _compare_agreement(
+    parameters: dict[str, Any],
+    *,
+    customer_id: UUID,
+    repository: QueryRepository,
+    max_results: int,
+) -> tuple[QueryStatus, QueryResultPayload]:
+    del max_results
+    after, before, window_note = _parse_time_window(parameters)
+    breakdown = repository.agreement_breakdown(
+        customer_id,
+        updated_after=after,
+        updated_before=before,
+    )
+    total = sum(breakdown.values())
+    if total == 0:
+        return QueryStatus.EMPTY, QueryResultPayload(
+            answer_summary=f"There are currently 0 classified documents{window_note}.",
+            records=[],
+            citations=[],
+        )
+    lines = [f"Agreement breakdown across {total} document(s){window_note}:"]
+    for category, count in breakdown.items():
+        share = int(round((count / total) * 100))
+        lines.append(f"- {category}: {count} ({share}%)")
+    lines.append(_SOURCE_NOTE)
+    return QueryStatus.RESULT, QueryResultPayload(
+        answer_summary="\n".join(lines),
+        records=[
+            {
+                "type": "agreement_breakdown",
+                "total": total,
+                "counts": dict(breakdown),
+            }
+        ],
+        citations=[],
     )
 
 

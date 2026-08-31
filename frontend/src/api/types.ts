@@ -54,6 +54,8 @@ export interface DocumentListItem {
   agreement?: AgreementCategory | null
   document_confidence?: number | null
   document_confidence_percent?: number | null
+  extraction_confidence?: number | null
+  extraction_confidence_percent?: number | null
   decision?: DecisionKind | null
   validation_result?: ValidationOutcome | null
   invoice_number?: string | null
@@ -102,6 +104,8 @@ export interface DocumentDetail {
   agreement?: AgreementCategory | null
   document_confidence?: number | null
   document_confidence_percent?: number | null
+  extraction_confidence?: number | null
+  extraction_confidence_percent?: number | null
   content?: {
     media_type: string
     size_bytes: number

@@ -139,7 +139,9 @@ describe('DocumentPage', () => {
     expect(screen.getByText('Acme Corp')).toBeInTheDocument()
     expect(screen.getAllByText('consignee_name').length).toBeGreaterThan(0)
     expect(screen.getByText('92%')).toBeInTheDocument()
-    expect(screen.getByText('Document Confidence')).toBeInTheDocument()
+    // Agreement confidence and extraction confidence are reported separately.
+    expect(screen.getByText('Document Agreement Confidence')).toBeInTheDocument()
+    expect(screen.getByText('Extraction Confidence')).toBeInTheDocument()
     expect(screen.getByText('71%')).toBeInTheDocument()
     expect(screen.getByText('PARTIAL AGREEMENT')).toBeInTheDocument()
     expect(screen.getByText('Agreement')).toBeInTheDocument()

@@ -21,6 +21,15 @@ class AgreementCategory(StrEnum):
 HIGH_CONFIDENCE_THRESHOLD = 0.85
 LOW_CONFIDENCE_THRESHOLD = 0.60
 
+# How much a required field contributes to document agreement, given its
+# validation outcome. Extraction confidence answers "did we read it right";
+# these factors answer "does the value agree with the customer's expectation".
+MATCH_FACTOR = 1.0
+UNCERTAIN_FACTOR = 0.5
+MISMATCH_FACTOR = 0.0
+UNVALIDATED_FACTOR = 0.5
+AMBIGUOUS_FACTOR = 0.25
+
 
 @dataclass(frozen=True)
 class FieldConfidenceInput:
@@ -38,15 +47,36 @@ class ValidationCheckInput:
 
 @dataclass(frozen=True)
 class DocumentAgreement:
+    """Document-level reliability.
+
+    ``document_confidence`` is the *agreement* score: how strongly the whole
+    document agrees with the customer's configured expectations. It combines
+    extraction confidence with validation outcomes, so a confidently-read but
+    mismatching value scores low.
+
+    ``extraction_confidence`` is the separate "did the extractor read the text
+    correctly" average. High extraction confidence with a MISMATCH is normal
+    and must not produce high agreement.
+    """
+
     category: AgreementCategory
     document_confidence: float | None
     reasons: tuple[str, ...]
+    extraction_confidence: float | None = None
 
     @property
     def document_confidence_percent(self) -> int | None:
-        if self.document_confidence is None:
-            return None
-        return int(round(self.document_confidence * 100))
+        return _percent(self.document_confidence)
+
+    @property
+    def extraction_confidence_percent(self) -> int | None:
+        return _percent(self.extraction_confidence)
+
+
+def _percent(value: float | None) -> int | None:
+    if value is None:
+        return None
+    return int(round(value * 100))
 
 
 def average_required_confidence(
@@ -94,6 +124,73 @@ def missing_required_confidence(
     return False
 
 
+def _worst_outcome_by_field(
+    checks: Sequence[ValidationCheckInput],
+) -> dict[str, str]:
+    """Worst validation outcome per field (a field is only as good as its worst check)."""
+    worst: dict[str, str] = {}
+    for check in checks:
+        name = check.field_name
+        if not name:
+            continue
+        outcome = str(check.outcome or "").upper()
+        prior = worst.get(name)
+        if prior is None or _outcome_rank(outcome) > _outcome_rank(prior):
+            worst[name] = outcome
+    return worst
+
+
+def agreement_score(
+    required_fields: Sequence[str],
+    fields: Sequence[FieldConfidenceInput],
+    checks: Sequence[ValidationCheckInput],
+) -> float | None:
+    """Document agreement over required fields, from extraction + validation evidence.
+
+    Each required field contributes ``extraction_confidence * outcome_factor``.
+    Fields with no evidence (MISSING/UNKNOWN) or a MISMATCH contribute zero, so
+    absent and disagreeing evidence materially reduce the document score. The
+    denominator is always the full required-field count, so a document cannot
+    score highly by validating only a handful of fields.
+    """
+    if not required_fields:
+        return None
+
+    by_name = {item.field_name: item for item in fields}
+    outcomes = _worst_outcome_by_field(checks)
+
+    total = 0.0
+    for name in required_fields:
+        item = by_name.get(name)
+        if item is None or item.is_missing:
+            continue
+
+        presence = (item.presence or "").upper()
+        if presence in {"MISSING", "UNKNOWN"}:
+            continue
+        if item.confidence is None:
+            continue
+
+        base = float(item.confidence)
+        if presence == "AMBIGUOUS":
+            total += base * AMBIGUOUS_FACTOR
+            continue
+
+        outcome = outcomes.get(name)
+        if outcome is None:
+            total += base * UNVALIDATED_FACTOR
+        elif outcome == "MATCH":
+            total += base * MATCH_FACTOR
+        elif outcome == "UNCERTAIN":
+            total += base * UNCERTAIN_FACTOR
+        elif outcome == "MISMATCH":
+            total += base * MISMATCH_FACTOR
+        else:
+            total += base * UNVALIDATED_FACTOR
+
+    return round(total / len(required_fields), 6)
+
+
 def classify_document_agreement(
     *,
     required_fields: Sequence[str],
@@ -105,17 +202,22 @@ def classify_document_agreement(
 ) -> DocumentAgreement:
     """Classify agreement from persisted extraction + validation evidence only."""
     reasons: list[str] = []
-    document_confidence = average_required_confidence(required_fields, fields)
+    extraction = average_required_confidence(required_fields, fields)
+    score = agreement_score(required_fields, fields, checks)
     incomplete_extraction = missing_required_confidence(required_fields, fields)
+
+    def result(category: AgreementCategory, reason: str) -> DocumentAgreement:
+        reasons.append(reason)
+        return DocumentAgreement(
+            category=category,
+            document_confidence=score,
+            reasons=tuple(reasons),
+            extraction_confidence=extraction,
+        )
 
     status = (validation_status or "").strip().lower()
     if not status or status not in {"completed", "complete"}:
-        reasons.append("validation_missing_or_incomplete")
-        return DocumentAgreement(
-            category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
-        )
+        return result(AgreementCategory.WEAK_AGREEMENT, "validation_missing_or_incomplete")
 
     outcomes = [str(check.outcome or "").upper() for check in checks]
     mismatch_count = sum(1 for outcome in outcomes if outcome == "MISMATCH")
@@ -123,49 +225,27 @@ def classify_document_agreement(
     match_count = sum(1 for outcome in outcomes if outcome == "MATCH")
 
     if mismatch_count:
-        reasons.append("validation_mismatch")
-        return DocumentAgreement(
-            category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
+        return result(AgreementCategory.WEAK_AGREEMENT, "validation_mismatch")
+
+    if incomplete_extraction or extraction is None:
+        return result(
+            AgreementCategory.WEAK_AGREEMENT,
+            "missing_required_extraction_confidence",
         )
 
-    if incomplete_extraction or document_confidence is None:
-        reasons.append("missing_required_extraction_confidence")
-        return DocumentAgreement(
-            category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
-        )
-
-    if document_confidence < low_confidence_threshold:
-        reasons.append("low_extraction_confidence")
-        return DocumentAgreement(
-            category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
-        )
+    if extraction < low_confidence_threshold:
+        return result(AgreementCategory.WEAK_AGREEMENT, "low_extraction_confidence")
 
     required_set = set(required_fields)
-    required_outcomes: dict[str, str] = {}
-    for check in checks:
-        name = check.field_name
-        if not name or name not in required_set:
-            continue
-        outcome = str(check.outcome or "").upper()
-        # Prefer worst outcome if multiple checks touch the same field.
-        prior = required_outcomes.get(name)
-        if prior is None or _outcome_rank(outcome) > _outcome_rank(prior):
-            required_outcomes[name] = outcome
+    required_outcomes = {
+        name: outcome
+        for name, outcome in _worst_outcome_by_field(checks).items()
+        if name in required_set
+    }
 
     missing_required_checks = [name for name in required_fields if name not in required_outcomes]
     if missing_required_checks:
-        reasons.append("incomplete_required_validation")
-        return DocumentAgreement(
-            category=AgreementCategory.WEAK_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
-        )
+        return result(AgreementCategory.WEAK_AGREEMENT, "incomplete_required_validation")
 
     required_uncertain = [
         name for name, outcome in required_outcomes.items() if outcome == "UNCERTAIN"
@@ -177,34 +257,27 @@ def classify_document_agreement(
         all_required_match
         and not any_uncertain
         and not required_uncertain
-        and document_confidence >= high_confidence_threshold
+        and extraction >= high_confidence_threshold
+        and score is not None
+        and score >= high_confidence_threshold
     ):
-        reasons.append("all_required_match_high_confidence")
-        return DocumentAgreement(
-            category=AgreementCategory.STRONG_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
+        return result(
+            AgreementCategory.STRONG_AGREEMENT,
+            "all_required_match_high_confidence",
         )
 
     if match_count > 0 and (
         any_uncertain
         or required_uncertain
-        or document_confidence < high_confidence_threshold
+        or extraction < high_confidence_threshold
         or not all_required_match
     ):
-        reasons.append("partial_alignment_requires_attention")
-        return DocumentAgreement(
-            category=AgreementCategory.PARTIAL_AGREEMENT,
-            document_confidence=document_confidence,
-            reasons=tuple(reasons),
+        return result(
+            AgreementCategory.PARTIAL_AGREEMENT,
+            "partial_alignment_requires_attention",
         )
 
-    reasons.append("insufficient_evidence_for_strong")
-    return DocumentAgreement(
-        category=AgreementCategory.WEAK_AGREEMENT,
-        document_confidence=document_confidence,
-        reasons=tuple(reasons),
-    )
+    return result(AgreementCategory.WEAK_AGREEMENT, "insufficient_evidence_for_strong")
 
 
 def _outcome_rank(outcome: str) -> int:
@@ -218,10 +291,17 @@ def _outcome_rank(outcome: str) -> int:
 
 
 def agreement_wire(result: DocumentAgreement) -> dict[str, object]:
-    """Stable API projection for agreement (orthogonal to decision)."""
+    """Stable API projection for agreement (orthogonal to decision).
+
+    ``document_confidence`` is the agreement score; ``extraction_confidence`` is
+    reported alongside it so consumers can tell "read correctly" apart from
+    "agrees with expectations".
+    """
     return {
         "agreement": result.category.value,
         "document_confidence": result.document_confidence,
         "document_confidence_percent": result.document_confidence_percent,
+        "extraction_confidence": result.extraction_confidence,
+        "extraction_confidence_percent": result.extraction_confidence_percent,
         "agreement_reasons": list(result.reasons),
     }
