@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -147,20 +147,25 @@ describe('QueryPage', () => {
     })
   })
 
-  it('renders EMPTY status', async () => {
+  it('renders EMPTY status with grounded zero-count answer', async () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
       mockFetch(() =>
         jsonResponse({
-          question: 'Any failed docs?',
+          question: 'How many documents were auto approved?',
+          interpreted_intent: {
+            name: 'count_documents_by_decision',
+            version: '1',
+            parameters: { decision: 'AUTO_APPROVE' },
+          },
           status: 'EMPTY',
           result: {
-            answer_summary: 'No matching records found.',
+            answer_summary: '0 documents were AUTO_APPROVE.',
             records: [],
             citations: [],
           },
-          trace_id: 'trace_empty',
+          trace_id: 'trace_empty_count',
         }),
       ),
     )
@@ -171,12 +176,16 @@ describe('QueryPage', () => {
       </MemoryRouter>,
     )
 
-    await user.type(screen.getByLabelText(/question/i), 'Any failed docs?')
+    await user.type(
+      screen.getByLabelText(/question/i),
+      'How many documents were auto approved?',
+    )
     await user.click(screen.getByRole('button', { name: /submit query/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/no matching records found/i)).toBeInTheDocument()
       expect(screen.getByText('EMPTY')).toBeInTheDocument()
+      expect(screen.getByText(/0 documents were AUTO_APPROVE/i)).toBeInTheDocument()
+      expect(screen.queryByText(/^No matching records$/i)).not.toBeInTheDocument()
     })
   })
 
@@ -276,6 +285,102 @@ describe('QueryPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/upstream dependency failed/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
+    })
+  })
+
+  it('runs an example query immediately when customer id is set', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(() =>
+        jsonResponse({
+          question: 'How many documents are there?',
+          interpreted_intent: {
+            name: 'count_documents',
+            version: '1',
+            parameters: {},
+          },
+          status: 'RESULT',
+          result: {
+            answer_summary: 'There are 3 document(s).',
+            records: [{ type: 'document_count', count: 3 }],
+            citations: [],
+          },
+          trace_id: 'trace_example',
+        }),
+      ),
+    )
+
+    render(
+      <MemoryRouter>
+        <QueryPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByText('How many documents are there?'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/there are 3 document\(s\)/i)).toBeInTheDocument()
+      expect(screen.getByText('RESULT')).toBeInTheDocument()
+    })
+  })
+
+  it('ignores stale responses when a newer query finishes first', async () => {
+    const resolvers: Array<(value: Response) => void> = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolvers.push(resolve)
+          }),
+      ),
+    )
+
+    render(
+      <MemoryRouter>
+        <QueryPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByText('How many documents are there?'))
+    fireEvent.click(screen.getByText('How many documents need human review?'))
+
+    expect(resolvers).toHaveLength(2)
+
+    resolvers[1](
+      jsonResponse({
+        question: 'How many documents need human review?',
+        status: 'RESULT',
+        result: {
+          answer_summary: 'Second answer.',
+          records: [],
+          citations: [],
+        },
+        trace_id: 'trace_second',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText(/second answer/i)).toBeInTheDocument()
+    })
+
+    resolvers[0](
+      jsonResponse({
+        question: 'How many documents are there?',
+        status: 'RESULT',
+        result: {
+          answer_summary: 'Stale first answer.',
+          records: [],
+          citations: [],
+        },
+        trace_id: 'trace_first',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(screen.queryByText(/stale first answer/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/second answer/i)).toBeInTheDocument()
     })
   })
 

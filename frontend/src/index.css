@@ -846,6 +846,13 @@ table.data-table td.id-cell {
   line-height: 1.45;
 }
 
+.record-detail-list {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
 .badge-row {
   display: flex;
   flex-wrap: wrap;

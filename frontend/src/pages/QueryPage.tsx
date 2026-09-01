@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiClientError, NetworkError, submitQuery, TimeoutError } from '../api'
 import type { QueryResponse } from '../api/types'
@@ -118,6 +118,56 @@ function confidenceDisplay(record: Record<string, unknown>): string {
   return 'Confidence unavailable'
 }
 
+function extractionDisplay(record: Record<string, unknown>): string | null {
+  const percent = record.extraction_confidence_percent
+  if (typeof percent === 'number') {
+    return `${percent}%`
+  }
+  const score = record.extraction_confidence
+  if (typeof score === 'number') {
+    return formatConfidence(score)
+  }
+  return null
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+  return value.filter((item): item is string => typeof item === 'string')
+}
+
+function recordDetails(record: Record<string, unknown>): string[] {
+  const lines: string[] = []
+  const mismatches = record.mismatches
+  if (Array.isArray(mismatches)) {
+    for (const item of mismatches) {
+      if (item && typeof item === 'object' && 'field' in item) {
+        const field = String((item as { field?: unknown }).field ?? '—')
+        const detail =
+          (item as { reason_detail?: unknown; reason_code?: unknown })
+            .reason_detail ??
+          (item as { reason_code?: unknown }).reason_code ??
+          '—'
+        lines.push(`${field} — ${String(detail)}`)
+      }
+    }
+  }
+  const mismatchedFields = stringList(record.mismatched_fields)
+  if (mismatchedFields.length > 0 && lines.length === 0) {
+    lines.push(...mismatchedFields.map((field) => `${field} — MISMATCH`))
+  }
+  const uncertainFields = stringList(record.uncertain_fields)
+  for (const field of uncertainFields) {
+    lines.push(`${field} — UNCERTAIN`)
+  }
+  const rationale = record.rationale
+  if (typeof rationale === 'string' && rationale.trim()) {
+    lines.push(`Rationale: ${rationale}`)
+  }
+  return lines
+}
+
 export function QueryPage() {
   const [question, setQuestion] = useState('')
   const [customerId, setCustomerId] = useState(readStoredCustomerId)
@@ -128,42 +178,68 @@ export function QueryPage() {
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [clientError, setClientError] = useState<string | null>(null)
+  const requestSeq = useRef(0)
 
-  async function runQuery() {
-    setClientError(null)
-    setError(null)
-    setResponse(null)
+  // Keep customer scope aligned with dashboard/upload when returning to this page.
+  useEffect(() => {
+    const syncCustomer = () => {
+      const stored = readStoredCustomerId()
+      if (stored) {
+        setCustomerId(stored)
+      }
+    }
+    syncCustomer()
+    window.addEventListener('focus', syncCustomer)
+    return () => window.removeEventListener('focus', syncCustomer)
+  }, [])
 
-    if (!question.trim()) {
-      setClientError('Question is required.')
-      return
+  function validateInputs(
+    questionText: string,
+    options?: { requireShipment?: boolean; requireDocument?: boolean },
+  ): string | null {
+    if (!questionText.trim()) {
+      return 'Question is required.'
     }
     if (!customerId.trim()) {
-      setClientError('Customer ID is required.')
-      return
+      return 'Customer ID is required. Create or load a customer on the Dashboard first.'
     }
     if (!isUuid(customerId.trim())) {
-      setClientError('Customer ID must be a valid UUID.')
-      return
+      return 'Customer ID must be a valid UUID.'
     }
     if (shipmentId.trim() && !isUuid(shipmentId.trim())) {
-      setClientError('Shipment ID must be a valid UUID when provided.')
-      return
+      return 'Shipment ID must be a valid UUID when provided.'
     }
     if (documentId.trim() && !isUuid(documentId.trim())) {
-      setClientError('Document ID must be a valid UUID when provided.')
-      return
+      return 'Document ID must be a valid UUID when provided.'
     }
     if (runId.trim() && !isUuid(runId.trim())) {
-      setClientError('Run ID must be a valid UUID when provided.')
+      return 'Run ID must be a valid UUID when provided.'
+    }
+    if (options?.requireShipment && !shipmentId.trim()) {
+      return 'This example needs a shipment ID in the scope fields below.'
+    }
+    if (options?.requireDocument && !documentId.trim()) {
+      return 'This example needs a document ID in the scope fields below.'
+    }
+    return null
+  }
+
+  async function runQuery(questionOverride?: string) {
+    const questionText = (questionOverride ?? question).trim()
+    const validationError = validateInputs(questionText)
+    setClientError(validationError)
+    setError(null)
+    setResponse(null)
+    if (validationError) {
       return
     }
 
+    const seq = ++requestSeq.current
     storeCustomerId(customerId.trim())
     setLoading(true)
     try {
       const result = await submitQuery({
-        question: question.trim(),
+        question: questionText,
         customer_id: customerId.trim(),
         scope: {
           shipment_id: shipmentId.trim() || null,
@@ -171,11 +247,19 @@ export function QueryPage() {
           run_id: runId.trim() || null,
         },
       })
+      if (seq !== requestSeq.current) {
+        return
+      }
       setResponse(result)
     } catch (err) {
+      if (seq !== requestSeq.current) {
+        return
+      }
       setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
-      setLoading(false)
+      if (seq === requestSeq.current) {
+        setLoading(false)
+      }
     }
   }
 
@@ -184,21 +268,23 @@ export function QueryPage() {
     await runQuery()
   }
 
-  function applyExample(example: (typeof EXAMPLE_QUERIES)[number]) {
+  async function applyExample(example: (typeof EXAMPLE_QUERIES)[number]) {
     setQuestion(example.question)
     setClientError(null)
     setError(null)
     setResponse(null)
-    if ('needsShipment' in example && example.needsShipment && !shipmentId.trim()) {
-      setClientError(
-        'This example needs a shipment ID in the scope fields below.',
-      )
+
+    const needsShipment = 'needsShipment' in example && example.needsShipment
+    const needsDocument = 'needsDocument' in example && example.needsDocument
+    const validationError = validateInputs(example.question, {
+      requireShipment: needsShipment,
+      requireDocument: needsDocument,
+    })
+    if (validationError) {
+      setClientError(validationError)
+      return
     }
-    if ('needsDocument' in example && example.needsDocument && !documentId.trim()) {
-      setClientError(
-        'This example needs a document ID in the scope fields below.',
-      )
-    }
+    await runQuery(example.question)
   }
 
   return (
@@ -217,8 +303,8 @@ export function QueryPage() {
           <h2>Example questions</h2>
         </div>
         <p className="form-hint">
-          Click an example to fill the question. Add scope IDs when the intent
-          requires them.
+          Click an example to run it immediately when a valid customer ID is set.
+          Add scope IDs when the intent requires them.
         </p>
         <div className="example-queries" role="list">
           {EXAMPLE_QUERIES.map((example) => (
@@ -227,7 +313,7 @@ export function QueryPage() {
               type="button"
               className="example-chip"
               role="listitem"
-              onClick={() => applyExample(example)}
+              onClick={() => void applyExample(example)}
             >
               {example.label}
             </button>
@@ -272,6 +358,10 @@ export function QueryPage() {
             autoComplete="off"
             disabled={loading}
           />
+          <p className="form-hint">
+            Queries are scoped to this customer. Use the same ID shown on the{' '}
+            <Link to="/">Dashboard</Link> after upload.
+          </p>
         </div>
         <div className="form-grid">
           <div className="form-row">
@@ -402,7 +492,8 @@ export function QueryPage() {
                       <tr>
                         <th scope="col">Type</th>
                         <th scope="col">Identifier</th>
-                        <th scope="col">Confidence</th>
+                        <th scope="col">Agreement confidence</th>
+                        <th scope="col">Extraction</th>
                         <th scope="col">Agreement</th>
                         <th scope="col">Decision / status</th>
                       </tr>
@@ -418,6 +509,8 @@ export function QueryPage() {
                           typeof record.invoice_number === 'string'
                             ? record.invoice_number
                             : null
+                        const details = recordDetails(record)
+                        const extraction = extractionDisplay(record)
                         return (
                           <tr key={`record-${index}`}>
                             <td>{String(record.type ?? 'record')}</td>
@@ -455,11 +548,19 @@ export function QueryPage() {
                               {'run_id' in record && record.run_id ? (
                                 <div>Run: {String(record.run_id)}</div>
                               ) : null}
+                              {details.length > 0 ? (
+                                <ul className="record-detail-list">
+                                  {details.map((line) => (
+                                    <li key={line}>{line}</li>
+                                  ))}
+                                </ul>
+                              ) : null}
                               {count == null &&
                               !invoice &&
                               !record.document_id &&
                               !record.shipment_id &&
-                              !record.run_id
+                              !record.run_id &&
+                              details.length === 0
                                 ? '—'
                                 : null}
                             </td>
@@ -470,6 +571,7 @@ export function QueryPage() {
                                 ? confidenceDisplay(record)
                                 : '—'}
                             </td>
+                            <td>{extraction ?? '—'}</td>
                             <td>
                               {agreement ? (
                                 <StatusBadge status={agreement} />
@@ -517,13 +619,19 @@ export function QueryPage() {
             </>
           ) : null}
 
-          {response.status === 'EMPTY' ? (
+          {response.status === 'EMPTY' && response.result?.answer_summary ? (
+            <>
+              <p className="query-summary">
+                <strong>Answer:</strong>
+              </p>
+              <pre className="query-answer">{response.result.answer_summary}</pre>
+            </>
+          ) : null}
+
+          {response.status === 'EMPTY' && !response.result?.answer_summary ? (
             <EmptyState
               title="No matching records"
-              message={
-                response.result?.answer_summary ??
-                'The query succeeded but found no matching records.'
-              }
+              message="The query succeeded but found no matching records."
             />
           ) : null}
 
