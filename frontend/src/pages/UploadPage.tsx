@@ -341,12 +341,14 @@ export function UploadPage() {
             <div>
               <h2 className="result-banner__title">
                 {result.idempotent_replay
-                  ? 'Idempotent replay — existing acceptance returned'
-                  : 'Document accepted'}
+                  ? 'Idempotent replay — existing upload returned'
+                  : 'Upload received'}
               </h2>
               <p className="result-banner__body">
-                Your document was accepted and queued for processing. Use the
-                IDs below to track verification status.
+                The file was stored and queued for verification. Upload
+                acceptance is not a routing decision — open the document to
+                see validation and AUTO_APPROVE / HUMAN_REVIEW /
+                AMENDMENT_REQUEST.
               </p>
             </div>
           </div>
@@ -375,8 +377,8 @@ export function UploadPage() {
             <dt>Idempotent replay</dt>
             <dd>
               {result.idempotent_replay
-                ? 'Yes — same idempotency key and payload returned the prior acceptance'
-                : 'No — this was a new acceptance'}
+                ? 'Yes — same idempotency key and payload returned the prior upload'
+                : 'No — this was a new upload'}
             </dd>
             <dt>Trace ID</dt>
             <dd>

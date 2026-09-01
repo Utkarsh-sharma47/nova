@@ -18,9 +18,9 @@ browse shipments, and ask grounded questions through the Query API.
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Dashboard — ops summary totals, recent documents/decisions |
+| `/` | Dashboard — ops summary totals, agreement counts/filters, recent documents/decisions |
 | `/upload` | Multipart upload with `Idempotency-Key` |
-| `/documents/:documentId` | Metadata, extraction, validation, decision |
+| `/documents/:documentId` | Metadata, agreement/confidence, extraction, validation, decision |
 | `/shipments/:shipmentId` | Shipment identity and linked documents |
 | `/query` | `POST /v1/query` with explicit supported-intent guidance |
 

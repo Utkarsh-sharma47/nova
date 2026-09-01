@@ -142,6 +142,42 @@ export function DocumentPage() {
           <dd>
             <StatusBadge status={doc.status} showLifecycle />
           </dd>
+          <dt>Document Agreement Confidence</dt>
+          <dd>
+            {doc.document_confidence_percent != null
+              ? `${doc.document_confidence_percent}%`
+              : 'Confidence unavailable'}
+          </dd>
+          <dt>Extraction Confidence</dt>
+          <dd>
+            {doc.extraction_confidence_percent != null
+              ? `${doc.extraction_confidence_percent}%`
+              : 'Confidence unavailable'}
+          </dd>
+          <dt>Agreement</dt>
+          <dd>
+            {doc.agreement ? <StatusBadge status={doc.agreement} /> : '—'}
+          </dd>
+          <dt>Validation</dt>
+          <dd>
+            {validationLoading ? (
+              'Loading…'
+            ) : validation ? (
+              <StatusBadge status={validation.overall_result} />
+            ) : (
+              '—'
+            )}
+          </dd>
+          <dt>Decision</dt>
+          <dd>
+            {decisionLoading ? (
+              'Loading…'
+            ) : decision ? (
+              <StatusBadge status={decision.decision} />
+            ) : (
+              '—'
+            )}
+          </dd>
           <dt>Customer</dt>
           <dd>{doc.customer_id}</dd>
           <dt>Shipment</dt>

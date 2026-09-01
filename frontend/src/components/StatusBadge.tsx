@@ -1,8 +1,9 @@
 import { toLifecycleBadge } from '../utils/status'
-import type { DocumentStatus } from '../api/types'
+import type { AgreementCategory, DocumentStatus } from '../api/types'
 
 type BadgeVariant =
   | DocumentStatus
+  | AgreementCategory
   | 'PROCESSING'
   | 'PROCESSED'
   | 'FAILED'
@@ -20,6 +21,9 @@ type BadgeVariant =
   | 'EXTRACTED'
   | 'VALIDATED'
   | 'DECIDED'
+  | 'STRONG AGREEMENT'
+  | 'PARTIAL AGREEMENT'
+  | 'WEAK AGREEMENT'
 
 const TONE_MAP: Record<string, string> = {
   PROCESSING: 'info',
@@ -31,14 +35,26 @@ const TONE_MAP: Record<string, string> = {
   MATCH: 'success',
   AUTO_APPROVE: 'success',
   RESULT: 'success',
+  STRONG_AGREEMENT: 'success',
+  'STRONG AGREEMENT': 'success',
   FAILED: 'danger',
   MISMATCH: 'danger',
   AMENDMENT_REQUEST: 'danger',
   FAILURE: 'danger',
+  WEAK_AGREEMENT: 'danger',
+  'WEAK AGREEMENT': 'danger',
   UNCERTAIN: 'warning',
   HUMAN_REVIEW: 'warning',
   UNSUPPORTED: 'warning',
+  PARTIAL_AGREEMENT: 'warning',
+  'PARTIAL AGREEMENT': 'warning',
   EMPTY: 'neutral',
+}
+
+const AGREEMENT_LABELS: Record<string, string> = {
+  STRONG_AGREEMENT: 'STRONG AGREEMENT',
+  PARTIAL_AGREEMENT: 'PARTIAL AGREEMENT',
+  WEAK_AGREEMENT: 'WEAK AGREEMENT',
 }
 
 interface StatusBadgeProps {
@@ -52,8 +68,8 @@ export function StatusBadge({ status, showLifecycle = false }: StatusBadgeProps)
       ? toLifecycleBadge(status)
       : null
 
-  const displayStatus = lifecycle ?? status
-  const tone = TONE_MAP[displayStatus] ?? 'neutral'
+  const displayStatus = lifecycle ?? AGREEMENT_LABELS[status] ?? status
+  const tone = TONE_MAP[String(displayStatus)] ?? TONE_MAP[String(status)] ?? 'neutral'
 
   return (
     <span

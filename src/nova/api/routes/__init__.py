@@ -137,10 +137,12 @@ def list_documents(
     _principal: Annotated[str, Depends(authenticate)],
     service: Annotated[OpsService, Depends(ops_service)],
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    agreement: Annotated[str | None, Query()] = None,
 ) -> dict[str, object]:
     return service.list_documents(
         customer_id,
         limit=limit,
+        agreement=agreement,
         trace_id=str(request.state.trace_id),
     )
 

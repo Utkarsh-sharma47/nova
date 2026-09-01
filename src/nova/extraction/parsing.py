@@ -180,6 +180,10 @@ def _build_field(
             or (item.snippet and _snippet_in_text(item.snippet, document_text))
         ]
 
+    if presence != FieldPresence.KNOWN and presence != FieldPresence.AMBIGUOUS:
+        # A field with no value must never carry a confident score forward.
+        confidence = None
+
     confidence_band = _band(confidence)
     codes = _codes_for(presence, uncertainty, confidence)
 
@@ -196,7 +200,9 @@ def _build_field(
         presence=presence,
         confidence=float(confidence) if confidence is not None else None,
         confidence_band=confidence_band,
-        confidence_source=ConfidenceSource.MODEL,
+        confidence_source=(
+            ConfidenceSource.MODEL if confidence is not None else ConfidenceSource.UNKNOWN
+        ),
         uncertainty=uncertainty,
         uncertainty_codes=codes,
         evidence=evidence,

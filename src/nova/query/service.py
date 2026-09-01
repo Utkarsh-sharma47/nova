@@ -21,7 +21,11 @@ from nova.contracts.query import (
 from nova.llm.errors import LLMError, LLMTimeoutError
 from nova.llm.port import LLMPort
 from nova.query.classifier import classify_intent
-from nova.query.executors import MissingEntityError, execute_intent
+from nova.query.executors import (
+    AmbiguousReferenceError,
+    MissingEntityError,
+    execute_intent,
+)
 from nova.query.repository import QueryRepository
 
 logger = logging.getLogger("nova.query")
@@ -82,6 +86,22 @@ class QueryService:
                 customer_id=request.customer_id,
                 repository=self.repository,
                 max_results=max_results,
+            )
+        except AmbiguousReferenceError as exc:
+            self._log(request, trace_id, intent.name.value, QueryStatus.UNSUPPORTED, started)
+            return QueryResponse(
+                question=request.question,
+                interpreted_intent=intent,
+                status=QueryStatus.UNSUPPORTED,
+                unsupported=UnsupportedPayload(
+                    reason_code=UnsupportedReasonCode.AMBIGUOUS_INTENT,
+                    message=(
+                        f'"{exc.reference}" matches {len(exc.candidates)} documents. '
+                        "Ask again naming one of them."
+                    ),
+                    suggestions=[f"Ask about {candidate}" for candidate in exc.candidates],
+                ),
+                trace_id=trace_id,
             )
         except MissingEntityError as exc:
             self._log(request, trace_id, intent.name.value, QueryStatus.EMPTY, started)

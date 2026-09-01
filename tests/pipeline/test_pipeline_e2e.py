@@ -19,6 +19,9 @@ from nova.agents.validator.agent import ValidatorAgent
 from nova.api.app import create_app
 from nova.application.extraction import ExtractionApplicationService, build_default_llm
 from nova.application.pipeline import PipelineOrchestrator
+from nova.application.rules import (
+    customer_metadata_with_expected_fields,
+)
 from nova.application.validation_persistence import SqlValidationStore
 from nova.config import Settings
 from nova.contracts.common import FieldPresence, UncertaintyFlag
@@ -49,6 +52,38 @@ from nova.validation_store import FailingValidationStore
 
 AUTH = {"X-API-Key": "nova-test-token"}
 
+# Expected values matching `_invoice_body()` so default API path can AUTO_APPROVE.
+_INVOICE_EXPECTED: dict[str, str] = {
+    "invoice_number": "INV-42",
+    "invoice_date": "2026-02-01",
+    "seller_name": "Acme Trading",
+    "buyer_name": "Globex Corp",
+    "consignee_name": "Globex Corp",
+    "hs_code": "8471.30",
+    "port_of_loading": "Singapore",
+    "port_of_discharge": "Rotterdam",
+    "incoterms": "FOB",
+    "description_of_goods": "Widget assemblies",
+    "gross_weight": "1250 KG",
+    "currency": "USD",
+    "total_amount": "1250.00",
+}
+
+_BOL_EXPECTED: dict[str, str] = {
+    "bl_number": "BL-9001",
+    "vessel_name": "Pacific Star",
+    "shipper_name": "Acme Trading",
+    "consignee_name": "Globex Corp",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Los Angeles",
+    "container_number": "MSKU1234567",
+    "hs_code": "8471.30",
+    "incoterms": "CIF",
+    "description_of_goods": "Widget assemblies",
+    "gross_weight": "1250 KG",
+    "invoice_number": "INV-42",
+}
+
 
 @pytest.fixture
 def client(tmp_path: Path) -> Iterator[tuple[TestClient, UUID, Path]]:
@@ -63,7 +98,14 @@ def client(tmp_path: Path) -> Iterator[tuple[TestClient, UUID, Path]]:
         Base.metadata.create_all(get_engine())
         customer_id = uuid4()
         with session_scope() as session:
-            session.add(Customer(customer_id=customer_id, name="Test Customer", status="active"))
+            session.add(
+                Customer(
+                    customer_id=customer_id,
+                    name="Test Customer",
+                    status="active",
+                    metadata_json=customer_metadata_with_expected_fields(_INVOICE_EXPECTED),
+                )
+            )
         yield test_client, customer_id, tmp_path
 
 
@@ -202,6 +244,9 @@ def test_01_valid_invoice_pipeline(client: tuple[TestClient, UUID, Path]) -> Non
     assert detail.status_code == 200
     assert detail.json()["status"] == "DECIDED"
     assert detail.json()["extraction"] is not None
+    assert detail.json()["agreement"] == "STRONG_AGREEMENT"
+    assert detail.json()["document_confidence"] is not None
+    assert detail.json()["document_confidence"] >= 0.85
 
     validation = test_client.get(f"/v1/documents/{document_id}/validation", headers=AUTH)
     assert validation.status_code == 200
@@ -210,6 +255,8 @@ def test_01_valid_invoice_pipeline(client: tuple[TestClient, UUID, Path]) -> Non
     decision = test_client.get(f"/v1/documents/{document_id}/decision", headers=AUTH)
     assert decision.status_code == 200
     assert decision.json()["decision"] == "AUTO_APPROVE"
+    # Agreement is analytical and orthogonal to the router decision.
+    assert detail.json()["agreement"] != decision.json()["decision"]
 
     shipment = test_client.get(f"/v1/shipments/{body['shipment_id']}", headers=AUTH).json()
     assert shipment["latest_decision"]["decision"] == "AUTO_APPROVE"
@@ -217,6 +264,12 @@ def test_01_valid_invoice_pipeline(client: tuple[TestClient, UUID, Path]) -> Non
 
 def test_02_valid_bol_pipeline(client: tuple[TestClient, UUID, Path]) -> None:
     test_client, customer_id, _ = client
+    with session_scope() as session:
+        customer = session.get(Customer, customer_id)
+        assert customer is not None
+        customer.metadata_json = customer_metadata_with_expected_fields(_BOL_EXPECTED)
+        session.add(customer)
+
     body = _ingest(
         test_client,
         customer_id,

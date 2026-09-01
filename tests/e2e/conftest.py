@@ -11,12 +11,44 @@ import pytest
 from fastapi.testclient import TestClient
 
 from nova.api.app import create_app
+from nova.application.rules import customer_metadata_with_expected_fields
 from nova.config import Settings
 from nova.persistence.database import get_engine, session_scope
 from nova.persistence.models import Base, Customer
 from tests.query.conftest import SeededWorld, _seed
 
 AUTH = {"X-API-Key": "nova-test-token"}
+
+PHASE10_INVOICE_EXPECTED: dict[str, str] = {
+    "invoice_number": "INV-42",
+    "invoice_date": "2026-02-01",
+    "seller_name": "Acme Trading",
+    "buyer_name": "Globex Corp",
+    "consignee_name": "Globex Corp",
+    "hs_code": "8471.30",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Los Angeles",
+    "incoterms": "FOB",
+    "description_of_goods": "Electronic components for Phase 10 E2E.",
+    "gross_weight": "1250 KG",
+    "currency": "USD",
+    "total_amount": "1250.00",
+}
+
+PHASE10_BOL_EXPECTED: dict[str, str] = {
+    "bl_number": "BL-9001",
+    "vessel_name": "Pacific Star",
+    "shipper_name": "Acme Trading",
+    "consignee_name": "Globex Corp",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Los Angeles",
+    "container_number": "MSKU1234567",
+    "hs_code": "8471.30",
+    "incoterms": "FOB",
+    "description_of_goods": "Containerized electronics.",
+    "gross_weight": "22000 KG",
+    "invoice_number": "INV-BOL-1",
+}
 
 
 @pytest.fixture
@@ -32,7 +64,14 @@ def client(tmp_path: Path) -> Iterator[tuple[TestClient, UUID, Path]]:
         Base.metadata.create_all(get_engine())
         customer_id = uuid4()
         with session_scope() as session:
-            session.add(Customer(customer_id=customer_id, name="Phase10 Customer", status="active"))
+            session.add(
+                Customer(
+                    customer_id=customer_id,
+                    name="Phase10 Customer",
+                    status="active",
+                    metadata_json=customer_metadata_with_expected_fields(PHASE10_INVOICE_EXPECTED),
+                )
+            )
         yield test_client, customer_id, tmp_path
 
 

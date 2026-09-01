@@ -9,6 +9,15 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from nova.application.agreement_projection import (
+    agreement_counts_for_customer,
+    enrich_document_item,
+)
+from nova.application.rules import (
+    customer_metadata_with_expected_fields,
+    demo_control_group_expected_fields,
+)
+from nova.domain.agreement import AgreementCategory
 from nova.domain.errors import CustomerNotFound, ValidationFailure
 from nova.persistence.models import (
     Customer,
@@ -64,7 +73,13 @@ class OpsService:
         cleaned = name.strip()
         if not cleaned:
             raise ValidationFailure("Customer name is required.", details={"field": "name"})
-        customer = Customer(name=cleaned, status="active")
+        customer = Customer(
+            name=cleaned,
+            status="active",
+            metadata_json=customer_metadata_with_expected_fields(
+                demo_control_group_expected_fields()
+            ),
+        )
         self.session.add(customer)
         self.session.commit()
         return {
@@ -81,9 +96,20 @@ class OpsService:
         *,
         limit: int,
         trace_id: str,
+        agreement: str | None = None,
     ) -> dict[str, Any]:
         self.ensure_customer(customer_id)
         capped = max(1, min(limit, 100))
+        agreement_filter: AgreementCategory | None = None
+        if agreement is not None and str(agreement).strip():
+            try:
+                agreement_filter = AgreementCategory(str(agreement).strip().upper())
+            except ValueError as exc:
+                raise ValidationFailure(
+                    "Unsupported agreement filter.",
+                    details={"agreement": agreement},
+                ) from exc
+
         rows = self.session.scalars(
             select(Document)
             .join(Shipment, Shipment.shipment_id == Document.shipment_id)
@@ -93,22 +119,28 @@ class OpsService:
                 Shipment.deleted_at.is_(None),
             )
             .order_by(Document.updated_at.desc())
-            .limit(capped)
         ).all()
-        items = [
-            {
-                "document_id": str(doc.document_id),
-                "shipment_id": str(doc.shipment_id),
-                "customer_id": str(customer_id),
-                "document_type": _TYPE_TO_WIRE.get(doc.document_type, "OTHER"),
-                "status": _STATUS_TO_WIRE.get(doc.status, doc.status.upper()),
-                "run_id": None,
-                "created_at": _iso(doc.created_at),
-                "updated_at": _iso(doc.updated_at),
-            }
-            for doc in rows
-        ]
-        return {"items": items, "limit": capped, "trace_id": trace_id}
+        items: list[dict[str, Any]] = []
+        for doc in rows:
+            item = enrich_document_item(
+                self.session,
+                doc,
+                customer_id=customer_id,
+                type_wire=_TYPE_TO_WIRE,
+                status_wire=_STATUS_TO_WIRE,
+                iso=_iso,
+            )
+            if agreement_filter is not None and item.get("agreement") != agreement_filter.value:
+                continue
+            items.append(item)
+            if len(items) >= capped:
+                break
+        return {
+            "items": items,
+            "limit": capped,
+            "agreement_filter": agreement_filter.value if agreement_filter else None,
+            "trace_id": trace_id,
+        }
 
     def summary(self, customer_id: UUID, *, trace_id: str) -> dict[str, Any]:
         self.ensure_customer(customer_id)
@@ -166,17 +198,16 @@ class OpsService:
             .limit(10)
         ).all()
 
+        agreement_counts = agreement_counts_for_customer(self.session, customer_id)
         recent_documents = [
-            {
-                "document_id": str(doc.document_id),
-                "shipment_id": str(doc.shipment_id),
-                "customer_id": str(customer_id),
-                "document_type": _TYPE_TO_WIRE.get(doc.document_type, "OTHER"),
-                "status": _STATUS_TO_WIRE.get(doc.status, doc.status.upper()),
-                "run_id": None,
-                "created_at": _iso(doc.created_at),
-                "updated_at": _iso(doc.updated_at),
-            }
+            enrich_document_item(
+                self.session,
+                doc,
+                customer_id=customer_id,
+                type_wire=_TYPE_TO_WIRE,
+                status_wire=_STATUS_TO_WIRE,
+                iso=_iso,
+            )
             for doc in documents[:10]
         ]
 
@@ -190,6 +221,26 @@ class OpsService:
                 "human_review": int(decision_counts.get("HUMAN_REVIEW", 0)),
                 "amendment_request": int(decision_counts.get("AMENDMENT_REQUEST", 0)),
                 "auto_approve": int(decision_counts.get("AUTO_APPROVE", 0)),
+                "strong_agreement": int(
+                    agreement_counts.get(AgreementCategory.STRONG_AGREEMENT.value, 0)
+                ),
+                "partial_agreement": int(
+                    agreement_counts.get(AgreementCategory.PARTIAL_AGREEMENT.value, 0)
+                ),
+                "weak_agreement": int(
+                    agreement_counts.get(AgreementCategory.WEAK_AGREEMENT.value, 0)
+                ),
+            },
+            "agreement_outcomes": {
+                "STRONG_AGREEMENT": int(
+                    agreement_counts.get(AgreementCategory.STRONG_AGREEMENT.value, 0)
+                ),
+                "PARTIAL_AGREEMENT": int(
+                    agreement_counts.get(AgreementCategory.PARTIAL_AGREEMENT.value, 0)
+                ),
+                "WEAK_AGREEMENT": int(
+                    agreement_counts.get(AgreementCategory.WEAK_AGREEMENT.value, 0)
+                ),
             },
             "validation_outcomes": {
                 "MATCH": int(validation_counts.get("MATCH", 0)),

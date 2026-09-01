@@ -468,6 +468,14 @@ code,
   align-items: center;
 }
 
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  margin: 0 0 var(--space-md);
+}
+
 /* —— Tables —— */
 
 .table-wrap {
@@ -822,8 +830,27 @@ table.data-table td.id-cell {
 }
 
 .query-summary {
+  margin: 0 0 var(--space-sm);
   font-size: 1rem;
-  margin-bottom: var(--space-md);
+}
+
+.query-answer {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md);
+  background: #f7f8fa;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.record-detail-list {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
 }
 
 .badge-row {

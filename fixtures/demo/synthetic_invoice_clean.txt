@@ -1,54 +1,17 @@
 COMMERCIAL INVOICE
-
 Invoice Number: INV-CLEAN-2001
-Invoice Date: 18 August 2026
-
-SHIPPER / EXPORTER
-Acme Logistics Pte. Ltd.
-18 Jurong Port Road
-Singapore 619114
-Contact: +65 6123 4500
-
-CONSIGNEE / IMPORTER
-Harbor Goods B.V.
-Waalhaven Zuidzijde 19
-3088 HH Rotterdam, Netherlands
-Contact: +31 10 555 0180
-
-SHIPMENT DETAILS
+Invoice Date: 2026-08-18
+Seller: Acme Logistics Pte Ltd
+Buyer: Harbor Goods BV
+Shipper: Acme Logistics Pte Ltd
+Consignee: Harbor Goods BV
 Port of Loading: Singapore
-Port of Discharge: Rotterdam, Netherlands
+Port of Discharge: Rotterdam
 Container Number: MSKU7654321
-Bill of Lading: ACME-RTM-2026-0818
 HS Code: 8471.30
-Country of Origin: Singapore
-Gross Weight: 10,250 KG
-Packages: 250 cartons
-
-DESCRIPTION OF GOODS
-Portable automatic data-processing machines, industrial laptop units,
-14-inch, 16 GB RAM / 512 GB SSD, packed for export.
-
-QUANTITY AND VALUE
-Quantity: 250 units
-Unit Value: USD 60.80
-Line Total: USD 15,200.00
-
-Subtotal: USD 15,200.00
-Freight: USD 0.00
-Insurance: USD 0.00
-TOTAL INVOICE VALUE: USD 15,200.00
-
+Incoterms: FOB
+Gross Weight: 10250 KG
 Currency: USD
-Incoterms: FOB Singapore
-Payment Terms: 30 days from invoice date
-
-SHIPPING NOTES
-FOB Singapore. Shipment packed in 250 cartons.
-Documents prepared for customs and trade-record purposes.
-
-DECLARATION
-We certify that the information contained in this commercial invoice
-is true and correct to the best of the exporter's knowledge.
-
-SYNTHETIC TEST FIXTURE — NOT A REAL COMMERCIAL DOCUMENT
+Total Amount: 15200.00
+Description of Goods: Synthetic clean invoice for Nova Part 1 evaluation.
+Note: Synthetic fixture only. Not a real customer document.

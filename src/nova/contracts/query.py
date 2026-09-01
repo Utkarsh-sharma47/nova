@@ -19,6 +19,22 @@ class QueryIntentName(StrEnum):
     LIST_SHIPMENTS_BY_DECISION = "list_shipments_by_decision"
     LIST_DOCUMENTS_FOR_SHIPMENT = "list_documents_for_shipment"
     SUMMARIZE_RUN = "summarize_run"
+    COUNT_DOCUMENTS_BY_AGREEMENT = "count_documents_by_agreement"
+    LIST_DOCUMENTS_BY_AGREEMENT = "list_documents_by_agreement"
+    COUNT_DOCUMENTS_REQUIRING_ATTENTION = "count_documents_requiring_attention"
+    COUNT_DOCUMENTS_BY_DECISION = "count_documents_by_decision"
+    COUNT_DOCUMENTS_WITH_MISMATCHES = "count_documents_with_mismatches"
+    COUNT_DOCUMENTS = "count_documents"
+    COUNT_SHIPMENTS = "count_shipments"
+    LIST_SHIPMENTS = "list_shipments"
+    LIST_RECENT_DOCUMENTS = "list_recent_documents"
+    LIST_DOCUMENTS_BY_DECISION = "list_documents_by_decision"
+    LIST_DOCUMENTS_BY_CONFIDENCE = "list_documents_by_confidence"
+    LIST_DOCUMENTS_WITH_MISMATCHES = "list_documents_with_mismatches"
+    LIST_DOCUMENTS_WITH_UNCERTAIN_VALIDATION = "list_documents_with_uncertain_validation"
+    GET_DOCUMENT_MISMATCHED_FIELDS = "get_document_mismatched_fields"
+    EXPLAIN_DOCUMENT_REVIEW = "explain_document_review"
+    COMPARE_AGREEMENT = "compare_agreement"
 
 
 class QueryStatus(StrEnum):

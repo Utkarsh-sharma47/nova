@@ -24,7 +24,7 @@ Honest inventory of what is complete, partial, engineering-limited, deferred, or
 | Live vendor LLM | `LLMPort` + optional OpenAI-compatible adapter; default is **MockLLM**. Without `LLM_API_KEY`, falls back to mock |
 | Images / vision | PNG/JPEG accepted; vision extraction requires live provider. Mock path returns MISSING (no fabrication) |
 | Scanned PDF OCR | Digital PDF text only; dedicated OCR adapter deferred |
-| Customer rule authoring UI | Default presence rules + request rules; no rich ruleset editor |
+| Customer rule authoring UI | Demo customers seed `expected_fields` in metadata; equals rules compare extracted vs expected. No rich ruleset editor |
 | `audit_events` table | Audit/event **contracts** exist; dedicated `audit_events` persistence table is not migrated |
 
 ## 3. Engineering limitations

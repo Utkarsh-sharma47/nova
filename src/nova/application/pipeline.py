@@ -21,6 +21,7 @@ from nova.application.rules import (
     DEFAULT_RULESET_VERSION,
     default_routing_policy,
     default_rules_for_document_type,
+    expected_fields_from_metadata,
 )
 from nova.application.validation_persistence import SqlValidationStore
 from nova.contracts.extraction import ExtractionResult, ExtractionStatus
@@ -40,7 +41,13 @@ from nova.domain.lifecycle import (
 )
 from nova.extraction.service import ExtractorService
 from nova.infrastructure.storage import DocumentStoragePort
-from nova.persistence.models import AgentExecution, Document, VerificationRun, utc_now
+from nova.persistence.models import (
+    AgentExecution,
+    Customer,
+    Document,
+    VerificationRun,
+    utc_now,
+)
 from nova.persistence.repositories import NovaRepository
 from nova.router.persistence import DecisionRepository
 from nova.router.service import RouterService
@@ -378,10 +385,13 @@ class PipelineOrchestrator:
             return existing.result
 
         wire_type = _TYPE_TO_WIRE.get(document.document_type, "OTHER")
+        customer_id = document.shipment.customer_id if document.shipment else None
+        expected_fields = self._load_customer_expected_fields(customer_id)
         rules = self._rules_override or default_rules_for_document_type(
             document_type=wire_type,
             trace_id=trace_id,
-            customer_id=document.shipment.customer_id if document.shipment else None,
+            customer_id=customer_id,
+            expected_fields=expected_fields,
         )
         version = next(
             (
@@ -408,6 +418,14 @@ class PipelineOrchestrator:
             timeout_ms=30_000,
         )
         return self.validator.validate(request)
+
+    def _load_customer_expected_fields(self, customer_id: UUID | None) -> dict[str, str]:
+        if customer_id is None:
+            return {}
+        customer = self.session.get(Customer, customer_id)
+        if customer is None or customer.deleted_at is not None:
+            return {}
+        return expected_fields_from_metadata(customer.metadata_json)
 
     def _route(
         self,

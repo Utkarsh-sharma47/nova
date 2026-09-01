@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiClientError, NetworkError, submitQuery, TimeoutError } from '../api'
 import type { QueryResponse } from '../api/types'
@@ -7,9 +7,54 @@ import { ErrorPanel } from '../components/ErrorPanel'
 import { LoadingState } from '../components/LoadingState'
 import { StatusBadge } from '../components/StatusBadge'
 import { readStoredCustomerId, storeCustomerId } from '../utils/customer'
+import { formatConfidence } from '../utils/status'
 import { isUuid } from '../utils/uuid'
 
 const EXAMPLE_QUERIES = [
+  {
+    label: 'How many strong agreement documents are there?',
+    question: 'How many strong agreement documents are there?',
+  },
+  {
+    label: 'How many weak agreement documents are there?',
+    question: 'How many weak agreement documents are there?',
+  },
+  {
+    label: 'Show strong agreement documents.',
+    question: 'Show strong agreement documents.',
+  },
+  {
+    label: 'Show weak agreement documents.',
+    question: 'Show weak agreement documents.',
+  },
+  {
+    label: 'How many documents are there?',
+    question: 'How many documents are there?',
+  },
+  {
+    label: 'Show documents with confidence below 70%.',
+    question: 'Show documents with confidence below 70%.',
+  },
+  {
+    label: 'Which documents have mismatches?',
+    question: 'Which documents have mismatches?',
+  },
+  {
+    label: 'How many documents need human review?',
+    question: 'How many documents need human review?',
+  },
+  {
+    label: 'How many documents were auto-approved?',
+    question: 'How many documents were auto-approved?',
+  },
+  {
+    label: 'How many documents were processed this week?',
+    question: 'How many documents were processed this week?',
+  },
+  {
+    label: 'How many documents require attention?',
+    question: 'How many documents require attention?',
+  },
   {
     label: 'How many shipments are in human review?',
     question: 'How many shipments are in human review?',
@@ -24,11 +69,6 @@ const EXAMPLE_QUERIES = [
     question: 'What is the decision for this document?',
     needsDocument: true,
   },
-  {
-    label: 'Summarize this verification run',
-    question: 'Summarize this verification run',
-    needsRun: true,
-  },
 ] as const
 
 const SUPPORTED_INTENTS = [
@@ -39,10 +79,93 @@ const SUPPORTED_INTENTS = [
   'list_shipments_by_decision — filter by AUTO_APPROVE | HUMAN_REVIEW | AMENDMENT_REQUEST',
   'list_documents_for_shipment — documents for a shipment',
   'summarize_run — summarize extraction/validation/decision for a run_id',
+  'count_documents_by_agreement — count STRONG / PARTIAL / WEAK agreement docs',
+  'list_documents_by_agreement — list documents by agreement category',
+  'count_documents_requiring_attention — partial + weak agreement count',
+  'count_documents_by_decision — count by AUTO_APPROVE / HUMAN_REVIEW / AMENDMENT_REQUEST',
+  'count_documents_with_mismatches — count documents with validation MISMATCH',
+  'count_documents — total documents (optionally within a time window)',
+  'count_shipments — total shipments (optionally within a time window)',
+  'list_shipments — shipments for the current customer',
+  'list_recent_documents — most recently updated documents',
+  'list_documents_by_decision — documents routed to a given disposition',
+  'list_documents_by_confidence — documents below a confidence threshold, or lowest first',
+  'list_documents_with_mismatches — documents whose validation result is MISMATCH',
+  'list_documents_with_uncertain_validation — documents with UNCERTAIN validation',
+  'get_document_mismatched_fields — which fields mismatched for one document',
+  'explain_document_review — validation + decision reasoning for one document',
+  'compare_agreement — STRONG / PARTIAL / WEAK breakdown',
 ]
 
 function recordHasStatus(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0
+}
+
+function recordCount(record: Record<string, unknown>): number | null {
+  const raw = record.count
+  return typeof raw === 'number' ? raw : null
+}
+
+function confidenceDisplay(record: Record<string, unknown>): string {
+  const percent = record.document_confidence_percent
+  if (typeof percent === 'number') {
+    return `${percent}%`
+  }
+  const score = record.document_confidence
+  if (typeof score === 'number') {
+    return formatConfidence(score)
+  }
+  return 'Confidence unavailable'
+}
+
+function extractionDisplay(record: Record<string, unknown>): string | null {
+  const percent = record.extraction_confidence_percent
+  if (typeof percent === 'number') {
+    return `${percent}%`
+  }
+  const score = record.extraction_confidence
+  if (typeof score === 'number') {
+    return formatConfidence(score)
+  }
+  return null
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+  return value.filter((item): item is string => typeof item === 'string')
+}
+
+function recordDetails(record: Record<string, unknown>): string[] {
+  const lines: string[] = []
+  const mismatches = record.mismatches
+  if (Array.isArray(mismatches)) {
+    for (const item of mismatches) {
+      if (item && typeof item === 'object' && 'field' in item) {
+        const field = String((item as { field?: unknown }).field ?? '—')
+        const detail =
+          (item as { reason_detail?: unknown; reason_code?: unknown })
+            .reason_detail ??
+          (item as { reason_code?: unknown }).reason_code ??
+          '—'
+        lines.push(`${field} — ${String(detail)}`)
+      }
+    }
+  }
+  const mismatchedFields = stringList(record.mismatched_fields)
+  if (mismatchedFields.length > 0 && lines.length === 0) {
+    lines.push(...mismatchedFields.map((field) => `${field} — MISMATCH`))
+  }
+  const uncertainFields = stringList(record.uncertain_fields)
+  for (const field of uncertainFields) {
+    lines.push(`${field} — UNCERTAIN`)
+  }
+  const rationale = record.rationale
+  if (typeof rationale === 'string' && rationale.trim()) {
+    lines.push(`Rationale: ${rationale}`)
+  }
+  return lines
 }
 
 export function QueryPage() {
@@ -55,42 +178,68 @@ export function QueryPage() {
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [clientError, setClientError] = useState<string | null>(null)
+  const requestSeq = useRef(0)
 
-  async function runQuery() {
-    setClientError(null)
-    setError(null)
-    setResponse(null)
+  // Keep customer scope aligned with dashboard/upload when returning to this page.
+  useEffect(() => {
+    const syncCustomer = () => {
+      const stored = readStoredCustomerId()
+      if (stored) {
+        setCustomerId(stored)
+      }
+    }
+    syncCustomer()
+    window.addEventListener('focus', syncCustomer)
+    return () => window.removeEventListener('focus', syncCustomer)
+  }, [])
 
-    if (!question.trim()) {
-      setClientError('Question is required.')
-      return
+  function validateInputs(
+    questionText: string,
+    options?: { requireShipment?: boolean; requireDocument?: boolean },
+  ): string | null {
+    if (!questionText.trim()) {
+      return 'Question is required.'
     }
     if (!customerId.trim()) {
-      setClientError('Customer ID is required.')
-      return
+      return 'Customer ID is required. Create or load a customer on the Dashboard first.'
     }
     if (!isUuid(customerId.trim())) {
-      setClientError('Customer ID must be a valid UUID.')
-      return
+      return 'Customer ID must be a valid UUID.'
     }
     if (shipmentId.trim() && !isUuid(shipmentId.trim())) {
-      setClientError('Shipment ID must be a valid UUID when provided.')
-      return
+      return 'Shipment ID must be a valid UUID when provided.'
     }
     if (documentId.trim() && !isUuid(documentId.trim())) {
-      setClientError('Document ID must be a valid UUID when provided.')
-      return
+      return 'Document ID must be a valid UUID when provided.'
     }
     if (runId.trim() && !isUuid(runId.trim())) {
-      setClientError('Run ID must be a valid UUID when provided.')
+      return 'Run ID must be a valid UUID when provided.'
+    }
+    if (options?.requireShipment && !shipmentId.trim()) {
+      return 'This example needs a shipment ID in the scope fields below.'
+    }
+    if (options?.requireDocument && !documentId.trim()) {
+      return 'This example needs a document ID in the scope fields below.'
+    }
+    return null
+  }
+
+  async function runQuery(questionOverride?: string) {
+    const questionText = (questionOverride ?? question).trim()
+    const validationError = validateInputs(questionText)
+    setClientError(validationError)
+    setError(null)
+    setResponse(null)
+    if (validationError) {
       return
     }
 
+    const seq = ++requestSeq.current
     storeCustomerId(customerId.trim())
     setLoading(true)
     try {
       const result = await submitQuery({
-        question: question.trim(),
+        question: questionText,
         customer_id: customerId.trim(),
         scope: {
           shipment_id: shipmentId.trim() || null,
@@ -98,11 +247,19 @@ export function QueryPage() {
           run_id: runId.trim() || null,
         },
       })
+      if (seq !== requestSeq.current) {
+        return
+      }
       setResponse(result)
     } catch (err) {
+      if (seq !== requestSeq.current) {
+        return
+      }
       setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
-      setLoading(false)
+      if (seq === requestSeq.current) {
+        setLoading(false)
+      }
     }
   }
 
@@ -111,24 +268,23 @@ export function QueryPage() {
     await runQuery()
   }
 
-  function applyExample(example: (typeof EXAMPLE_QUERIES)[number]) {
+  async function applyExample(example: (typeof EXAMPLE_QUERIES)[number]) {
     setQuestion(example.question)
     setClientError(null)
     setError(null)
     setResponse(null)
-    if ('needsShipment' in example && example.needsShipment && !shipmentId.trim()) {
-      setClientError(
-        'This example needs a shipment ID in the scope fields below.',
-      )
+
+    const needsShipment = 'needsShipment' in example && example.needsShipment
+    const needsDocument = 'needsDocument' in example && example.needsDocument
+    const validationError = validateInputs(example.question, {
+      requireShipment: needsShipment,
+      requireDocument: needsDocument,
+    })
+    if (validationError) {
+      setClientError(validationError)
+      return
     }
-    if ('needsDocument' in example && example.needsDocument && !documentId.trim()) {
-      setClientError(
-        'This example needs a document ID in the scope fields below.',
-      )
-    }
-    if ('needsRun' in example && example.needsRun && !runId.trim()) {
-      setClientError('This example needs a run ID in the scope fields below.')
-    }
+    await runQuery(example.question)
   }
 
   return (
@@ -147,8 +303,8 @@ export function QueryPage() {
           <h2>Example questions</h2>
         </div>
         <p className="form-hint">
-          Click an example to fill the question. Add scope IDs when the intent
-          requires them.
+          Click an example to run it immediately when a valid customer ID is set.
+          Add scope IDs when the intent requires them.
         </p>
         <div className="example-queries" role="list">
           {EXAMPLE_QUERIES.map((example) => (
@@ -157,7 +313,7 @@ export function QueryPage() {
               type="button"
               className="example-chip"
               role="listitem"
-              onClick={() => applyExample(example)}
+              onClick={() => void applyExample(example)}
             >
               {example.label}
             </button>
@@ -188,7 +344,7 @@ export function QueryPage() {
             onChange={(event) => setQuestion(event.target.value)}
             required
             disabled={loading}
-            placeholder="e.g. How many shipments are in human review?"
+            placeholder="e.g. How many strong agreement documents are there?"
           />
         </div>
         <div className="form-row">
@@ -202,6 +358,10 @@ export function QueryPage() {
             autoComplete="off"
             disabled={loading}
           />
+          <p className="form-hint">
+            Queries are scoped to this customer. Use the same ID shown on the{' '}
+            <Link to="/">Dashboard</Link> after upload.
+          </p>
         </div>
         <div className="form-grid">
           <div className="form-row">
@@ -302,6 +462,17 @@ export function QueryPage() {
                 '—'
               )}
             </dd>
+            <dt>Filters applied</dt>
+            <dd>
+              {response.interpreted_intent &&
+              Object.keys(response.interpreted_intent.parameters ?? {}).length > 0 ? (
+                <code className="mono">
+                  {JSON.stringify(response.interpreted_intent.parameters)}
+                </code>
+              ) : (
+                'None'
+              )}
+            </dd>
             <dt>Trace ID</dt>
             <dd>
               <code className="mono">{response.trace_id}</code>
@@ -311,72 +482,131 @@ export function QueryPage() {
           {response.status === 'RESULT' && response.result ? (
             <>
               <p className="query-summary">
-                <strong>Summary:</strong> {response.result.answer_summary}
+                <strong>Answer:</strong>
               </p>
+              <pre className="query-answer">{response.result.answer_summary}</pre>
               {response.result.records.length > 0 ? (
                 <div className="table-wrap">
                   <table className="data-table">
                     <thead>
                       <tr>
                         <th scope="col">Type</th>
-                        <th scope="col">IDs</th>
-                        <th scope="col">Status / decision</th>
+                        <th scope="col">Identifier</th>
+                        <th scope="col">Agreement confidence</th>
+                        <th scope="col">Extraction</th>
+                        <th scope="col">Agreement</th>
+                        <th scope="col">Decision / status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {response.result.records.map((record, index) => (
-                        <tr key={`record-${index}`}>
-                          <td>{String(record.type ?? 'record')}</td>
-                          <td className="id-cell">
-                            {'document_id' in record && record.document_id ? (
-                              <div>
-                                Document:{' '}
-                                <Link
-                                  to={`/documents/${String(record.document_id)}`}
-                                >
-                                  {String(record.document_id)}
-                                </Link>
-                              </div>
-                            ) : null}
-                            {'shipment_id' in record && record.shipment_id ? (
-                              <div>
-                                Shipment:{' '}
-                                <Link
-                                  to={`/shipments/${String(record.shipment_id)}`}
-                                >
-                                  {String(record.shipment_id)}
-                                </Link>
-                              </div>
-                            ) : null}
-                            {'run_id' in record && record.run_id ? (
-                              <div>Run: {String(record.run_id)}</div>
-                            ) : null}
-                            {!record.document_id &&
-                            !record.shipment_id &&
-                            !record.run_id
-                              ? '—'
-                              : null}
-                          </td>
-                          <td>
-                            <div className="badge-row">
-                              {recordHasStatus(record.decision) ? (
-                                <StatusBadge status={record.decision} />
+                      {response.result.records.map((record, index) => {
+                        const count = recordCount(record)
+                        const agreement =
+                          typeof record.agreement === 'string'
+                            ? record.agreement
+                            : null
+                        const invoice =
+                          typeof record.invoice_number === 'string'
+                            ? record.invoice_number
+                            : null
+                        const details = recordDetails(record)
+                        const extraction = extractionDisplay(record)
+                        return (
+                          <tr key={`record-${index}`}>
+                            <td>{String(record.type ?? 'record')}</td>
+                            <td className="id-cell">
+                              {count != null ? (
+                                <div>
+                                  Count: <strong>{count}</strong>
+                                  {agreement ? ` · ${agreement}` : ''}
+                                  {typeof record.decision === 'string'
+                                    ? ` · ${record.decision}`
+                                    : ''}
+                                </div>
                               ) : null}
-                              {recordHasStatus(record.status) ? (
-                                <StatusBadge status={record.status} />
+                              {invoice ? <div>Invoice: {invoice}</div> : null}
+                              {'document_id' in record && record.document_id ? (
+                                <div>
+                                  Document:{' '}
+                                  <Link
+                                    to={`/documents/${String(record.document_id)}`}
+                                  >
+                                    {String(record.document_id)}
+                                  </Link>
+                                </div>
                               ) : null}
-                              {recordHasStatus(record.overall_result) ? (
-                                <StatusBadge status={record.overall_result} />
+                              {'shipment_id' in record && record.shipment_id ? (
+                                <div>
+                                  Shipment:{' '}
+                                  <Link
+                                    to={`/shipments/${String(record.shipment_id)}`}
+                                  >
+                                    {String(record.shipment_id)}
+                                  </Link>
+                                </div>
                               ) : null}
-                              {!record.decision &&
-                              !record.status &&
-                              !record.overall_result
+                              {'run_id' in record && record.run_id ? (
+                                <div>Run: {String(record.run_id)}</div>
+                              ) : null}
+                              {details.length > 0 ? (
+                                <ul className="record-detail-list">
+                                  {details.map((line) => (
+                                    <li key={line}>{line}</li>
+                                  ))}
+                                </ul>
+                              ) : null}
+                              {count == null &&
+                              !invoice &&
+                              !record.document_id &&
+                              !record.shipment_id &&
+                              !record.run_id &&
+                              details.length === 0
                                 ? '—'
                                 : null}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td>
+                              {record.type === 'document' ||
+                              record.document_confidence != null ||
+                              record.document_confidence_percent != null
+                                ? confidenceDisplay(record)
+                                : '—'}
+                            </td>
+                            <td>{extraction ?? '—'}</td>
+                            <td>
+                              {agreement ? (
+                                <StatusBadge status={agreement} />
+                              ) : (
+                                '—'
+                              )}
+                            </td>
+                            <td>
+                              <div className="badge-row">
+                                {recordHasStatus(record.decision) ? (
+                                  <StatusBadge status={record.decision} />
+                                ) : null}
+                                {recordHasStatus(record.status) ? (
+                                  <StatusBadge status={record.status} />
+                                ) : null}
+                                {recordHasStatus(record.overall_result) ? (
+                                  <StatusBadge status={record.overall_result} />
+                                ) : null}
+                                {recordHasStatus(record.validation_result) ? (
+                                  <StatusBadge
+                                    status={record.validation_result}
+                                  />
+                                ) : null}
+                                {!record.decision &&
+                                !record.status &&
+                                !record.overall_result &&
+                                !record.validation_result &&
+                                count == null
+                                  ? '—'
+                                  : null}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -389,13 +619,19 @@ export function QueryPage() {
             </>
           ) : null}
 
-          {response.status === 'EMPTY' ? (
+          {response.status === 'EMPTY' && response.result?.answer_summary ? (
+            <>
+              <p className="query-summary">
+                <strong>Answer:</strong>
+              </p>
+              <pre className="query-answer">{response.result.answer_summary}</pre>
+            </>
+          ) : null}
+
+          {response.status === 'EMPTY' && !response.result?.answer_summary ? (
             <EmptyState
               title="No matching records"
-              message={
-                response.result?.answer_summary ??
-                'The query succeeded but found no matching records.'
-              }
+              message="The query succeeded but found no matching records."
             />
           ) : null}
 
